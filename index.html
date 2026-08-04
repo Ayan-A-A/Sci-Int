@@ -3,1383 +3,1662 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Generator and the Discriminator</title>
+<title>The Generator and the Discriminator — Amplify Fellows 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --blue:#7E98BD;
-  --slate:#7787A2;
-  --peach:#E5D09A;
-  --mauve:#B991B6;
-  --dark:#1a1a1a;
-  --off:#f5f3ef;
+  --cream:#F0EAE0;
+  --olive:#5A6B35;
+  --black:#1A1A1A;
+  --ivory:#F0E8D8;
+  --grey:#4A4A42;
+  --cream-rgb:240,234,224;
+  --olive-rgb:90,107,53;
 }
-html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
-body{font-family:'Inter',sans-serif;background:var(--dark);-webkit-font-smoothing:antialiased}
-
+html{
+  scroll-behavior:smooth;
+  scroll-snap-type:y mandatory;
+  overflow-y:scroll;
+  overflow-x:hidden;
+}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--black);
+  -webkit-font-smoothing:antialiased;
+  cursor:default;
+}
 .slide{
-  width:100vw;height:100vh;
+  width:100vw;
+  height:100vh;
   scroll-snap-align:start;
-  position:relative;overflow:hidden;
+  position:relative;
+  overflow:hidden;
   display:flex;
 }
+canvas.dot-bg{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+}
 
-/* Stipple canvas containers */
-.stipple-wrap{position:absolute;pointer-events:none}
-.stipple-wrap canvas{display:block}
-
-/* Typography */
-.label{
+/* ── TYPOGRAPHY ── */
+.t-label{
   font-family:'Inter',sans-serif;
-  font-size:0.6rem;letter-spacing:0.32em;
+  font-size:0.6rem;
+  font-weight:400;
+  letter-spacing:0.28em;
   text-transform:uppercase;
 }
-.serif{font-family:'Cormorant Garamond',serif}
+.t-serif{font-family:'Cormorant Garamond',serif;}
+.t-italic{font-style:italic;}
 
-/* Slide number */
-.slide-num{
-  position:absolute;bottom:2.2rem;right:2.8rem;
-  font-family:'Inter',sans-serif;
-  font-size:0.55rem;letter-spacing:0.22em;
-  color:var(--slate);opacity:0.5;
-  z-index:10;
-}
-
-/* ===================== SLIDE 1 ===================== */
-.s1{background:var(--dark)}
-.s1 .zone-left{
-  position:absolute;left:0;top:0;
-  width:45%;height:100%;
-  background:var(--dark);
-  z-index:1;
-}
-.s1 .zone-right{
-  position:absolute;right:0;top:0;
-  width:55%;height:100%;
-  background:var(--off);
-  z-index:1;
-}
-.s1 .stipple-wrap{z-index:2}
-.s1 .text-block{
+/* ── CARD BLOCKS ── */
+.card{
   position:absolute;
-  right:0;top:0;width:55%;height:100%;
-  display:flex;flex-direction:column;
-  justify-content:center;
-  padding:0 7% 0 9%;
   z-index:10;
 }
-.s1 .eyebrow{color:var(--slate);margin-bottom:2.2rem}
-.s1 h1{
+.card-olive{background:var(--olive);}
+.card-black{background:var(--black);}
+.card-ivory{background:var(--ivory);}
+
+/* ── BOTANICAL SVG LAYER ── */
+.botanical{
+  position:absolute;
+  z-index:5;
+  pointer-events:none;
+}
+
+/* ─────────────────────────────────────
+   SLIDE 1 — TITLE
+───────────────────────────────────── */
+#s1{background:var(--cream);}
+#s1 .main-card{
+  left:6%;top:50%;
+  transform:translateY(-50%);
+  width:44%;
+  background:var(--black);
+  padding:3.5rem 3rem 3.5rem 3.5rem;
+}
+#s1 .main-card .lbl{
+  color:rgba(240,234,224,0.45);
+  margin-bottom:2.2rem;
+}
+#s1 h1{
   font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:clamp(2.4rem,4vw,4.2rem);
-  line-height:1.13;color:var(--dark);
+  font-weight:300;
+  font-size:clamp(2.2rem,3.8vw,4rem);
+  line-height:1.12;
+  color:var(--ivory);
   margin-bottom:1.4rem;
 }
-.s1 h1 em{font-style:italic;color:var(--blue)}
-.s1 .subtitle{
+#s1 h1 em{
+  font-style:italic;
+  color:rgba(90,107,53,0.9);
+}
+#s1 .sub{
   font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:1.1rem;
-  color:var(--slate);margin-bottom:2.8rem;
-  line-height:1.55;max-width:340px;
+  font-style:italic;
+  font-weight:300;
+  font-size:clamp(0.95rem,1.4vw,1.2rem);
+  color:rgba(240,232,216,0.55);
+  line-height:1.55;
+  margin-bottom:2.8rem;
 }
-.s1 .meta{font-size:0.6rem;letter-spacing:0.2em;color:var(--slate);opacity:0.7}
-.s1 .corner-note{
-  position:absolute;top:2.5rem;right:3rem;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.78rem;
-  color:var(--slate);opacity:0.6;
-  text-align:right;line-height:1.5;
-  z-index:12;
-}
-
-/* ===================== SLIDE 2 ===================== */
-.s2{background:var(--off)}
-.s2 .zone-l{
-  position:absolute;left:0;top:0;
-  width:47%;height:100%;
-  background:var(--slate);
-  z-index:1;
-}
-.s2 .zone-r{
-  position:absolute;right:0;top:0;
-  width:53%;height:100%;
-  background:var(--peach);
-  z-index:1;
-}
-.s2 .divider-bar{
-  position:absolute;left:47%;top:0;
-  width:4px;height:100%;
-  background:var(--off);
-  z-index:5;
-}
-.s2 .col-d{
-  position:absolute;left:0;top:0;
-  width:47%;height:100%;
-  display:flex;flex-direction:column;
-  justify-content:center;
-  padding:0 7% 0 9%;
-  z-index:10;
-}
-.s2 .col-g{
-  position:absolute;right:0;top:0;
-  width:53%;height:100%;
-  display:flex;flex-direction:column;
-  justify-content:center;
-  padding:0 9% 0 10%;
-  z-index:10;
-}
-.s2 .col-d .eyebrow{color:var(--peach);margin-bottom:2rem}
-.s2 .col-g .eyebrow{color:var(--slate);margin-bottom:2rem}
-.s2 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.2rem;
-  line-height:1.2;margin-bottom:1.3rem;
-}
-.s2 .col-d h2{color:var(--off)}
-.s2 .col-g h2{color:var(--dark)}
-.s2 p{
-  font-size:0.8rem;line-height:1.7;
-  margin-bottom:0.9rem;
-}
-.s2 .col-d p{color:var(--off);opacity:0.8}
-.s2 .col-g p{color:var(--dark);opacity:0.8}
-.s2 .big-num{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:3.5rem;
-  line-height:1;margin-top:1.6rem;
-  margin-bottom:0.4rem;
-}
-.s2 .col-d .big-num{color:var(--peach)}
-.s2 .col-g .big-num{color:var(--slate)}
-.s2 .num-label{
-  font-size:0.6rem;letter-spacing:0.2em;
-  text-transform:uppercase;opacity:0.6;
-}
-.s2 .col-d .num-label{color:var(--off)}
-.s2 .col-g .num-label{color:var(--dark)}
-.s2 .bottom-quote{
-  position:absolute;bottom:2.8rem;left:50%;
-  transform:translateX(-50%);
-  width:500px;text-align:center;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.92rem;
-  color:var(--dark);opacity:0.55;
-  line-height:1.6;z-index:12;
-}
-
-/* ===================== SLIDE 3 ===================== */
-.s3{background:var(--dark)}
-.s3 .content{
-  position:relative;z-index:10;
-  padding:9vh 10% 7vh;
-  width:100%;display:flex;
-  flex-direction:column;
-}
-.s3 .eyebrow{color:var(--blue);opacity:0.7;margin-bottom:2rem}
-.s3 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.8rem;
-  color:var(--off);margin-bottom:3.5rem;
-  line-height:1.2;
-}
-.s3 .forces{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:3rem;
-}
-.s3 .force{
-  border-top:1px solid rgba(245,243,239,0.12);
-  padding-top:1.5rem;
-}
-.s3 .f-num{
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.8rem;font-weight:300;
-  margin-bottom:0.8rem;
-}
-.s3 .force:nth-child(1) .f-num{color:var(--blue)}
-.s3 .force:nth-child(2) .f-num{color:var(--peach)}
-.s3 .force:nth-child(3) .f-num{color:var(--mauve)}
-.s3 .force h3{
-  font-family:'Inter',sans-serif;font-weight:400;
-  font-size:0.82rem;color:var(--off);
-  margin-bottom:0.9rem;letter-spacing:0.02em;
-}
-.s3 .force p{
-  font-size:0.75rem;line-height:1.68;
-  color:var(--off);opacity:0.55;
-  margin-bottom:0.8rem;
-}
-.s3 .evidence{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.8rem;
-  opacity:0.7;margin-top:0.5rem;
-}
-.s3 .force:nth-child(1) .evidence{color:var(--blue)}
-.s3 .force:nth-child(2) .evidence{color:var(--peach)}
-.s3 .force:nth-child(3) .evidence{color:var(--mauve)}
-
-/* ===================== SLIDE 4 ===================== */
-.s4{background:var(--off)}
-.s4 .content{
-  position:relative;z-index:10;
-  padding:8vh 10%;width:100%;
-  display:flex;flex-direction:column;
-}
-.s4 .header{text-align:center;margin-bottom:3.5rem}
-.s4 .eyebrow{color:var(--slate);margin-bottom:1.2rem}
-.s4 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.2rem;
-  color:var(--dark);margin-bottom:1.2rem;
-}
-.s4 .flow{
-  display:flex;align-items:center;
-  justify-content:center;gap:0.8rem;
-}
-.s4 .fstep{
-  font-size:0.6rem;letter-spacing:0.2em;
+#s1 .meta{
+  color:rgba(240,232,216,0.3);
+  font-size:0.62rem;
+  letter-spacing:0.22em;
   text-transform:uppercase;
-  padding:0.35rem 1rem;border-radius:2px;
 }
-.s4 .fstep:nth-child(1){background:rgba(126,152,189,0.12);color:var(--blue)}
-.s4 .fstep:nth-child(3){background:rgba(185,145,182,0.12);color:var(--mauve)}
-.s4 .fstep:nth-child(5){background:rgba(119,135,162,0.12);color:var(--slate)}
-.s4 .arrow{color:var(--slate);opacity:0.4;font-size:1rem}
-.s4 .pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem}
-.s4 .piece{
-  padding:2rem 2rem 2rem;
-  background:white;
-  border-radius:1px;
-  position:relative;
-}
-.s4 .piece::before{
-  content:'';position:absolute;top:0;left:0;
-  width:100%;height:3px;
-}
-.s4 .piece:nth-child(1)::before{background:var(--blue)}
-.s4 .piece:nth-child(2)::before{background:var(--mauve)}
-.s4 .piece:nth-child(3)::before{background:var(--slate)}
-.s4 .month{
-  font-size:0.58rem;letter-spacing:0.25em;
-  text-transform:uppercase;color:var(--slate);
-  opacity:0.5;margin-bottom:0.8rem;
-}
-.s4 .piece h3{
+#s1 .corner-note{
+  position:absolute;
+  bottom:4rem;right:5%;
   font-family:'Cormorant Garamond',serif;
-  font-weight:400;font-size:1.45rem;
-  color:var(--dark);margin-bottom:0.6rem;
-  line-height:1.25;
+  font-style:italic;
+  font-size:0.78rem;
+  color:var(--grey);
+  opacity:0.55;
+  line-height:1.6;
+  text-align:right;
+  max-width:160px;
 }
-.s4 .piece-sub{
+
+/* ─────────────────────────────────────
+   SLIDE 2 — CORE TENSION
+───────────────────────────────────── */
+#s2{background:var(--cream);}
+#s2 .half-left{
+  position:absolute;
+  left:0;top:0;
+  width:48%;height:100%;
+  background:var(--black);
+}
+#s2 .half-right{
+  position:absolute;
+  right:0;top:0;
+  width:48%;height:100%;
+  background:var(--cream);
+}
+#s2 .divider-bar{
+  position:absolute;
+  left:48%;top:0;
+  width:4%;height:100%;
+  background:var(--olive);
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#s2 .divider-bar span{
+  writing-mode:vertical-rl;
   font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.85rem;
-  color:var(--slate);line-height:1.5;
+  font-style:italic;
+  font-size:0.7rem;
+  color:var(--ivory);
+  opacity:0.6;
+  letter-spacing:0.2em;
+}
+#s2 .col-text{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  padding:3rem;
+  z-index:15;
+}
+#s2 .col-text.left{left:0;width:48%;}
+#s2 .col-text.right{right:0;width:48%;}
+#s2 .col-head{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;
+  font-size:clamp(1.4rem,2.2vw,2rem);
+  line-height:1.2;
   margin-bottom:1.2rem;
 }
-.s4 .cos{
-  font-size:0.6rem;letter-spacing:0.15em;
-  text-transform:uppercase;color:var(--slate);opacity:0.5;
+#s2 .left .col-head{color:var(--ivory);}
+#s2 .right .col-head{color:var(--black);}
+#s2 .col-body{
+  font-size:0.77rem;
+  line-height:1.7;
+  margin-bottom:1rem;
 }
-.s4 .stipple-wrap{z-index:2}
+#s2 .left .col-body{color:rgba(240,232,216,0.6);}
+#s2 .right .col-body{color:rgba(26,26,26,0.65);}
+#s2 .stat-num{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:3.5rem;
+  line-height:1;
+  margin-top:1.8rem;
+}
+#s2 .left .stat-num{color:rgba(240,232,216,0.2);}
+#s2 .right .stat-num{color:rgba(90,107,53,0.4);}
+#s2 .stat-lbl{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;margin-top:0.4rem;}
+#s2 .left .stat-lbl{color:rgba(240,232,216,0.3);}
+#s2 .right .stat-lbl{color:rgba(74,74,66,0.6);}
+#s2 .bottom-quote{
+  position:absolute;
+  bottom:3.5rem;left:50%;
+  transform:translateX(-50%);
+  width:60%;
+  text-align:center;
+  z-index:25;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(0.75rem,1.1vw,0.95rem);
+  color:var(--ivory);
+  background:var(--olive);
+  padding:1rem 1.8rem;
+  line-height:1.6;
+}
+#s2 .page-lbl{
+  position:absolute;
+  top:2.5rem;left:2rem;
+  z-index:30;
+  color:rgba(240,232,216,0.35);
+}
 
-/* ===================== SLIDES 5-6 ===================== */
-.s5,.s6{background:var(--off)}
-.split-slide{display:flex}
-.split-slide .img-half{
-  position:relative;flex-shrink:0;
+/* ─────────────────────────────────────
+   SLIDE 3 — WHY NOW
+───────────────────────────────────── */
+#s3{background:var(--black);}
+#s3 .content{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:78%;
+  z-index:10;
 }
-.split-slide .text-half{
-  flex:1;display:flex;flex-direction:column;
-  justify-content:center;
-  padding:0 7%;
-  position:relative;z-index:10;
-}
-.split-slide .eyebrow{color:var(--slate);margin-bottom:1.5rem}
-.split-slide h2{
+#s3 .s-lbl{color:rgba(90,107,53,0.5);margin-bottom:2rem;}
+#s3 h2{
   font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.1rem;
-  line-height:1.2;margin-bottom:0.6rem;
-  color:var(--dark);
+  font-weight:300;
+  font-size:clamp(1.8rem,3vw,2.8rem);
+  color:var(--ivory);
+  margin-bottom:3rem;
 }
-.split-slide .detail-sub{
+#s3 .forces{display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+#s3 .force-card{
+  background:var(--olive);
+  padding:2rem 1.8rem;
+  margin:0 0.8rem;
+}
+#s3 .force-card:first-child{margin-left:0;}
+#s3 .force-card:last-child{margin-right:0;}
+#s3 .force-num{
   font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.9rem;
-  color:var(--slate);margin-bottom:2rem;
+  font-size:2.8rem;
+  font-weight:300;
+  color:rgba(240,232,216,0.18);
+  line-height:1;
+  margin-bottom:1rem;
 }
-.split-slide .sections{
-  display:grid;grid-template-columns:1fr 1fr;
+#s3 .force-card h3{
+  font-family:'Inter',sans-serif;
+  font-size:0.78rem;
+  font-weight:500;
+  letter-spacing:0.05em;
+  color:var(--ivory);
+  margin-bottom:0.9rem;
+}
+#s3 .force-card p{
+  font-size:0.72rem;
+  line-height:1.65;
+  color:rgba(240,232,216,0.6);
+}
+#s3 .force-card .ev{
+  margin-top:1rem;
+  padding-top:1rem;
+  border-top:1px solid rgba(240,232,216,0.12);
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:0.78rem;
+  color:rgba(240,232,216,0.4);
+}
+
+/* ─────────────────────────────────────
+   SLIDE 4 — THREE PIECES
+───────────────────────────────────── */
+#s4{background:var(--cream);}
+#s4 .header{
+  position:absolute;
+  top:3.5rem;left:8%;
+  z-index:10;
+}
+#s4 .header .s-lbl{color:rgba(74,74,66,0.5);margin-bottom:1.2rem;}
+#s4 .header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(1.5rem,2.5vw,2.2rem);
+  color:var(--black);
+}
+#s4 .arc-row{
+  position:absolute;
+  top:calc(3.5rem + 7rem);
+  left:8%;
+  display:flex;
+  align-items:center;
+  gap:0.8rem;
+  z-index:10;
+}
+#s4 .arc-tag{
+  font-family:'Inter',sans-serif;
+  font-size:0.58rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  padding:0.3rem 0.9rem;
+  border:1px solid rgba(26,26,26,0.2);
+  color:rgba(26,26,26,0.5);
+}
+#s4 .arc-arrow{color:rgba(26,26,26,0.2);font-size:0.9rem;}
+#s4 .pieces{
+  position:absolute;
+  bottom:5%;left:5%;right:5%;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;
+  z-index:10;
+  height:52%;
+}
+#s4 .piece-card{
+  background:var(--black);
+  padding:0 1.8rem 1.8rem;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+#s4 .piece-canvas-wrap{
+  width:100%;
+  height:90px;
+  flex-shrink:0;
+  position:relative;
+  margin-bottom:1.2rem;
+}
+#s4 .piece-canvas-wrap canvas{
+  width:100%;height:100%;
+  display:block;
+}
+#s4 .piece-month{
+  font-size:0.57rem;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:rgba(240,232,216,0.3);
+  margin-bottom:0.7rem;
+}
+#s4 .piece-card h3{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;
+  font-size:clamp(1rem,1.5vw,1.35rem);
+  color:var(--ivory);
+  line-height:1.25;
+  margin-bottom:0.5rem;
+}
+#s4 .piece-card .piece-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:0.75rem;
+  color:rgba(240,232,216,0.4);
+  line-height:1.5;
+  flex:1;
+}
+#s4 .piece-card .co{
+  font-size:0.58rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(90,107,53,0.6);
+  margin-top:1rem;
+}
+#s4 .piece-card:nth-child(1){border-top:2px solid rgba(90,107,53,0.4);}
+#s4 .piece-card:nth-child(2){border-top:2px solid rgba(240,232,216,0.15);}
+#s4 .piece-card:nth-child(3){border-top:2px solid rgba(90,107,53,0.4);}
+
+/* ─────────────────────────────────────
+   SLIDES 5–6  PIECE 1
+───────────────────────────────────── */
+#s5,#s6{background:var(--cream);}
+.detail-slide .main-card{
+  position:absolute;
+  top:8%;left:5%;
+  width:58%;
+  bottom:6%;
+  background:var(--olive);
+  padding:2.8rem 2.8rem 2.8rem 3rem;
+  z-index:10;
+  overflow:hidden;
+}
+.detail-slide .page-info{
+  position:absolute;
+  top:2.5rem;right:3rem;
+  z-index:20;
+  text-align:right;
+}
+.detail-slide .page-info .p-num{
+  font-size:0.58rem;letter-spacing:0.22em;
+  text-transform:uppercase;color:rgba(74,74,66,0.35);
+}
+.detail-slide .main-card .lbl{color:rgba(240,232,216,0.45);margin-bottom:2rem;}
+.detail-slide .main-card h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(1.5rem,2.5vw,2.2rem);
+  color:var(--ivory);
+  line-height:1.15;
+  margin-bottom:0.5rem;
+}
+.detail-slide .main-card .d-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:0.8rem;
+  color:rgba(240,232,216,0.45);
+  margin-bottom:1.8rem;
+}
+.detail-slide .sections{
+  display:grid;
+  grid-template-columns:1fr 1fr;
   gap:1rem 2rem;
 }
-.split-slide .sec-item{
-  padding-top:1rem;
-  border-top:1px solid rgba(26,26,26,0.07);
+.detail-slide .sec-item{
+  padding-top:0.9rem;
+  border-top:1px solid rgba(240,232,216,0.12);
 }
-.split-slide .sec-item h4{
-  font-family:'Inter',sans-serif;font-weight:400;
-  font-size:0.72rem;color:var(--dark);
-  margin-bottom:0.4rem;letter-spacing:0.01em;
+.detail-slide .sec-item h4{
+  font-family:'Inter',sans-serif;
+  font-size:0.7rem;
+  font-weight:400;
+  color:rgba(240,232,216,0.85);
+  margin-bottom:0.4rem;
 }
-.split-slide .sec-item p{
-  font-size:0.7rem;line-height:1.62;
-  color:var(--dark);opacity:0.58;
+.detail-slide .sec-item p{
+  font-size:0.68rem;
+  line-height:1.6;
+  color:rgba(240,232,216,0.45);
+}
+.detail-slide .sec-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.1rem;
+  font-weight:300;
+  color:rgba(240,232,216,0.18);
+  margin-bottom:0.3rem;
 }
 
-/* ===================== SLIDES 7-8 ===================== */
-.s7,.s8{background:var(--peach)}
-.s7 .text-half,.s8 .text-half{background:var(--peach)}
-.s7 h2,.s8 h2{color:var(--dark)}
-.s7 .eyebrow,.s8 .eyebrow{color:var(--slate)}
-.s7 .sec-item,.s8 .sec-item{border-top-color:rgba(26,26,26,0.1)}
-.s7 .sec-item h4,.s8 .sec-item h4{color:var(--dark)}
-.s7 .sec-item p,.s8 .sec-item p{color:var(--dark)}
-
-/* ===================== SLIDES 9-10 ===================== */
-.s9,.s10{background:var(--off)}
-.s9 .img-half,.s10 .img-half{background:var(--dark)}
-
-/* ===================== COMPANY SLIDES ===================== */
-.co-slide{
-  background:var(--off);
-  flex-direction:column;
-  padding:7vh 8%;
+/* Company slides (6,8,10) */
+.company-slide{background:var(--cream);}
+.company-slide .main-card{
+  position:absolute;
+  top:8%;right:5%;
+  width:58%;bottom:6%;
+  background:var(--black);
+  padding:2.8rem 3rem 2.8rem 2.8rem;
+  z-index:10;
+  overflow:auto;
 }
-.co-slide.dark-co{background:var(--dark)}
-.co-slide .co-header{
-  display:flex;align-items:baseline;
-  gap:2rem;margin-bottom:2.5rem;
+.company-slide .main-card .lbl{color:rgba(90,107,53,0.5);margin-bottom:1.8rem;}
+.company-slide .co-card{
+  padding:1.4rem 0;
+  border-bottom:1px solid rgba(240,232,216,0.07);
 }
-.co-slide .co-header .eyebrow{color:var(--slate)}
-.co-slide.dark-co .co-header .eyebrow{color:var(--blue);opacity:0.7}
-.co-slide .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-.co-slide .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8rem}
-.co-card{
-  padding:1.8rem;background:rgba(255,255,255,0.6);
-  border-radius:1px;position:relative;
-  border-top:3px solid var(--blue);
-}
-.dark-co .co-card{
-  background:rgba(255,255,255,0.06);
-  border-top-color:var(--blue);
-}
-.co-card h3{
-  font-family:'Inter',sans-serif;font-weight:400;
-  font-size:0.95rem;color:var(--dark);
+.company-slide .co-card:last-child{border-bottom:none;}
+.company-slide .co-card h3{
+  font-family:'Inter',sans-serif;
+  font-size:0.8rem;
+  font-weight:500;
+  color:var(--ivory);
   margin-bottom:0.2rem;
 }
-.dark-co .co-card h3{color:var(--off)}
-.co-card .co-type{
-  font-size:0.57rem;letter-spacing:0.2em;
-  text-transform:uppercase;color:var(--slate);
-  opacity:0.6;margin-bottom:1.1rem;
+.company-slide .co-card .co-type{
+  font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(90,107,53,0.5);margin-bottom:0.8rem;
 }
-.co-card p{
-  font-size:0.74rem;line-height:1.66;
-  color:var(--dark);opacity:0.72;
-  margin-bottom:0.8rem;
+.company-slide .co-card p{
+  font-size:0.7rem;line-height:1.65;
+  color:rgba(240,232,216,0.5);margin-bottom:0.5rem;
 }
-.dark-co .co-card p{color:var(--off)}
-.co-card .insight{
+.company-slide .co-card .insight{
   font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.85rem;
-  color:var(--blue);
-  padding-top:0.9rem;
-  border-top:1px solid rgba(126,152,189,0.2);
+  font-style:italic;
+  font-size:0.78rem;
+  color:rgba(90,107,53,0.7);
+  padding-top:0.6rem;
+  border-top:1px solid rgba(90,107,53,0.15);
   line-height:1.5;
 }
 
-/* ===================== SLIDE 11 ===================== */
-.s11{background:var(--off);flex-direction:column;padding:7vh 10%}
-.s11 .eyebrow{color:var(--slate);margin-bottom:1.5rem;text-align:center}
-.s11 h2{
+/* ─────────────────────────────────────
+   SLIDES 7–8  PIECE 2
+───────────────────────────────────── */
+#s7,#s8{background:var(--black);}
+#s7 .main-card,#s8 .main-card-alt{
+  position:absolute;
+  top:8%;right:5%;
+  width:58%;bottom:6%;
+  background:var(--ivory);
+  padding:2.8rem 3rem 2.8rem 2.8rem;
+  z-index:10;
+  overflow:hidden;
+}
+#s7 .main-card .lbl{color:rgba(74,74,66,0.5);margin-bottom:2rem;}
+#s7 .main-card h2{
   font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.1rem;
-  color:var(--dark);text-align:center;
-  margin-bottom:3rem;
+  font-weight:300;
+  font-size:clamp(1.5rem,2.5vw,2.2rem);
+  color:var(--black);
+  line-height:1.15;
+  margin-bottom:0.5rem;
 }
-.s11 .grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:1.8rem;max-width:880px;width:100%;margin:0 auto;
-}
-.s11 .thread{
-  padding:1.6rem;
-  background:white;border-radius:1px;
-  position:relative;
-}
-.s11 .thread:nth-child(1){border-top:3px solid var(--blue)}
-.s11 .thread:nth-child(2){border-top:3px solid var(--peach)}
-.s11 .thread:nth-child(3){border-top:3px solid var(--mauve)}
-.s11 .thread:nth-child(4){border-top:3px solid var(--slate)}
-.s11 .thread h4{
-  font-family:'Inter',sans-serif;font-weight:400;
-  font-size:0.72rem;color:var(--dark);
-  margin-bottom:0.7rem;letter-spacing:0.01em;
-}
-.s11 .thread p{
-  font-size:0.73rem;line-height:1.64;
-  color:var(--dark);opacity:0.68;
-  margin-bottom:0.7rem;
-}
-.s11 .conn{
+#s7 .main-card .d-sub{
   font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.8rem;
-  color:var(--slate);
+  font-style:italic;
+  font-size:0.8rem;
+  color:rgba(26,26,26,0.45);
+  margin-bottom:1.8rem;
 }
-
-/* ===================== SLIDE 12 ===================== */
-.s12{background:var(--dark);flex-direction:column;padding:9vh 12%}
-.s12 .eyebrow{color:var(--blue);opacity:0.6;margin-bottom:2rem}
-.s12 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.6rem;
-  color:var(--off);margin-bottom:2rem;
-  line-height:1.2;max-width:680px;
+#s7 .sections{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem 2rem;
 }
-.s12 p{
-  font-size:0.83rem;line-height:1.75;
-  color:var(--off);opacity:0.65;
-  max-width:620px;margin-bottom:1.3rem;
-}
-.s12 .highlight{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:1.15rem;
-  color:var(--peach);
-  max-width:580px;line-height:1.5;
-  margin-top:0.8rem;
-}
-.s12 .stipple-wrap{z-index:1}
-
-/* ===================== SLIDE 13 ===================== */
-.s13{background:var(--off);flex-direction:column;padding:7vh 10%}
-.s13 .eyebrow{color:var(--slate);margin-bottom:1.5rem}
-.s13 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2rem;
-  color:var(--dark);margin-bottom:2.8rem;
-}
-.s13 .grid{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:2rem;max-width:900px;
-}
-.s13 .log{
+#s7 .sec-item{
+  padding-top:0.9rem;
   border-top:1px solid rgba(26,26,26,0.1);
-  padding-top:1.5rem;
 }
-.s13 .log-lbl{
-  font-size:0.58rem;letter-spacing:0.25em;
-  text-transform:uppercase;color:var(--slate);
-  opacity:0.55;margin-bottom:0.8rem;
+#s7 .sec-item h4{
+  font-size:0.7rem;font-weight:400;
+  color:rgba(26,26,26,0.8);margin-bottom:0.4rem;
 }
-.s13 .log-val{
+#s7 .sec-item p{
+  font-size:0.68rem;line-height:1.6;
+  color:rgba(26,26,26,0.45);
+}
+#s7 .sec-num{
   font-family:'Cormorant Garamond',serif;
-  font-size:2rem;font-weight:300;
-  color:var(--dark);margin-bottom:0.5rem;
-}
-.s13 .log p{
-  font-size:0.73rem;line-height:1.55;
-  color:var(--dark);opacity:0.6;
+  font-size:1.1rem;font-weight:300;
+  color:rgba(26,26,26,0.12);margin-bottom:0.3rem;
 }
 
-/* ===================== SLIDE 14 ===================== */
-.s14{
-  background:var(--off);
-  align-items:center;justify-content:center;
-  flex-direction:column;
+/* slide 8 companies */
+#s8{background:var(--black);}
+#s8 .main-card-alt{
+  background:var(--black);border:1px solid rgba(90,107,53,0.2);
+  right:5%;top:8%;
+  width:58%;bottom:6%;
 }
-.s14 .inner{
-  position:relative;z-index:10;
-  display:flex;flex-direction:column;
-  align-items:center;
-  text-align:center;
-  padding:0 15%;
+#s8 .main-card-alt .lbl{color:rgba(90,107,53,0.5);margin-bottom:1.8rem;}
+#s8 .main-card-alt .co-card h3{color:var(--ivory);}
+#s8 .main-card-alt .co-card p{color:rgba(240,232,216,0.45);}
+#s8 .main-card-alt .co-card .co-type{color:rgba(90,107,53,0.5);}
+#s8 .main-card-alt .co-card .insight{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;
+  color:rgba(90,107,53,0.6);padding-top:0.6rem;
+  border-top:1px solid rgba(90,107,53,0.15);line-height:1.5;
 }
-.s14 .eyebrow{color:var(--slate);margin-bottom:2.5rem}
-.s14 .quote{
+
+/* ─────────────────────────────────────
+   SLIDES 9–10  PIECE 3
+───────────────────────────────────── */
+#s9,#s10{background:var(--cream);}
+
+/* ─────────────────────────────────────
+   SLIDE 11 — INTEGRATION
+───────────────────────────────────── */
+#s11{background:var(--cream);}
+#s11 .header{
+  position:absolute;top:3.5rem;left:50%;
+  transform:translateX(-50%);
+  text-align:center;z-index:10;
+}
+#s11 .header .s-lbl{color:rgba(74,74,66,0.4);margin-bottom:1rem;}
+#s11 .header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:clamp(1.5rem,2.5vw,2rem);
+  color:var(--black);
+}
+#s11 .threads{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1.2rem;width:72%;z-index:10;
+}
+#s11 .thread-card{
+  background:var(--black);
+  padding:1.6rem 1.8rem;
+}
+#s11 .thread-card h4{
+  font-family:'Inter',sans-serif;font-size:0.68rem;
+  font-weight:400;color:rgba(90,107,53,0.8);
+  letter-spacing:0.08em;margin-bottom:0.7rem;
+}
+#s11 .thread-card p{
+  font-size:0.7rem;line-height:1.6;
+  color:rgba(240,232,216,0.5);
+}
+#s11 .thread-card .conn{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.72rem;
+  color:rgba(90,107,53,0.45);margin-top:0.8rem;
+}
+
+/* ─────────────────────────────────────
+   SLIDE 12 — WHY AMPLIFY
+───────────────────────────────────── */
+#s12{background:var(--black);}
+#s12 .accent-bar{
+  position:absolute;left:0;top:0;
+  width:5px;height:100%;
+  background:var(--olive);
+  z-index:20;
+}
+#s12 .content{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-45%,-50%);
+  width:64%;z-index:10;
+}
+#s12 .s-lbl{color:rgba(90,107,53,0.45);margin-bottom:2.5rem;}
+#s12 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:clamp(1.8rem,3vw,2.6rem);
+  color:var(--ivory);margin-bottom:2rem;line-height:1.2;
+}
+#s12 p{
+  font-size:0.77rem;line-height:1.75;
+  color:rgba(240,232,216,0.55);margin-bottom:1.2rem;
+  max-width:580px;
+}
+#s12 .highlight{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:1.05rem;
+  color:rgba(90,107,53,0.8);
+  line-height:1.5;max-width:560px;
+  margin-top:1.5rem;padding-top:1.5rem;
+  border-top:1px solid rgba(90,107,53,0.2);
+}
+
+/* ─────────────────────────────────────
+   SLIDE 13 — LOGISTICS
+───────────────────────────────────── */
+#s13{background:var(--cream);}
+#s13 .header{
+  position:absolute;top:3.5rem;left:8%;z-index:10;
+}
+#s13 .header .s-lbl{color:rgba(74,74,66,0.4);margin-bottom:1rem;}
+#s13 .header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:clamp(1.5rem,2.2vw,2rem);
+  color:var(--black);
+}
+#s13 .grid{
+  position:absolute;
+  bottom:7%;left:8%;right:8%;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.5rem 2rem;
+  z-index:10;
+}
+#s13 .log-block{
+  background:var(--black);
+  padding:1.6rem 1.8rem;
+}
+#s13 .log-block .log-lbl{
+  font-size:0.57rem;letter-spacing:0.26em;
+  text-transform:uppercase;
+  color:rgba(90,107,53,0.5);margin-bottom:0.7rem;
+}
+#s13 .log-block .log-val{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2.2rem;
+  color:var(--ivory);line-height:1;
+  margin-bottom:0.5rem;
+}
+#s13 .log-block p{
+  font-size:0.68rem;line-height:1.55;
+  color:rgba(240,232,216,0.4);
+}
+
+/* ─────────────────────────────────────
+   SLIDE 14 — CLOSING
+───────────────────────────────────── */
+#s14{background:var(--cream);}
+#s14 .quote-wrap{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:62%;text-align:center;
+  z-index:10;
+}
+#s14 .closing-quote{
   font-family:'Cormorant Garamond',serif;
   font-style:italic;font-weight:300;
-  font-size:clamp(1.3rem,2.2vw,1.85rem);
-  color:var(--dark);line-height:1.55;
-  max-width:700px;margin-bottom:3rem;
+  font-size:clamp(1.1rem,1.8vw,1.55rem);
+  line-height:1.6;color:var(--black);
+  margin-bottom:2.5rem;
 }
-.s14 .meta{
-  font-size:0.6rem;letter-spacing:0.22em;
-  text-transform:uppercase;color:var(--slate);
-  opacity:0.55;
+#s14 .closing-meta{
+  font-size:0.6rem;letter-spacing:0.25em;
+  text-transform:uppercase;color:rgba(74,74,66,0.4);
 }
 
-/* Fade-in animation */
-@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.slide{animation:fadeSlide 0.5s ease both}
-
+/* Nav dots */
+#nav{
+  position:fixed;right:1.6rem;top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:0.5rem;
+  z-index:1000;
+}
+.nav-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(74,74,66,0.25);
+  cursor:pointer;transition:all 0.3s;
+}
+.nav-dot.active{background:var(--olive);transform:scale(1.4);}
 </style>
 </head>
 <body>
 
-<!-- ===================== SLIDE 1: TITLE ===================== -->
-<div class="slide s1" id="slide-1">
-  <div class="zone-left"></div>
-  <div class="zone-right"></div>
-  <!-- Stipple rose: blue dots on dark bg, positioned on left zone -->
-  <div class="stipple-wrap" style="left:-2%;top:8%;width:52%;height:84%;z-index:3">
-    <canvas id="c1" width="520" height="680"></canvas>
-  </div>
-  <!-- Small botanical fragment top-right -->
-  <div class="stipple-wrap" style="right:2%;top:3%;width:160px;height:160px;z-index:12">
-    <canvas id="c1b" width="160" height="160"></canvas>
-  </div>
-  <div class="text-block">
-    <div class="label eyebrow">Amplify Partners Writing Fellowship</div>
+<!-- ═══════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════ -->
+<div class="slide" id="s1">
+  <canvas class="dot-bg" id="c1"></canvas>
+
+  <!-- Botanical SVG top-right -->
+  <svg class="botanical" style="top:6%;right:5%;width:120px;height:200px;" viewBox="0 0 120 200" fill="none">
+    <path d="M60 200 L60 20" stroke="#1A1A1A" stroke-width="1" opacity="0.18"/>
+    <path d="M60 80 C40 60 20 55 15 40" stroke="#1A1A1A" stroke-width="1" opacity="0.18" fill="none"/>
+    <path d="M60 80 C80 60 100 55 105 40" stroke="#1A1A1A" stroke-width="1" opacity="0.18" fill="none"/>
+    <path d="M60 120 C35 100 18 90 10 70" stroke="#1A1A1A" stroke-width="1" opacity="0.12" fill="none"/>
+    <path d="M60 120 C85 100 102 90 110 70" stroke="#1A1A1A" stroke-width="1" opacity="0.12" fill="none"/>
+    <path d="M60 155 C48 140 38 132 30 120" stroke="#1A1A1A" stroke-width="1" opacity="0.1" fill="none"/>
+    <path d="M60 155 C72 140 82 132 90 120" stroke="#1A1A1A" stroke-width="1" opacity="0.1" fill="none"/>
+    <!-- Tiny 5-petal flower -->
+    <circle cx="60" cy="22" r="2" stroke="#1A1A1A" stroke-width="0.8" opacity="0.2"/>
+    <path d="M60 20 C56 16 53 12 57 10 C61 8 61 14 60 20" stroke="#1A1A1A" stroke-width="0.8" opacity="0.15" fill="none"/>
+    <path d="M60 20 C64 16 67 12 63 10 C59 8 59 14 60 20" stroke="#1A1A1A" stroke-width="0.8" opacity="0.15" fill="none"/>
+    <path d="M60 20 C56 16 52 19 53 23 C55 27 60 23 60 20" stroke="#1A1A1A" stroke-width="0.8" opacity="0.15" fill="none"/>
+    <path d="M60 20 C64 16 68 19 67 23 C65 27 60 23 60 20" stroke="#1A1A1A" stroke-width="0.8" opacity="0.15" fill="none"/>
+  </svg>
+
+  <div class="card card-black main-card" id="s1-card">
+    <div class="t-label lbl">Amplify Partners Writing Fellowship</div>
     <h1>The <em>Generator</em><br>and the<br><em>Discriminator</em></h1>
-    <div class="subtitle">Scientific Intuition<br>in the Age of AI Scientists</div>
-    <div class="meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
+    <div class="sub">Scientific Intuition<br>in the Age of AI Scientists</div>
+    <div class="meta t-label" style="color:rgba(240,232,216,0.28);font-size:0.58rem;">
+      Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series
+    </div>
   </div>
-  <div class="corner-note">72 of 84 Nobel laureates<br>called it intuition</div>
-  <div class="slide-num">01 / 14</div>
+
+  <div class="corner-note">
+    72 of 84 Nobel laureates<br>called it intuition
+  </div>
 </div>
 
-<!-- ===================== SLIDE 2: CORE TENSION ===================== -->
-<div class="slide s2" id="slide-2">
-  <div class="zone-l"></div>
-  <div class="zone-r"></div>
-  <div class="divider-bar"></div>
-  <!-- Geometric dot pattern on left (discriminator side) -->
-  <div class="stipple-wrap" style="left:0;bottom:-5%;width:47%;height:65%;z-index:2">
-    <canvas id="c2l" width="470" height="520"></canvas>
+<!-- ═══════════════════════════════════
+     SLIDE 2 — CORE TENSION
+═══════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="half-left"></div>
+  <div class="half-right"></div>
+  <canvas class="dot-bg" id="c2l" style="width:48%;height:100%;left:0;top:0;position:absolute;z-index:2;"></canvas>
+  <canvas class="dot-bg" id="c2r" style="width:48%;height:100%;right:0;top:0;position:absolute;z-index:2;"></canvas>
+  <div class="divider-bar"><span>vs</span></div>
+
+  <div class="col-text left">
+    <div class="t-label lbl" style="color:rgba(240,232,216,0.35);margin-bottom:1.5rem;font-size:0.57rem;">Discriminator Taste</div>
+    <div class="col-head">Pattern-matching against consensus</div>
+    <p class="col-body">Calibrated against what has already been accepted, published, cited, funded. Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
+    <p class="col-body t-italic t-serif" style="color:rgba(240,232,216,0.3);font-size:0.8rem;">What has already won.</p>
+    <div class="stat-num">100+</div>
+    <div class="stat-lbl t-label">AI companies building discriminators for biology</div>
   </div>
-  <!-- Organic flower on right (generator side) -->
-  <div class="stipple-wrap" style="right:-3%;top:5%;width:55%;height:75%;z-index:2">
-    <canvas id="c2r" width="530" height="580"></canvas>
+
+  <div class="col-text right">
+    <div class="t-label lbl" style="color:rgba(74,74,66,0.45);margin-bottom:1.5rem;font-size:0.57rem;">Generator Taste</div>
+    <div class="col-head">Identifying problems before the field has vocabulary</div>
+    <p class="col-body">Sustaining attention on something unrewarding long enough for it to become rewarding. The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
+    <p class="col-body t-italic t-serif" style="color:rgba(26,26,26,0.3);font-size:0.8rem;">What nobody yet believes matters.</p>
+    <div class="stat-num">0</div>
+    <div class="stat-lbl t-label">AI systems designed to cultivate this capacity</div>
   </div>
-  <div class="col-d">
-    <div class="label eyebrow">Discriminator Taste</div>
-    <h2 class="serif">Pattern-matching against consensus</h2>
-    <p>Calibrated against what has already been accepted, published, cited, funded.</p>
-    <p>Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
-    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.82rem;color:rgba(245,243,239,0.5)">What has already won.</p>
-    <div class="big-num">100+</div>
-    <div class="num-label">AI companies building discriminators for biology</div>
+
+  <div class="t-label page-lbl">The Core Tension</div>
+  <div class="bottom-quote">
+    "They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."
   </div>
-  <div class="col-g">
-    <div class="label eyebrow">Generator Taste</div>
-    <h2 class="serif">Identifying problems before the field has words</h2>
-    <p>Sustaining attention on something unrewarding long enough for it to become rewarding.</p>
-    <p>The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
-    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.82rem;color:rgba(26,26,26,0.45)">What nobody yet believes matters.</p>
-    <div class="big-num">0</div>
-    <div class="num-label">AI systems designed to cultivate this capacity</div>
-  </div>
-  <div class="bottom-quote">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
-  <div class="slide-num" style="color:var(--slate)">02 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 3: WHY NOW ===================== -->
-<div class="slide s3" id="slide-3">
-  <!-- Stipple accent, corner -->
-  <div class="stipple-wrap" style="right:-2%;top:5%;width:280px;height:300px;opacity:0.35;z-index:2">
-    <canvas id="c3" width="280" height="300"></canvas>
-  </div>
+<!-- ═══════════════════════════════════
+     SLIDE 3 — WHY NOW
+═══════════════════════════════════ -->
+<div class="slide" id="s3">
+  <canvas class="dot-bg" id="c3"></canvas>
   <div class="content">
-    <div class="label eyebrow">Why This Matters Now</div>
-    <h2 class="serif">Three converging forces</h2>
+    <div class="t-label s-lbl">Why This Matters Now</div>
+    <h2>Three converging forces</h2>
     <div class="forces">
-      <div class="force">
-        <div class="f-num">01</div>
+      <div class="force-card">
+        <div class="force-num">01</div>
         <h3>The Automation Inflection</h3>
         <p>Self-driving labs at production scale. Ginkgo, Emerald Cloud Lab, Strateos running autonomous experiments. Recursion screening millions of compounds per week.</p>
-        <div class="evidence">Nobel 2024 → Hassabis, Jumper, Baker</div>
+        <div class="ev">Nobel 2024 → Hassabis, Jumper, Baker</div>
       </div>
-      <div class="force">
-        <div class="f-num">02</div>
+      <div class="force-card">
+        <div class="force-num">02</div>
         <h3>The Signal-to-Noise Crisis</h3>
         <p>AI-assisted authorship flooding the literature. Autonomous agents fail 40% of physical tasks. More experiments, not more signal.</p>
-        <div class="evidence">Bergstrom 2026: "do more, less well"</div>
+        <div class="ev">Bergstrom 2026: "do more, less well"</div>
       </div>
-      <div class="force">
-        <div class="f-num">03</div>
+      <div class="force-card">
+        <div class="force-num">03</div>
         <h3>The Missing Piece</h3>
-        <p>No AI scientist system is designed to cultivate generative scientific intuition. All optimize for discriminator performance. The gap is structural, not accidental.</p>
-        <div class="evidence">Guo et al. 2026: ~40% failure rate</div>
+        <p>No AI scientist system designed to cultivate generative scientific intuition. All optimize for discriminator performance. The gap is structural, not accidental.</p>
+        <div class="ev">Guo et al. 2026: ~40% failure rate</div>
       </div>
     </div>
   </div>
-  <div class="slide-num">03 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 4: THREE PIECES ===================== -->
-<div class="slide s4" id="slide-4">
-  <!-- Small stipple images above each column, positioned absolutely -->
-  <div class="stipple-wrap" style="left:10%;top:2%;width:18%;height:22%;z-index:3">
-    <canvas id="c4a" width="200" height="150"></canvas>
+<!-- ═══════════════════════════════════
+     SLIDE 4 — THREE PIECES
+═══════════════════════════════════ -->
+<div class="slide" id="s4">
+  <canvas class="dot-bg" id="c4"></canvas>
+  <div class="header">
+    <div class="t-label s-lbl">The Series</div>
+    <h2>Three pieces. Three months. One argument.</h2>
   </div>
-  <div class="stipple-wrap" style="left:41%;top:1%;width:18%;height:22%;z-index:3">
-    <canvas id="c4b" width="200" height="150"></canvas>
+  <div class="arc-row">
+    <span class="arc-tag">Define</span>
+    <span class="arc-arrow">→</span>
+    <span class="arc-tag">Diagnose</span>
+    <span class="arc-arrow">→</span>
+    <span class="arc-tag">Resolve</span>
   </div>
-  <div class="stipple-wrap" style="right:9%;top:2%;width:18%;height:22%;z-index:3">
-    <canvas id="c4c" width="200" height="150"></canvas>
-  </div>
-  <div class="content">
-    <div class="header">
-      <div class="label eyebrow">The Series</div>
-      <h2 class="serif">Three pieces. Three months. One argument.</h2>
-      <div class="flow">
-        <span class="fstep">Define</span>
-        <span class="arrow">→</span>
-        <span class="fstep">Diagnose</span>
-        <span class="arrow">→</span>
-        <span class="fstep">Resolve</span>
-      </div>
+  <div class="pieces">
+    <div class="piece-card">
+      <div class="piece-canvas-wrap"><canvas id="c4a"></canvas></div>
+      <div class="piece-month t-label">Month 1</div>
+      <h3>The Oracle and the Visionary</h3>
+      <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
+      <div class="co t-label">Recursion · Boltz</div>
     </div>
-    <div class="pieces">
-      <div class="piece">
-        <div class="month">Month 1</div>
-        <h3>The Oracle and the Visionary</h3>
-        <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
-        <div class="cos">Recursion · Boltz</div>
-      </div>
-      <div class="piece">
-        <div class="month">Month 2</div>
-        <h3>The Noise Floor</h3>
-        <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
-        <div class="cos">Modal · LangChain · DatologyAI</div>
-      </div>
-      <div class="piece">
-        <div class="month">Month 3</div>
-        <h3>Designing for Intuition</h3>
-        <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
-        <div class="cos">VeriSIM Life · Antithesis · Scribe</div>
-      </div>
+    <div class="piece-card">
+      <div class="piece-canvas-wrap"><canvas id="c4b"></canvas></div>
+      <div class="piece-month t-label">Month 2</div>
+      <h3>The Noise Floor</h3>
+      <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
+      <div class="co t-label">Modal · LangChain · DatologyAI</div>
+    </div>
+    <div class="piece-card">
+      <div class="piece-canvas-wrap"><canvas id="c4c"></canvas></div>
+      <div class="piece-month t-label">Month 3</div>
+      <h3>Designing for Intuition</h3>
+      <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
+      <div class="co t-label">VeriSIM Life · Antithesis · Scribe</div>
     </div>
   </div>
-  <div class="slide-num" style="color:var(--slate)">04 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 5: PIECE 1 OUTLINE ===================== -->
-<div class="slide s5 split-slide" id="slide-5">
-  <div class="img-half" style="width:40%;background:var(--blue);position:relative">
-    <div class="stipple-wrap" style="left:-5%;top:5%;width:110%;height:90%;z-index:2">
-      <canvas id="c5" width="450" height="720"></canvas>
-    </div>
-  </div>
-  <div class="text-half">
-    <div class="label eyebrow" style="color:var(--blue)">Piece 1 · Month 1</div>
+<!-- ═══════════════════════════════════
+     SLIDE 5 — PIECE 1 OUTLINE
+═══════════════════════════════════ -->
+<div class="slide detail-slide" id="s5">
+  <canvas class="dot-bg" id="c5"></canvas>
+
+  <!-- Botanical leaf accent (right exposed area) -->
+  <svg class="botanical" style="right:4%;bottom:10%;width:140px;height:220px;" viewBox="0 0 140 220" fill="none">
+    <path d="M70 220 L70 10" stroke="#5A6B35" stroke-width="1" opacity="0.2"/>
+    <path d="M70 90 C30 75 10 50 5 20 C40 35 65 60 70 90Z" stroke="#5A6B35" stroke-width="1" opacity="0.15" fill="none"/>
+    <path d="M70 130 C100 115 120 90 125 60 C90 75 72 100 70 130Z" stroke="#5A6B35" stroke-width="1" opacity="0.12" fill="none"/>
+    <path d="M70 160 C50 148 35 135 28 115" stroke="#5A6B35" stroke-width="0.8" opacity="0.1" fill="none"/>
+  </svg>
+
+  <div class="main-card">
+    <div class="t-label lbl">Piece 1 · Month 1 · 8,000–9,000 words</div>
     <h2>The Oracle<br>and the Visionary</h2>
-    <div class="detail-sub">8,000–9,000 words · Establishing the distinction</div>
+    <div class="d-sub">Establishing the distinction</div>
     <div class="sections">
       <div class="sec-item">
-        <h4>1. The Contrast</h4>
-        <p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960.</p>
+        <div class="sec-num">1</div>
+        <h4>The Contrast</h4>
+        <p>Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. Interpolation vs. extrapolation made visceral.</p>
       </div>
       <div class="sec-item">
-        <h4>2. What Laureates Said</h4>
-        <p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — generator taste in action.</p>
+        <div class="sec-num">2</div>
+        <h4>What Laureates Said</h4>
+        <p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p>
       </div>
       <div class="sec-item">
-        <h4>3. Cognitive Science</h4>
-        <p>Klein's RPD model, Dreyfus, Kahneman's expert intuition conditions, Polanyi's tacit knowledge.</p>
+        <div class="sec-num">3</div>
+        <h4>What Cognitive Science Says</h4>
+        <p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge.</p>
       </div>
       <div class="sec-item">
-        <h4>4. What AI Is Actually Learning</h4>
-        <p>Foundation models trained on PDB, published literature, citation patterns. Training distribution ≠ frontier.</p>
+        <div class="sec-num">4</div>
+        <h4>What AI Is Actually Learning</h4>
+        <p>Foundation models trained on PDB, published literature, citation patterns. Calibrated against consensus. Training distribution ≠ the frontier.</p>
       </div>
       <div class="sec-item">
-        <h4>5. The Architecture of the Gap</h4>
-        <p>Discriminator bias at every layer: literature surfacing, experiment suggestion, hypothesis evaluation.</p>
+        <div class="sec-num">5</div>
+        <h4>The Architecture of the Gap</h4>
+        <p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation.</p>
       </div>
       <div class="sec-item">
-        <h4>6. What This Is Not Saying</h4>
-        <p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p>
+        <div class="sec-num">6</div>
+        <h4>What This Is Not Saying</h4>
+        <p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific structural gap.</p>
       </div>
     </div>
   </div>
-  <div class="slide-num">05 / 14</div>
+  <div class="page-info"><div class="p-num">05 / 14</div></div>
 </div>
 
-<!-- ===================== SLIDE 6: PIECE 1 COMPANIES ===================== -->
-<div class="slide s6 co-slide" id="slide-6" style="background:var(--off)">
-  <div class="stipple-wrap" style="right:-3%;bottom:-5%;width:260px;height:260px;opacity:0.2;z-index:1">
-    <canvas id="c6" width="260" height="260"></canvas>
-  </div>
-  <div class="co-header">
-    <div class="label eyebrow" style="color:var(--blue)">Piece 1 · Portfolio Companies</div>
-  </div>
-  <div class="grid-2" style="position:relative;z-index:10">
-    <div class="co-card" style="border-top-color:var(--blue)">
-      <h3>Recursion Pharmaceuticals</h3>
-      <div class="co-type">NASDAQ: RXRX · Digital Biology</div>
-      <p>50PB+ phenomics data. Millions of cellular perturbation experiments per week. BioHive-2 supercomputer. The most complete realization of discriminator-taste science at industrial scale.</p>
-      <p>FAP clinical milestone (Feb 2026). REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
-      <div class="insight">Key question: What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
+<!-- ═══════════════════════════════════
+     SLIDE 6 — PIECE 1 COMPANIES
+═══════════════════════════════════ -->
+<div class="slide company-slide" id="s6">
+  <canvas class="dot-bg" id="c6"></canvas>
+
+  <svg class="botanical" style="left:4%;top:15%;width:100px;height:300px;" viewBox="0 0 100 300" fill="none">
+    <path d="M50 300 L50 10" stroke="#1A1A1A" stroke-width="1" opacity="0.12"/>
+    <path d="M50 100 C25 80 8 60 5 35" stroke="#1A1A1A" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M50 100 C75 80 92 60 95 35" stroke="#1A1A1A" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M50 160 C20 140 5 115 2 90" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M50 160 C80 140 95 115 98 90" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M50 220 C32 205 20 190 15 172" stroke="#1A1A1A" stroke-width="0.8" opacity="0.07" fill="none"/>
+    <path d="M50 220 C68 205 80 190 85 172" stroke="#1A1A1A" stroke-width="0.8" opacity="0.07" fill="none"/>
+  </svg>
+
+  <div class="main-card" style="left:auto;right:5%;top:8%;width:58%;bottom:6%;background:var(--black);padding:2.8rem 3rem 2.8rem 2.8rem;z-index:10;position:absolute;overflow:auto;">
+    <div class="t-label" style="color:rgba(90,107,53,0.5);margin-bottom:1.8rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Piece 1 · Portfolio Companies</div>
+    <div class="co-card" style="padding:1.4rem 0;border-bottom:1px solid rgba(240,232,216,0.07);">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">Recursion Pharmaceuticals</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">NASDAQ: RXRX · Digital Biology</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);margin-bottom:0.5rem;">50PB+ phenomics data. Millions of cellular perturbation experiments per week. BioHive-2 supercomputer. The most complete realization of discriminator-taste science at industrial scale.</p>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.4);">FAP clinical milestone (Feb 2026). REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.65);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.15);line-height:1.5;margin-top:0.6rem;">What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
     </div>
-    <div class="co-card" style="border-top-color:var(--slate)">
-      <h3>Boltz</h3>
-      <div class="co-type">Open-Source · Digital Biology</div>
-      <p>Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
-      <p>The clearest pedagogical exhibit for the discriminator argument: what a foundation model learns is bounded by what has been deposited and characterized.</p>
-      <div class="insight">Key question: What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
+    <div class="co-card" style="padding:1.4rem 0;">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">Boltz</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Open-Source · Digital Biology</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);margin-bottom:0.5rem;">Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.4);">The clearest pedagogical exhibit: what a foundation model learns is bounded by what has been deposited and characterized.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.65);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.15);line-height:1.5;margin-top:0.6rem;">What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
     </div>
   </div>
-  <div class="slide-num" style="color:var(--slate)">06 / 14</div>
+  <div class="page-info" style="position:absolute;top:2.5rem;left:3rem;z-index:20;"><div class="p-num" style="font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(74,74,66,0.35);">06 / 14</div></div>
 </div>
 
-<!-- ===================== SLIDE 7: PIECE 2 OUTLINE ===================== -->
-<div class="slide s7 split-slide" id="slide-7" style="flex-direction:row-reverse">
-  <div class="img-half" style="width:38%;background:var(--slate);position:relative">
-    <div class="stipple-wrap" style="left:-8%;top:3%;width:115%;height:92%;z-index:2">
-      <canvas id="c7" width="440" height="720"></canvas>
+<!-- ═══════════════════════════════════
+     SLIDE 7 — PIECE 2 OUTLINE
+═══════════════════════════════════ -->
+<div class="slide" id="s7">
+  <canvas class="dot-bg" id="c7"></canvas>
+  <div class="main-card" style="position:absolute;top:8%;right:5%;width:58%;bottom:6%;background:var(--ivory);padding:2.8rem 3rem 2.8rem 2.8rem;z-index:10;overflow:hidden;">
+    <div class="t-label" style="color:rgba(74,74,66,0.5);margin-bottom:2rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Piece 2 · Month 2 · 7,500–8,500 words</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(1.5rem,2.5vw,2.2rem);color:var(--black);line-height:1.15;margin-bottom:0.5rem;">The Noise Floor</h2>
+    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:rgba(26,26,26,0.45);margin-bottom:1.8rem;">Diagnosing the crisis</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 2rem;">
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">1</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Throughput Fallacy</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">500 DBTL cycles per week produces data points, not insights. The noise floor rises with the throughput.</p>
+      </div>
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">2</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Failure Modes at Scale</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding the literature.</p>
+      </div>
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">3</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Literature Flood</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">Preprints growing faster than curation capacity. AI-assisted authorship: more things that look like science.</p>
+      </div>
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">4</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Agent Orchestration Problem</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">Agent frameworks handle anomalies as noise. Missing design: generative flexibility at inflection points.</p>
+      </div>
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">5</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Training Culture Problem</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices.</p>
+      </div>
+      <div style="padding-top:0.9rem;border-top:1px solid rgba(26,26,26,0.1);">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:rgba(26,26,26,0.12);margin-bottom:0.3rem;">6</div>
+        <h4 style="font-size:0.7rem;font-weight:400;color:rgba(26,26,26,0.8);margin-bottom:0.4rem;font-family:'Inter',sans-serif;">The Real Filter</h4>
+        <p style="font-size:0.68rem;line-height:1.6;color:rgba(26,26,26,0.45);">In every layer — lab, literature, field, institution — what cuts through noise is generator taste. Human. Unbuilt for.</p>
+      </div>
     </div>
   </div>
-  <div class="text-half" style="background:var(--peach)">
-    <div class="label eyebrow" style="color:var(--slate)">Piece 2 · Month 2</div>
-    <h2 style="color:var(--dark)">The Noise Floor</h2>
-    <div class="detail-sub" style="color:var(--slate)">7,500–8,500 words · Diagnosing the crisis</div>
+  <div style="position:absolute;top:2.5rem;left:3rem;z-index:20;">
+    <div style="font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(240,232,216,0.2);">07 / 14</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 8 — PIECE 2 COMPANIES
+═══════════════════════════════════ -->
+<div class="slide" id="s8">
+  <canvas class="dot-bg" id="c8"></canvas>
+  <div style="position:absolute;top:8%;right:5%;width:62%;bottom:6%;background:rgba(26,26,26,0.95);border:1px solid rgba(90,107,53,0.18);padding:2.8rem 3rem 2.8rem 2.8rem;z-index:10;overflow:auto;">
+    <div class="t-label" style="color:rgba(90,107,53,0.5);margin-bottom:1.8rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Piece 2 · Portfolio Companies</div>
+    <div style="padding:1.4rem 0;border-bottom:1px solid rgba(240,232,216,0.07);">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">Modal</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Serverless Compute</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">What happens to question quality when compute stops being the constraint?</div>
+    </div>
+    <div style="padding:1.4rem 0;border-bottom:1px solid rgba(240,232,216,0.07);">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">LangChain</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Agent Orchestration</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
+    </div>
+    <div style="padding:1.4rem 0;">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">DatologyAI</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Data Curation</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">What would a training dataset look like if optimized for novelty rather than consensus?</div>
+    </div>
+  </div>
+  <div style="position:absolute;top:2.5rem;left:3rem;z-index:20;">
+    <div style="font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(240,232,216,0.18);">08 / 14</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SLIDE 9 — PIECE 3 OUTLINE
+═══════════════════════════════════ -->
+<div class="slide detail-slide" id="s9">
+  <canvas class="dot-bg" id="c9"></canvas>
+
+  <!-- Botanical branch accent -->
+  <svg class="botanical" style="right:3%;top:8%;width:160px;height:260px;" viewBox="0 0 160 260" fill="none">
+    <path d="M80 260 L80 40" stroke="#5A6B35" stroke-width="1" opacity="0.18"/>
+    <path d="M80 60 C50 45 25 35 10 15" stroke="#5A6B35" stroke-width="0.8" opacity="0.14" fill="none"/>
+    <path d="M80 60 C110 45 135 35 150 15" stroke="#5A6B35" stroke-width="0.8" opacity="0.14" fill="none"/>
+    <path d="M80 100 C55 88 35 78 18 55" stroke="#5A6B35" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M80 100 C105 88 125 78 142 55" stroke="#5A6B35" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M80 145 C60 135 42 122 30 103" stroke="#5A6B35" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M80 145 C100 135 118 122 130 103" stroke="#5A6B35" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M80 185 C68 176 55 165 48 150" stroke="#5A6B35" stroke-width="0.8" opacity="0.07" fill="none"/>
+    <path d="M80 185 C92 176 105 165 112 150" stroke="#5A6B35" stroke-width="0.8" opacity="0.07" fill="none"/>
+    <!-- leaf -->
+    <path d="M80 60 C65 50 58 38 62 28 C68 22 78 35 80 60Z" stroke="#5A6B35" stroke-width="0.8" opacity="0.12" fill="none"/>
+  </svg>
+
+  <div class="main-card" style="background:var(--black);top:8%;left:5%;width:58%;bottom:6%;">
+    <div class="t-label lbl" style="color:rgba(90,107,53,0.5);">Piece 3 · Month 3 · 7,000–8,000 words</div>
+    <h2 style="color:var(--ivory);">Designing<br>for Intuition</h2>
+    <div class="d-sub" style="color:rgba(240,232,216,0.4);">The constructive turn</div>
     <div class="sections">
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">1. The Throughput Fallacy</h4>
-        <p style="color:var(--dark)">500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress.</p>
-      </div>
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">2. Failure Modes at Scale</h4>
-        <p style="color:var(--dark)">Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist flooding literature.</p>
-      </div>
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">3. The Literature Flood</h4>
-        <p style="color:var(--dark)">Preprints growing faster than curation capacity. Signal-to-noise ratio decreasing.</p>
-      </div>
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">4. Agent Orchestration Problem</h4>
-        <p style="color:var(--dark)">Agent frameworks handle anomalies as noise, not signal. Coverage and reliability, not generative flexibility.</p>
-      </div>
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">5. The Training Culture Problem</h4>
-        <p style="color:var(--dark)">Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices.</p>
-      </div>
-      <div class="sec-item" style="border-top-color:rgba(26,26,26,0.1)">
-        <h4 style="color:var(--dark)">6. The Real Filter</h4>
-        <p style="color:var(--dark)">In every layer, what cuts through noise is generator taste. The filter is human. Systems aren't building for it.</p>
-      </div>
-    </div>
-  </div>
-  <div class="slide-num" style="color:var(--slate)">07 / 14</div>
-</div>
-
-<!-- ===================== SLIDE 8: PIECE 2 COMPANIES ===================== -->
-<div class="slide s8 co-slide" id="slide-8" style="background:var(--peach)">
-  <div class="stipple-wrap" style="left:-2%;top:-5%;width:220px;height:220px;opacity:0.15;z-index:1">
-    <canvas id="c8" width="220" height="220"></canvas>
-  </div>
-  <div class="co-header">
-    <div class="label eyebrow" style="color:var(--slate)">Piece 2 · Portfolio Companies</div>
-  </div>
-  <div class="grid-3" style="position:relative;z-index:10">
-    <div class="co-card" style="border-top-color:var(--blue);background:rgba(255,255,255,0.55)">
-      <h3>Modal</h3>
-      <div class="co-type">Serverless Compute</div>
-      <p>The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
-      <div class="insight">What happens to question quality when compute stops being the constraint?</div>
-    </div>
-    <div class="co-card" style="border-top-color:var(--slate);background:rgba(255,255,255,0.55)">
-      <h3>LangChain</h3>
-      <div class="co-type">Agent Orchestration</div>
-      <p>LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
-      <div class="insight">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
-    </div>
-    <div class="co-card" style="border-top-color:var(--mauve);background:rgba(255,255,255,0.55)">
-      <h3>DatologyAI</h3>
-      <div class="co-type">Data Curation</div>
-      <p>Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
-      <div class="insight">What would a training dataset look like if optimized for novelty rather than consensus?</div>
-    </div>
-  </div>
-  <div class="slide-num" style="color:var(--slate)">08 / 14</div>
-</div>
-
-<!-- ===================== SLIDE 9: PIECE 3 OUTLINE ===================== -->
-<div class="slide s9 split-slide" id="slide-9">
-  <div class="img-half" style="width:40%;background:var(--dark);position:relative">
-    <div class="stipple-wrap" style="left:-5%;top:3%;width:112%;height:92%;z-index:2">
-      <canvas id="c9" width="460" height="720"></canvas>
-    </div>
-  </div>
-  <div class="text-half" style="background:var(--off)">
-    <div class="label eyebrow" style="color:var(--mauve)">Piece 3 · Month 3</div>
-    <h2 style="color:var(--dark)">Designing<br>for Intuition</h2>
-    <div class="detail-sub" style="color:var(--slate)">7,000–8,000 words · The constructive turn</div>
-    <div class="sections">
       <div class="sec-item">
-        <h4>1. The Constructive Frame</h4>
+        <div class="sec-num">1</div>
+        <h4>The Constructive Frame</h4>
         <p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p>
       </div>
       <div class="sec-item">
-        <h4>2. Designed Friction</h4>
+        <div class="sec-num">2</div>
+        <h4>Designed Friction</h4>
         <p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p>
       </div>
       <div class="sec-item">
-        <h4>3. Generator-Augmented Interfaces</h4>
+        <div class="sec-num">3</div>
+        <h4>Generator-Augmented Interfaces</h4>
         <p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas.</p>
       </div>
       <div class="sec-item">
-        <h4>4. Institutional Protection</h4>
-        <p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p>
+        <div class="sec-num">4</div>
+        <h4>Institutional Protection</h4>
+        <p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship for productive uncertainty.</p>
       </div>
       <div class="sec-item">
-        <h4>5. What an AI Generator Looks Like</h4>
-        <p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs.</p>
+        <div class="sec-num">5</div>
+        <h4>What an AI Generator Would Look Like</h4>
+        <p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p>
       </div>
       <div class="sec-item">
-        <h4>6. The Long Game</h4>
-        <p>Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p>
+        <div class="sec-num">6</div>
+        <h4>The Long Game</h4>
+        <p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p>
       </div>
     </div>
   </div>
-  <div class="slide-num">09 / 14</div>
+  <div class="page-info"><div class="p-num">09 / 14</div></div>
 </div>
 
-<!-- ===================== SLIDE 10: PIECE 3 COMPANIES ===================== -->
-<div class="slide s10 co-slide" id="slide-10" style="background:var(--off)">
-  <div class="stipple-wrap" style="right:-2%;bottom:-5%;width:240px;height:240px;opacity:0.18;z-index:1">
-    <canvas id="c10" width="240" height="240"></canvas>
-  </div>
-  <div class="co-header">
-    <div class="label eyebrow" style="color:var(--mauve)">Piece 3 · Portfolio Companies</div>
-  </div>
-  <div class="grid-3" style="position:relative;z-index:10">
-    <div class="co-card" style="border-top-color:var(--mauve)">
-      <h3>VeriSIM Life</h3>
-      <div class="co-type">Biosimulation</div>
-      <p>BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
-      <div class="insight" style="color:var(--mauve)">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
+<!-- ═══════════════════════════════════
+     SLIDE 10 — PIECE 3 COMPANIES
+═══════════════════════════════════ -->
+<div class="slide company-slide" id="s10">
+  <canvas class="dot-bg" id="c10"></canvas>
+
+  <svg class="botanical" style="left:4%;top:12%;width:100px;height:280px;" viewBox="0 0 100 280" fill="none">
+    <path d="M50 280 L50 20" stroke="#1A1A1A" stroke-width="1" opacity="0.1"/>
+    <path d="M50 80 C20 65 5 45 2 22" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M50 80 C80 65 95 45 98 22" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M50 150 C18 132 3 110 1 88" stroke="#1A1A1A" stroke-width="0.8" opacity="0.07" fill="none"/>
+    <path d="M50 150 C82 132 97 110 99 88" stroke="#1A1A1A" stroke-width="0.8" opacity="0.07" fill="none"/>
+    <path d="M50 210 C30 197 15 180 10 162" stroke="#1A1A1A" stroke-width="0.8" opacity="0.06" fill="none"/>
+    <path d="M50 210 C70 197 85 180 90 162" stroke="#1A1A1A" stroke-width="0.8" opacity="0.06" fill="none"/>
+  </svg>
+
+  <div style="position:absolute;top:8%;right:5%;width:58%;bottom:6%;background:var(--black);padding:2.8rem 3rem 2.8rem 2.8rem;z-index:10;overflow:auto;">
+    <div class="t-label" style="color:rgba(90,107,53,0.5);margin-bottom:1.8rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Piece 3 · Portfolio Companies</div>
+    <div style="padding:1.4rem 0;border-bottom:1px solid rgba(240,232,216,0.07);">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">VeriSIM Life</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Biosimulation</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
     </div>
-    <div class="co-card" style="border-top-color:var(--blue)">
-      <h3>Antithesis</h3>
-      <div class="co-type">Autonomous Testing</div>
-      <p>Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
-      <div class="insight">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
+    <div style="padding:1.4rem 0;border-bottom:1px solid rgba(240,232,216,0.07);">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">Antithesis</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Autonomous Testing</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
     </div>
-    <div class="co-card" style="border-top-color:var(--slate)">
-      <h3>Scribe</h3>
-      <div class="co-type">Workflow Documentation</div>
-      <p>AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
-      <div class="insight">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
+    <div style="padding:1.4rem 0;">
+      <h3 style="font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;color:var(--ivory);margin-bottom:0.2rem;">Scribe</h3>
+      <div style="font-size:0.57rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(90,107,53,0.5);margin-bottom:0.8rem;">Workflow Documentation</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(240,232,216,0.5);">AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(90,107,53,0.6);padding-top:0.6rem;border-top:1px solid rgba(90,107,53,0.12);line-height:1.5;margin-top:0.6rem;">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
     </div>
   </div>
-  <div class="slide-num" style="color:var(--slate)">10 / 14</div>
+  <div style="position:absolute;top:2.5rem;left:3rem;z-index:20;">
+    <div style="font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(74,74,66,0.35);">10 / 14</div>
+  </div>
 </div>
 
-<!-- ===================== SLIDE 11: INTEGRATION ===================== -->
-<div class="slide s11" id="slide-11">
-  <!-- stipple accents -->
-  <div class="stipple-wrap" style="right:2%;top:8%;width:120px;height:120px;opacity:0.18;z-index:1">
-    <canvas id="c11a" width="120" height="120"></canvas>
+<!-- ═══════════════════════════════════
+     SLIDE 11 — INTEGRATION
+═══════════════════════════════════ -->
+<div class="slide" id="s11">
+  <canvas class="dot-bg" id="c11"></canvas>
+  <div class="header" style="top:3.5rem;left:50%;transform:translateX(-50%);z-index:10;text-align:center;">
+    <div class="t-label s-lbl" style="color:rgba(74,74,66,0.4);margin-bottom:1rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Integration</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(1.5rem,2.5vw,2rem);color:var(--black);">How the pieces connect</h2>
   </div>
-  <div class="stipple-wrap" style="left:3%;bottom:8%;width:100px;height:100px;opacity:0.15;z-index:1">
-    <canvas id="c11b" width="100" height="100"></canvas>
-  </div>
-  <div class="label eyebrow" style="text-align:center">Integration</div>
-  <h2 class="serif">How the pieces connect</h2>
-  <div class="grid">
-    <div class="thread">
-      <h4>Recursion ↔ Modal</h4>
-      <p>Throughput side of the argument. Recursion as discriminator science at scale, Modal as the infrastructure enabling that scale.</p>
-      <div class="conn">P1 and P2 in direct conversation</div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-44%);display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;width:72%;z-index:10;">
+    <div style="background:var(--black);padding:1.6rem 1.8rem;">
+      <h4 style="font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:400;color:rgba(90,107,53,0.8);letter-spacing:0.08em;margin-bottom:0.7rem;">Recursion ↔ Modal</h4>
+      <p style="font-size:0.7rem;line-height:1.6;color:rgba(240,232,216,0.5);">Throughput side of the argument. Recursion as discriminator science at scale, Modal as the infrastructure enabling that scale.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:rgba(90,107,53,0.4);margin-top:0.8rem;">P1 and P2 in direct conversation</div>
     </div>
-    <div class="thread">
-      <h4>Boltz ↔ DatologyAI</h4>
-      <p>What a model learns is a function of what's in training data. Boltz's PDB limits connect to DatologyAI's curation question.</p>
-      <div class="conn">P1 diagnosis → P2 mechanism</div>
+    <div style="background:var(--black);padding:1.6rem 1.8rem;">
+      <h4 style="font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:400;color:rgba(90,107,53,0.8);letter-spacing:0.08em;margin-bottom:0.7rem;">Boltz ↔ DatologyAI</h4>
+      <p style="font-size:0.7rem;line-height:1.6;color:rgba(240,232,216,0.5);">What a model learns is a function of what's in training data. Boltz's PDB limits connect to DatologyAI's curation question.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:rgba(90,107,53,0.4);margin-top:0.8rem;">P1 diagnosis → P2 mechanism</div>
     </div>
-    <div class="thread">
-      <h4>LangChain ↔ Antithesis</h4>
-      <p>Agent orchestration that handles anomalies as noise vs. autonomous testing that seeks anomalies as signal.</p>
-      <div class="conn">P2 problem → P3 solution</div>
+    <div style="background:var(--black);padding:1.6rem 1.8rem;">
+      <h4 style="font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:400;color:rgba(90,107,53,0.8);letter-spacing:0.08em;margin-bottom:0.7rem;">LangChain ↔ Antithesis</h4>
+      <p style="font-size:0.7rem;line-height:1.6;color:rgba(240,232,216,0.5);">Agent orchestration that handles anomalies as noise vs. autonomous testing that seeks anomalies as signal.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:rgba(90,107,53,0.4);margin-top:0.8rem;">P2 problem → P3 solution</div>
     </div>
-    <div class="thread">
-      <h4>Productive Struggle Thread</h4>
-      <p>From tacit knowledge (P1) through atrophy under automation (P2) to designed friction (P3). The spine of the series.</p>
-      <div class="conn">Runs through all three pieces</div>
+    <div style="background:var(--olive);padding:1.6rem 1.8rem;">
+      <h4 style="font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:400;color:rgba(240,232,216,0.8);letter-spacing:0.08em;margin-bottom:0.7rem;">Productive Struggle Thread</h4>
+      <p style="font-size:0.7rem;line-height:1.6;color:rgba(240,232,216,0.6);">From tacit knowledge (P1) through atrophy under automation (P2) to designed friction (P3). The spine of the series.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.72rem;color:rgba(240,232,216,0.4);margin-top:0.8rem;">Runs through all three pieces</div>
     </div>
   </div>
-  <div class="slide-num" style="color:var(--slate)">11 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 12: WHY AMPLIFY ===================== -->
-<div class="slide s12" id="slide-12">
-  <!-- Large stipple hand/botanical as subtle background -->
-  <div class="stipple-wrap" style="right:-5%;top:0;width:42%;height:100%;opacity:0.12;z-index:1">
-    <canvas id="c12" width="500" height="800"></canvas>
-  </div>
-  <div style="position:relative;z-index:10;display:flex;flex-direction:column">
-    <div class="label eyebrow">Why This Matters to Amplify</div>
-    <h2 class="serif">The portfolio thesis, extended</h2>
+<!-- ═══════════════════════════════════
+     SLIDE 12 — WHY AMPLIFY
+═══════════════════════════════════ -->
+<div class="slide" id="s12">
+  <canvas class="dot-bg" id="c12"></canvas>
+  <div class="accent-bar"></div>
+  <div class="content">
+    <div class="t-label s-lbl">Why This Matters to Amplify</div>
+    <h2>The portfolio thesis,<br>extended</h2>
     <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
     <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
     <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
   </div>
-  <div class="slide-num">12 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 13: LOGISTICS ===================== -->
-<div class="slide s13" id="slide-13">
-  <div class="label eyebrow">Reporting Plan</div>
-  <h2 class="serif">How I'll build it</h2>
+<!-- ═══════════════════════════════════
+     SLIDE 13 — LOGISTICS
+═══════════════════════════════════ -->
+<div class="slide" id="s13">
+  <canvas class="dot-bg" id="c13"></canvas>
+  <div class="header">
+    <div class="t-label" style="color:rgba(74,74,66,0.4);margin-bottom:1rem;font-size:0.57rem;letter-spacing:0.28em;text-transform:uppercase;">Reporting Plan</div>
+    <h2>How I'll build it</h2>
+  </div>
   <div class="grid">
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Interviews</div>
       <div class="log-val">20–25</div>
       <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
     </div>
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Duration</div>
       <div class="log-val">3 months</div>
-      <p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p>
+      <p>One piece per month. Research, reporting, writing, revision. Progressive argument across the series.</p>
     </div>
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Word Count</div>
       <div class="log-val">~24K</div>
       <p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p>
     </div>
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Portfolio Companies</div>
       <div class="log-val">8</div>
       <p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p>
     </div>
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Bibliography</div>
       <div class="log-val">78</div>
       <p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p>
     </div>
-    <div class="log">
+    <div class="log-block">
       <div class="log-lbl">Builds From</div>
       <div class="log-val">2 pieces</div>
       <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
     </div>
   </div>
-  <!-- small stipple accent -->
-  <div class="stipple-wrap" style="right:3%;top:5%;width:160px;height:160px;opacity:0.12;z-index:1">
-    <canvas id="c13" width="160" height="160"></canvas>
-  </div>
-  <div class="slide-num" style="color:var(--slate)">13 / 14</div>
 </div>
 
-<!-- ===================== SLIDE 14: CLOSING ===================== -->
-<div class="slide s14" id="slide-14">
-  <!-- Tall vertical stippled flower stem, left side -->
-  <div class="stipple-wrap" style="left:5%;top:0;width:180px;height:100%;z-index:2">
-    <canvas id="c14" width="180" height="800"></canvas>
+<!-- ═══════════════════════════════════
+     SLIDE 14 — CLOSING
+═══════════════════════════════════ -->
+<div class="slide" id="s14">
+  <canvas class="dot-bg" id="c14"></canvas>
+
+  <!-- Tall vertical botanical stem -->
+  <svg class="botanical" style="left:50%;transform:translateX(-50%);bottom:0;width:80px;height:35vh;" viewBox="0 0 80 300" fill="none">
+    <path d="M40 300 L40 5" stroke="#1A1A1A" stroke-width="1" opacity="0.15"/>
+    <path d="M40 120 C22 100 12 80 8 55" stroke="#1A1A1A" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M40 120 C58 100 68 80 72 55" stroke="#1A1A1A" stroke-width="0.8" opacity="0.1" fill="none"/>
+    <path d="M40 190 C26 175 16 158 12 138" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <path d="M40 190 C54 175 64 158 68 138" stroke="#1A1A1A" stroke-width="0.8" opacity="0.08" fill="none"/>
+    <!-- bud at top -->
+    <ellipse cx="40" cy="12" rx="5" ry="8" stroke="#1A1A1A" stroke-width="0.8" opacity="0.12" fill="none"/>
+  </svg>
+
+  <!-- Small botanical accent top-left -->
+  <svg class="botanical" style="top:5%;left:4%;width:80px;height:80px;" viewBox="0 0 80 80" fill="none">
+    <path d="M40 40 C20 30 8 15 5 5 C22 12 38 28 40 40Z" stroke="#5A6B35" stroke-width="0.8" opacity="0.2" fill="none"/>
+    <path d="M40 40 C60 30 72 15 75 5 C58 12 42 28 40 40Z" stroke="#5A6B35" stroke-width="0.8" opacity="0.2" fill="none"/>
+    <path d="M40 40 L40 80" stroke="#5A6B35" stroke-width="0.8" opacity="0.15"/>
+  </svg>
+
+  <div class="quote-wrap">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(74,74,66,0.35);margin-bottom:2.5rem;">Closing</div>
+    <div class="closing-quote">
+      "The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."
+    </div>
+    <div class="closing-meta">
+      Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026
+    </div>
   </div>
-  <div class="inner">
-    <div class="label eyebrow">Closing</div>
-    <div class="quote">"The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."</div>
-    <div class="meta">Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026</div>
-  </div>
-  <div class="slide-num" style="color:var(--slate)">14 / 14</div>
 </div>
 
-<!-- Hidden images for CORS pixel sampling -->
-<div style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden">
-  <img id="img-rose"     src="https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-hand"     src="https://images.unsplash.com/photo-1517697471339-4aa32003c11a?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-leaf"     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-wild"     src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-pressed"  src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-fern"     src="https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600" crossOrigin="anonymous" alt="">
-  <img id="img-shadow"   src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600" crossOrigin="anonymous" alt="">
+<!-- NAV DOTS -->
+<div id="nav">
+  <div class="nav-dot active" data-slide="0"></div>
+  <div class="nav-dot" data-slide="1"></div>
+  <div class="nav-dot" data-slide="2"></div>
+  <div class="nav-dot" data-slide="3"></div>
+  <div class="nav-dot" data-slide="4"></div>
+  <div class="nav-dot" data-slide="5"></div>
+  <div class="nav-dot" data-slide="6"></div>
+  <div class="nav-dot" data-slide="7"></div>
+  <div class="nav-dot" data-slide="8"></div>
+  <div class="nav-dot" data-slide="9"></div>
+  <div class="nav-dot" data-slide="10"></div>
+  <div class="nav-dot" data-slide="11"></div>
+  <div class="nav-dot" data-slide="12"></div>
+  <div class="nav-dot" data-slide="13"></div>
 </div>
 
 <script>
-// =============================================
-// PALETTE
-// =============================================
-const C = {
-  blue:  '#7E98BD',
-  slate: '#7787A2',
-  peach: '#E5D09A',
-  mauve: '#B991B6',
-  dark:  '#1a1a1a',
-  off:   '#f5f3ef',
-};
+// ─── UTILITIES ──────────────────────────────────────────────────────────────
+const TAU = Math.PI * 2;
+let t = 0;
 
-function hexToRgb(h){
-  const r=parseInt(h.slice(1,3),16),
-        g=parseInt(h.slice(3,5),16),
-        b=parseInt(h.slice(5,7),16);
-  return [r,g,b];
+function setupCanvas(el) {
+  if (!el) return null;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = el.getBoundingClientRect();
+  const w = rect.width || el.offsetWidth || el.parentElement.offsetWidth;
+  const h = rect.height || el.offsetHeight || el.parentElement.offsetHeight;
+  el.width = w * dpr;
+  el.height = h * dpr;
+  const ctx = el.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, w, h };
 }
 
-// =============================================
-// STIPPLE FROM IMAGE (real photo)
-// =============================================
-function stippleFromImage(canvas, img, dotColor, bgColor, spacing=5, inverse=false){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-
-  // fill background
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0,0,W,H);
-
-  // draw image to offscreen
-  const off = document.createElement('canvas');
-  off.width = W; off.height = H;
-  const octx = off.getContext('2d');
-  octx.drawImage(img, 0, 0, W, H);
-
-  let data;
-  try {
-    data = octx.getImageData(0,0,W,H).data;
-  } catch(e) {
-    // CORS blocked — fall back to procedural
-    stippleProcedural(canvas, dotColor, bgColor, spacing, 'botanical');
-    return;
+// ─── DOT SYSTEM ─────────────────────────────────────────────────────────────
+class DotField {
+  constructor(canvas, config) {
+    this.canvas = canvas;
+    this.cfg = config;
+    this.dots = [];
+    this.init();
   }
-
-  const dc = hexToRgb(dotColor);
-  ctx.fillStyle = dotColor;
-
-  for(let y = spacing/2; y < H; y += spacing){
-    for(let x = spacing/2; x < W; x += spacing){
-      const idx = (Math.floor(y)*W + Math.floor(x))*4;
-      const r = data[idx], g = data[idx+1], b = data[idx+2];
-      // luminance
-      const lum = (0.299*r + 0.587*g + 0.114*b)/255;
-      const t = inverse ? lum : 1-lum;
-      const maxR = spacing*0.45;
-      const radius = t * maxR;
-      if(radius < 0.4) continue;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${dc[0]},${dc[1]},${dc[2]},${0.6+t*0.4})`;
-      ctx.fill();
+  init() {
+    const info = setupCanvas(this.canvas);
+    if (!info) return;
+    this.ctx = info.ctx;
+    this.w = info.w;
+    this.h = info.h;
+    this.buildDots();
+  }
+  buildDots() {
+    const { count, pattern, colors, rMin, rMax } = this.cfg;
+    this.dots = [];
+    for (let i = 0; i < count; i++) {
+      const dot = this.createDot(i, count);
+      this.dots.push(dot);
     }
   }
-}
+  createDot(i, total) {
+    const p = this.cfg.pattern;
+    const w = this.w, h = this.h;
+    let x, y, baseX, baseY, ox, oy, r, color, alpha, phase, amp;
 
-// =============================================
-// PROCEDURAL STIPPLE — botanical shapes
-// =============================================
-function stippleProcedural(canvas, dotColor, bgColor, spacing=5, mode='botanical'){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
+    const colors = this.cfg.colors;
+    color = colors[Math.floor(Math.random() * colors.length)];
+    alpha = 0.08 + Math.random() * 0.55;
+    r = (this.cfg.rMin || 1) + Math.random() * ((this.cfg.rMax || 2.5) - (this.cfg.rMin || 1));
+    phase = Math.random() * TAU;
+    amp = 4 + Math.random() * 14;
 
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0,0,W,H);
-
-  const dc = hexToRgb(dotColor);
-
-  if(mode === 'geometric'){
-    // Ordered grid — discriminator side
-    for(let y = spacing/2; y < H; y += spacing){
-      for(let x = spacing/2; x < W; x += spacing){
-        // distance from center for slight vignette
-        const dx = (x/W)-0.5, dy = (y/H)-0.5;
-        const d = Math.sqrt(dx*dx+dy*dy);
-        const t = Math.max(0, 0.85 - d*1.2);
-        const radius = t * spacing * 0.38;
-        if(radius < 0.3) continue;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(${dc[0]},${dc[1]},${dc[2]},${0.5+t*0.5})`;
-        ctx.fill();
+    if (p === 'bloom') {
+      // spiral bloom — right side
+      const angle = (i / total) * TAU * 5 + Math.random() * 0.8;
+      const radius = 30 + (i / total) * Math.min(w, h) * 0.42 + Math.random() * 20;
+      baseX = w * 0.68 + Math.cos(angle) * radius;
+      baseY = h * 0.5 + Math.sin(angle) * radius;
+      ox = Math.cos(angle + TAU / 4) * amp;
+      oy = Math.sin(angle + TAU / 4) * amp;
+    } else if (p === 'grid') {
+      const cols = Math.ceil(Math.sqrt(total * w / h));
+      const rows = Math.ceil(total / cols);
+      const cx = (i % cols) / (cols - 1) * w;
+      const cy = Math.floor(i / cols) / (rows - 1) * h;
+      baseX = cx + (Math.random() - 0.5) * 8;
+      baseY = cy + (Math.random() - 0.5) * 8;
+      ox = (Math.random() - 0.5) * 3;
+      oy = (Math.random() - 0.5) * 3;
+      amp = 2;
+    } else if (p === 'organic') {
+      baseX = Math.random() * w;
+      baseY = Math.random() * h;
+      ox = Math.cos(baseX * 0.02 + baseY * 0.01) * amp;
+      oy = Math.sin(baseX * 0.01 + baseY * 0.02) * amp;
+    } else if (p === 'converge') {
+      // three clusters
+      const cluster = i % 3;
+      const centers = [[w*0.15, h*0.4],[w*0.5, h*0.6],[w*0.85, h*0.4]];
+      const [cx, cy] = centers[cluster];
+      const spread = Math.random() * 80;
+      const ang = Math.random() * TAU;
+      baseX = cx + Math.cos(ang) * spread;
+      baseY = cy + Math.sin(ang) * spread;
+      const tx = w * 0.5, ty = h * 0.5;
+      ox = (tx - baseX) * 0.05;
+      oy = (ty - baseY) * 0.05;
+    } else if (p === 'crystal') {
+      const ang = (i / total) * TAU * 6;
+      const layer = Math.floor(i / 8);
+      const rad = layer * 22 + 5;
+      baseX = w * 0.5 + Math.cos(ang) * rad + (Math.random()-0.5)*6;
+      baseY = h * 0.5 + Math.sin(ang) * rad + (Math.random()-0.5)*6;
+      ox = 0; oy = 0; amp = 3;
+    } else if (p === 'noise-signal') {
+      baseX = Math.random() * w;
+      baseY = Math.random() * h;
+      if (Math.random() < 0.04) {
+        // bright signal dot
+        alpha = 0.85;
+        r = 2.5 + Math.random() * 1.5;
+        color = '#F0E8D8';
+      } else {
+        alpha = 0.04 + Math.random() * 0.18;
+        r = 0.8 + Math.random() * 1;
       }
-    }
-    return;
-  }
-
-  // botanical: rose curve + petal shapes + organic noise
-  const cx = W*0.5, cy = H*0.52;
-  const baseR = Math.min(W,H)*0.38;
-
-  // generate density field using superposition of rose curves
-  function density(x, y){
-    let total = 0;
-    const shapes = [
-      // large petals
-      {cx:cx, cy:cy, a:baseR, k:3, rot:0, w:1.0},
-      {cx:cx, cy:cy, a:baseR*0.7, k:5, rot:Math.PI/5, w:0.6},
-      // stem hint
-      {cx:cx, cy:cy+baseR*0.5, a:baseR*0.15, k:1, rot:Math.PI/2, w:0.5},
-    ];
-    for(const s of shapes){
-      const rx = x-s.cx, ry = y-s.cy;
-      const angle = Math.atan2(ry, rx) - s.rot;
-      const dist = Math.sqrt(rx*rx+ry*ry);
-      // rose: r = a*cos(k*theta)
-      const rRose = Math.abs(s.a * Math.cos(s.k * angle));
-      const diff = Math.max(0, 1 - Math.abs(dist-rRose)/(s.a*0.22));
-      total += s.w * diff;
-      // also inner fill gradient
-      if(dist < rRose * 0.9){
-        total += s.w * 0.4 * (1 - dist/(rRose*0.9+1));
+      ox = (Math.random()-0.5)*amp;
+      oy = (Math.random()-0.5)*amp;
+    } else if (p === 'dendrite') {
+      // branching outward from center
+      const angle = (i / total) * TAU;
+      const decay = Math.pow(Math.random(), 0.5);
+      const rad = 10 + decay * Math.min(w, h) * 0.46;
+      baseX = w * 0.5 + Math.cos(angle) * rad;
+      baseY = h * 0.5 + Math.sin(angle) * rad;
+      ox = Math.cos(angle) * amp * 0.4;
+      oy = Math.sin(angle) * amp * 0.4;
+    } else if (p === 'merge') {
+      // mix of crystal + organic
+      if (i % 3 === 0) {
+        const ang = (i / total) * TAU * 4;
+        const rad = 20 + Math.random() * Math.min(w,h)*0.35;
+        baseX = w*0.5 + Math.cos(ang)*rad;
+        baseY = h*0.5 + Math.sin(ang)*rad;
+      } else {
+        baseX = Math.random()*w;
+        baseY = Math.random()*h;
       }
+      ox = (Math.random()-0.5)*amp;
+      oy = (Math.random()-0.5)*amp;
+    } else if (p === 'sparse') {
+      baseX = Math.random()*w;
+      baseY = Math.random()*h;
+      alpha *= 0.4;
+      ox = (Math.random()-0.5)*amp;
+      oy = (Math.random()-0.5)*amp;
+    } else if (p === 'calm') {
+      baseX = Math.random()*w;
+      baseY = Math.random()*h;
+      const cx = w*0.5, cy = h*0.5;
+      const dist = Math.sqrt((baseX-cx)**2+(baseY-cy)**2);
+      alpha *= Math.max(0, 1 - dist/Math.max(w,h)*1.2);
+      ox = (Math.random()-0.5)*amp*0.5;
+      oy = (Math.random()-0.5)*amp*0.5;
+    } else {
+      baseX = Math.random()*w;
+      baseY = Math.random()*h;
+      ox = (Math.random()-0.5)*amp;
+      oy = (Math.random()-0.5)*amp;
     }
-    return Math.min(1, total);
+
+    return { baseX, baseY, ox, oy, r, color, alpha, phase, amp };
   }
 
-  for(let y = spacing/2; y < H; y += spacing){
-    for(let x = spacing/2; x < W; x += spacing){
-      // add slight jitter for organic feel
-      const jx = x + (Math.random()-0.5)*spacing*0.3;
-      const jy = y + (Math.random()-0.5)*spacing*0.3;
-      const t = density(jx, jy);
-      const radius = t * spacing * 0.44;
-      if(radius < 0.3) continue;
+  draw(time) {
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.w, this.h);
+    const speed = this.cfg.speed || 0.0004;
+
+    for (const d of this.dots) {
+      const wave = Math.sin(time * speed * TAU + d.phase);
+      const wave2 = Math.cos(time * speed * TAU * 0.7 + d.phase * 1.3);
+      const x = d.baseX + d.ox * wave;
+      const y = d.baseY + d.oy * wave2;
+
+      if (x < -10 || x > this.w + 10 || y < -10 || y > this.h + 10) continue;
+
       ctx.beginPath();
-      ctx.arc(jx, jy, radius, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${dc[0]},${dc[1]},${dc[2]},${0.5+t*0.5})`;
+      ctx.arc(x, y, d.r, 0, TAU);
+      ctx.fillStyle = d.color;
+      ctx.globalAlpha = d.alpha;
       ctx.fill();
     }
+    ctx.globalAlpha = 1;
   }
 }
 
-function stippleProceduralStem(canvas, dotColor, bgColor, spacing=5){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0,0,W,H);
-
-  const dc = hexToRgb(dotColor);
-  const cx = W*0.5;
-
-  function density(x, y){
-    // Vertical stem
-    const stemDist = Math.abs(x-cx)/(W*0.06);
-    const stemD = Math.max(0, 1-stemDist) * (y < H*0.9 ? 0.7 : 0);
-
-    // Two leaves branching off
-    let leafD = 0;
-    const leafPositions = [0.3, 0.55, 0.75];
-    for(const lp of leafPositions){
-      const ly = H*lp;
-      const side = lp % 0.3 < 0.15 ? 1 : -1;
-      const lx = cx + side*(W*0.18);
-      const dx = x-lx, dy = y-ly;
-      const leafR = W*0.14;
-      // elliptical leaf
-      const el = Math.sqrt((dx/(leafR*1.4))**2 + (dy/(leafR*0.7))**2);
-      leafD = Math.max(leafD, Math.max(0, 1-el));
-    }
-
-    // small flower at top
-    const flx = cx, fly = H*0.1;
-    const fr = W*0.22;
-    const angle = Math.atan2(y-fly, x-flx);
-    const dist2 = Math.sqrt((x-flx)**2+(y-fly)**2);
-    const rRose = Math.abs(fr*Math.cos(3*angle));
-    const flowerD = Math.max(0, 1-Math.abs(dist2-rRose)/(fr*0.25));
-
-    return Math.min(1, stemD + leafD*0.9 + flowerD);
+// ─── MINI CANVAS for piece cards ───────────────────────────────────────────
+class MiniDotField {
+  constructor(canvas, pattern, colors) {
+    this.canvas = canvas;
+    this.pattern = pattern;
+    this.colors = colors;
+    this.dots = [];
+    this.init();
   }
-
-  for(let y = spacing/2; y < H; y += spacing){
-    for(let x = spacing/2; x < W; x += spacing){
-      const jx = x + (Math.random()-0.5)*spacing*0.3;
-      const jy = y + (Math.random()-0.5)*spacing*0.3;
-      const t = density(jx, jy);
-      const radius = t * spacing * 0.44;
-      if(radius < 0.3) continue;
+  init() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = this.canvas.offsetWidth || 200;
+    const h = this.canvas.offsetHeight || 90;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.ctx = this.canvas.getContext('2d');
+    this.ctx.scale(dpr, dpr);
+    this.w = w; this.h = h;
+    this.build();
+  }
+  build() {
+    const count = 180;
+    const w = this.w, h = this.h;
+    for (let i = 0; i < count; i++) {
+      let x, y, ox, oy, r, alpha, phase;
+      phase = Math.random() * TAU;
+      r = 0.8 + Math.random() * 1.5;
+      alpha = 0.15 + Math.random() * 0.5;
+      if (this.pattern === 'crystal') {
+        const ang = (i/count)*TAU*5;
+        const layer = Math.floor(i/6);
+        const rad = layer*10+3;
+        x = w/2 + Math.cos(ang)*rad;
+        y = h/2 + Math.sin(ang)*rad;
+        ox = 0; oy = 0;
+      } else if (this.pattern === 'noise') {
+        x = Math.random()*w; y = Math.random()*h;
+        if (Math.random()<0.05){r=2;alpha=0.9;}
+        ox=(Math.random()-0.5)*5; oy=(Math.random()-0.5)*5;
+      } else {
+        // dendrite
+        const ang = (i/count)*TAU;
+        const rad = 5 + Math.pow(Math.random(),0.6)*(Math.min(w,h)*0.42);
+        x = w/2+Math.cos(ang)*rad;
+        y = h/2+Math.sin(ang)*rad;
+        ox=Math.cos(ang)*4; oy=Math.sin(ang)*4;
+      }
+      const color = this.colors[Math.floor(Math.random()*this.colors.length)];
+      this.dots.push({x,y,ox,oy,r,alpha,color,phase});
+    }
+  }
+  draw(time) {
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,this.w,this.h);
+    for(const d of this.dots){
+      const w=Math.sin(time*0.0004*TAU+d.phase);
+      const w2=Math.cos(time*0.0003*TAU+d.phase*1.2);
+      const x=d.x+d.ox*w, y=d.y+d.oy*w2;
       ctx.beginPath();
-      ctx.arc(jx, jy, radius, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${dc[0]},${dc[1]},${dc[2]},${0.45+t*0.55})`;
+      ctx.arc(x,y,d.r,0,TAU);
+      ctx.fillStyle=d.color;
+      ctx.globalAlpha=d.alpha;
       ctx.fill();
     }
+    ctx.globalAlpha=1;
   }
 }
 
-function stippleProceduralFrag(canvas, dotColor, bgColor, spacing=4, fragType='leaf'){
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0,0,W,H);
+// ─── BUILD ALL FIELDS ───────────────────────────────────────────────────────
+const CREAM='#F0EAE0', OLIVE='#5A6B35', BLACK='#1A1A1A', IVORY='#F0E8D8', GREY='#4A4A42';
 
-  const dc = hexToRgb(dotColor);
-  const cx = W*0.5, cy = H*0.5;
+let fields = [];
+let miniFields = [];
 
-  function density(x, y){
-    if(fragType === 'leaf'){
-      // elongated leaf shape
-      const dx = x-cx, dy = y-cy;
-      const angle = Math.atan2(dy,dx);
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      const maxR = Math.min(W,H)*0.44 * (1 - 0.4*Math.abs(Math.cos(angle)));
-      return Math.max(0, 1 - dist/maxR);
-    }
-    if(fragType === 'circle'){
-      const dist = Math.sqrt((x-cx)**2+(y-cy)**2);
-      return Math.max(0, 1-dist/(Math.min(W,H)*0.43));
-    }
-    // scatter dots
-    const dist = Math.sqrt((x-cx)**2+(y-cy)**2);
-    const t = Math.max(0, 1-dist/(Math.min(W,H)*0.5));
-    return t * (Math.random() < 0.6 ? 1 : 0);
+function initAll() {
+  // Slide 1 — bloom on cream bg, dark dots
+  const c1 = document.getElementById('c1');
+  if(c1) fields.push(new DotField(c1, {
+    count:650, pattern:'bloom', rMin:1, rMax:2.8, speed:0.35,
+    colors:[OLIVE,'#3D5228','#6B7F40','#4A5A30']
+  }));
+
+  // Slide 2 — left: rigid grid (dark dots on black); right: organic (dark dots on cream)
+  const c2l = document.getElementById('c2l');
+  if(c2l){
+    c2l.style.width='48%';c2l.style.height='100%';
+    fields.push(new DotField(c2l,{count:500,pattern:'grid',rMin:0.8,rMax:1.8,speed:0.08,colors:['rgba(240,232,216,0.5)','rgba(90,107,53,0.4)']}));
+  }
+  const c2r = document.getElementById('c2r');
+  if(c2r){
+    c2r.style.width='48%';c2r.style.height='100%';
+    fields.push(new DotField(c2r,{count:500,pattern:'organic',rMin:1,rMax:2.5,speed:0.5,colors:[GREY,'#3A3A34','#5A6B35']}));
   }
 
-  for(let y = spacing/2; y < H; y += spacing){
-    for(let x = spacing/2; x < W; x += spacing){
-      const jx = x + (Math.random()-0.5)*spacing*0.25;
-      const jy = y + (Math.random()-0.5)*spacing*0.25;
-      const t = density(jx, jy);
-      const radius = t * spacing * 0.42;
-      if(radius < 0.3) continue;
-      ctx.beginPath();
-      ctx.arc(jx, jy, radius, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${dc[0]},${dc[1]},${dc[2]},${0.45+t*0.55})`;
-      ctx.fill();
-    }
-  }
+  // Slide 3 — converge on black
+  const c3=document.getElementById('c3');
+  if(c3) fields.push(new DotField(c3,{count:700,pattern:'converge',rMin:1,rMax:2.5,speed:0.4,colors:['rgba(90,107,53,0.4)','rgba(240,232,216,0.12)','rgba(90,107,53,0.2)']}));
+
+  // Slide 4 — calm organic cream
+  const c4=document.getElementById('c4');
+  if(c4) fields.push(new DotField(c4,{count:400,pattern:'calm',rMin:1,rMax:2,speed:0.3,colors:[GREY,'#3A3A34',OLIVE]}));
+
+  // Mini canvases inside piece cards
+  const c4a=document.getElementById('c4a');
+  if(c4a) miniFields.push(new MiniDotField(c4a,'crystal',['rgba(240,232,216,0.6)','rgba(90,107,53,0.5)']));
+  const c4b=document.getElementById('c4b');
+  if(c4b) miniFields.push(new MiniDotField(c4b,'noise',['rgba(240,232,216,0.5)']));
+  const c4c=document.getElementById('c4c');
+  if(c4c) miniFields.push(new MiniDotField(c4c,'dendrite',['rgba(90,107,53,0.6)','rgba(240,232,216,0.4)']));
+
+  // Slide 5 — crystal on cream
+  const c5=document.getElementById('c5');
+  if(c5) fields.push(new DotField(c5,{count:300,pattern:'crystal',rMin:1,rMax:2.2,speed:0.2,colors:[GREY,'rgba(90,107,53,0.35)','rgba(26,26,26,0.25)']}));
+
+  // Slide 6 — organic on cream
+  const c6=document.getElementById('c6');
+  if(c6) fields.push(new DotField(c6,{count:350,pattern:'organic',rMin:1,rMax:2,speed:0.3,colors:[GREY,OLIVE,'rgba(74,74,66,0.4)']}));
+
+  // Slide 7 — noise-signal on black
+  const c7=document.getElementById('c7');
+  if(c7) fields.push(new DotField(c7,{count:700,pattern:'noise-signal',rMin:0.8,rMax:2,speed:0.25,colors:['rgba(240,232,216,0.35)','rgba(90,107,53,0.3)']}));
+
+  // Slide 8 — noise on black
+  const c8=document.getElementById('c8');
+  if(c8) fields.push(new DotField(c8,{count:600,pattern:'noise-signal',rMin:0.8,rMax:2,speed:0.3,colors:['rgba(90,107,53,0.3)','rgba(240,232,216,0.2)']}));
+
+  // Slide 9 — dendrite on cream
+  const c9=document.getElementById('c9');
+  if(c9) fields.push(new DotField(c9,{count:500,pattern:'dendrite',rMin:1,rMax:2.5,speed:0.35,colors:[GREY,OLIVE,'rgba(90,107,53,0.3)']}));
+
+  // Slide 10 — dendrite on cream
+  const c10=document.getElementById('c10');
+  if(c10) fields.push(new DotField(c10,{count:450,pattern:'dendrite',rMin:1,rMax:2,speed:0.3,colors:[GREY,'rgba(90,107,53,0.35)']}));
+
+  // Slide 11 — merge on cream
+  const c11=document.getElementById('c11');
+  if(c11) fields.push(new DotField(c11,{count:550,pattern:'merge',rMin:1,rMax:2.2,speed:0.4,colors:[GREY,OLIVE,'rgba(26,26,26,0.2)']}));
+
+  // Slide 12 — sparse on black
+  const c12=document.getElementById('c12');
+  if(c12) fields.push(new DotField(c12,{count:300,pattern:'sparse',rMin:1,rMax:2,speed:0.25,colors:['rgba(90,107,53,0.3)','rgba(240,232,216,0.12)']}));
+
+  // Slide 13 — calm on cream
+  const c13=document.getElementById('c13');
+  if(c13) fields.push(new DotField(c13,{count:250,pattern:'calm',rMin:1,rMax:1.8,speed:0.2,colors:[GREY,'rgba(90,107,53,0.3)']}));
+
+  // Slide 14 — calm gentle on cream
+  const c14=document.getElementById('c14');
+  if(c14) fields.push(new DotField(c14,{count:400,pattern:'calm',rMin:1,rMax:2,speed:0.22,colors:[GREY,OLIVE,'rgba(74,74,66,0.3)']}));
 }
 
-// =============================================
-// TRY IMAGE STIPPLE, FALLBACK TO PROCEDURAL
-// =============================================
-function tryStipple(canvas, imgEl, dotColor, bgColor, spacing, inverse, fallback){
-  function doIt(){
-    try {
-      // create temp canvas to test CORS
-      const test = document.createElement('canvas');
-      test.width = 4; test.height = 4;
-      const tc = test.getContext('2d');
-      tc.drawImage(imgEl, 0,0,4,4);
-      tc.getImageData(0,0,1,1); // throws if CORS blocked
-      stippleFromImage(canvas, imgEl, dotColor, bgColor, spacing, inverse);
-    } catch(e){
-      fallback();
-    }
+// ─── ANIMATION LOOP ──────────────────────────────────────────────────────────
+let lastT = 0;
+function loop(ts) {
+  // Target ~30fps
+  if (ts - lastT > 33) {
+    lastT = ts;
+    for (const f of fields) f.draw(ts);
+    for (const f of miniFields) f.draw(ts);
   }
-
-  if(imgEl.complete && imgEl.naturalWidth > 0){
-    doIt();
-  } else {
-    imgEl.onload = doIt;
-    imgEl.onerror = fallback;
-  }
+  requestAnimationFrame(loop);
 }
 
-// =============================================
-// RENDER ALL CANVASES
-// =============================================
-window.addEventListener('load', function(){
+// ─── NAV DOTS ────────────────────────────────────────────────────────────────
+const slides = document.querySelectorAll('.slide');
+const navDots = document.querySelectorAll('.nav-dot');
 
-  // Slide 1 — Rose, blue dots on dark bg
-  const imgRose = document.getElementById('img-rose');
-  tryStipple(
-    document.getElementById('c1'), imgRose,
-    C.blue, C.dark, 5, false,
-    ()=>stippleProcedural(document.getElementById('c1'), C.blue, C.dark, 5, 'botanical')
-  );
-  // Slide 1b — small botanical fragment top-right
-  stippleProceduralFrag(document.getElementById('c1b'), C.blue, C.off, 4, 'leaf');
+function updateNav() {
+  const scrollY = window.scrollY;
+  const h = window.innerHeight;
+  const idx = Math.round(scrollY / h);
+  navDots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
 
-  // Slide 2 left — geometric dot pattern (discriminator)
-  stippleProcedural(document.getElementById('c2l'), C.peach, C.slate, 6, 'geometric');
-  // Slide 2 right — organic flower (generator)
-  const imgWild = document.getElementById('img-wild');
-  tryStipple(
-    document.getElementById('c2r'), imgWild,
-    C.slate, C.peach, 5, false,
-    ()=>stippleProcedural(document.getElementById('c2r'), C.slate, C.peach, 5, 'botanical')
-  );
-
-  // Slide 3 corner — leaf fragment
-  stippleProceduralFrag(document.getElementById('c3'), C.blue, C.dark, 5, 'leaf');
-
-  // Slide 4 — three small botanical images above columns
-  const imgFern = document.getElementById('img-fern');
-  tryStipple(
-    document.getElementById('c4a'), imgFern,
-    C.blue, C.off, 4, false,
-    ()=>stippleProceduralFrag(document.getElementById('c4a'), C.blue, C.off, 4, 'leaf')
-  );
-  const imgPressed = document.getElementById('img-pressed');
-  tryStipple(
-    document.getElementById('c4b'), imgPressed,
-    C.mauve, C.off, 4, false,
-    ()=>stippleProceduralFrag(document.getElementById('c4b'), C.mauve, C.off, 4, 'circle')
-  );
-  const imgLeaf = document.getElementById('img-leaf');
-  tryStipple(
-    document.getElementById('c4c'), imgLeaf,
-    C.slate, C.off, 4, false,
-    ()=>stippleProceduralFrag(document.getElementById('c4c'), C.slate, C.off, 4, 'leaf')
-  );
-
-  // Slide 5 — vista blue + off-white, botanical
-  tryStipple(
-    document.getElementById('c5'), imgFern,
-    C.off, C.blue, 5, true,
-    ()=>stippleProcedural(document.getElementById('c5'), C.off, C.blue, 5, 'botanical')
-  );
-
-  // Slide 6 — corner fragment
-  stippleProceduralFrag(document.getElementById('c6'), C.blue, C.off, 4, 'circle');
-
-  // Slide 7 — slate + peach duotone
-  tryStipple(
-    document.getElementById('c7'), imgWild,
-    C.peach, C.slate, 5, false,
-    ()=>stippleProcedural(document.getElementById('c7'), C.peach, C.slate, 5, 'botanical')
-  );
-
-  // Slide 8 — corner fragment
-  stippleProceduralFrag(document.getElementById('c8'), C.slate, C.peach, 4, 'leaf');
-
-  // Slide 9 — dusty mauve + off-white
-  const imgShadow = document.getElementById('img-shadow');
-  tryStipple(
-    document.getElementById('c9'), imgShadow,
-    C.mauve, C.dark, 5, false,
-    ()=>stippleProcedural(document.getElementById('c9'), C.mauve, C.dark, 5, 'botanical')
-  );
-
-  // Slide 10 — corner fragment
-  stippleProceduralFrag(document.getElementById('c10'), C.mauve, C.off, 4, 'circle');
-
-  // Slide 11 — small accents
-  stippleProceduralFrag(document.getElementById('c11a'), C.blue, C.off, 3, 'leaf');
-  stippleProceduralFrag(document.getElementById('c11b'), C.mauve, C.off, 3, 'circle');
-
-  // Slide 12 — large background stipple hand
-  const imgHand = document.getElementById('img-hand');
-  tryStipple(
-    document.getElementById('c12'), imgHand,
-    C.blue, C.dark, 6, false,
-    ()=>stippleProcedural(document.getElementById('c12'), C.blue, C.dark, 6, 'botanical')
-  );
-
-  // Slide 13 — corner accent
-  stippleProceduralFrag(document.getElementById('c13'), C.slate, C.off, 4, 'leaf');
-
-  // Slide 14 — tall vertical stem with flower
-  stippleProceduralStem(document.getElementById('c14'), C.slate, C.off, 4);
-
+navDots.forEach(d => {
+  d.addEventListener('click', () => {
+    const idx = parseInt(d.dataset.slide);
+    window.scrollTo({ top: idx * window.innerHeight, behavior: 'smooth' });
+  });
 });
 
-// =============================================
-// KEYBOARD NAVIGATION
-// =============================================
-document.addEventListener('keydown', function(e){
-  const slides = document.querySelectorAll('.slide');
-  const scroll = document.documentElement.scrollTop || document.body.scrollTop;
-  const H = window.innerHeight;
-  const cur = Math.round(scroll / H);
+window.addEventListener('scroll', updateNav, { passive: true });
 
-  if(e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown'){
+// ─── KEYBOARD NAV ────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const scrollY = window.scrollY;
+  const h = window.innerHeight;
+  const current = Math.round(scrollY / h);
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
     e.preventDefault();
-    const next = Math.min(cur+1, slides.length-1);
-    slides[next].scrollIntoView({behavior:'smooth'});
-  } else if(e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp'){
+    const next = Math.min(slides.length - 1, current + 1);
+    window.scrollTo({ top: next * h, behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
     e.preventDefault();
-    const prev = Math.max(cur-1, 0);
-    slides[prev].scrollIntoView({behavior:'smooth'});
-  } else if(e.key === 'Home'){
-    e.preventDefault();
-    slides[0].scrollIntoView({behavior:'smooth'});
-  } else if(e.key === 'End'){
-    e.preventDefault();
-    slides[slides.length-1].scrollIntoView({behavior:'smooth'});
+    const prev = Math.max(0, current - 1);
+    window.scrollTo({ top: prev * h, behavior: 'smooth' });
   }
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Small delay to let layout settle
+  setTimeout(() => {
+    initAll();
+    requestAnimationFrame(loop);
+  }, 80);
 });
 </script>
 </body>
