@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Generator and the Discriminator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cream: #EDE9D8;
+  --bone: #E8E4DA;
+  --sage: #8A9A6B;
+  --umber: #6B5D3F;
+  --moss: #3D4A2E;
+  --coral: #E85D3D;
+  --rose: #D98BA0;
+  --periwinkle: #7B7FC4;
+  --mint: #7FC4A8;
+  --ochre: #C4A855;
+  --salmon: #E89B8B;
+  --dark: #2A2622;
+  --translucent: rgba(237, 233, 216, 0.85);
+}
+
+html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+.slide {
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grain overlay */
+.slide::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.06;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+  z-index: 100;
+}
+
+.serif { font-family: 'Cormorant Garamond', serif; }
+.italic { font-style: italic; }
+.sans { font-family: 'Inter', sans-serif; }
+
+.label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--umber);
+}
+
+.annotation {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--umber);
+  opacity: 0.8;
+}
+
+/* Leader lines */
+.leader {
+  position: absolute;
+  border-top: 1px solid rgba(106, 93, 63, 0.3);
+}
+
+/* Bounding box highlight */
+.bbox {
+  border: 1.5px solid var(--ochre);
+  padding: 1.2rem 1.5rem;
+  position: relative;
+}
+
+.bbox::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: -4px;
+  width: 8px; height: 8px;
+  border-top: 1.5px solid var(--ochre);
+  border-left: 1.5px solid var(--ochre);
+}
+
+.bbox::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; right: -4px;
+  width: 8px; height: 8px;
+  border-bottom: 1.5px solid var(--ochre);
+  border-right: 1.5px solid var(--ochre);
+}
+
+/* Color blocks */
+.block {
+  position: absolute;
+  mix-blend-mode: multiply;
+  opacity: 0.15;
+}
+
+/* ========== SLIDE 1: TITLE ========== */
+.slide-1 {
+  background: var(--cream);
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.slide-1 .color-wash {
+  position: absolute;
+  top: 0; right: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 50%, transparent 100%);
+  opacity: 0.08;
+}
+
+.slide-1 .title-block {
+  position: relative;
+  z-index: 2;
+  text-align: left;
+  max-width: 70%;
+  padding-left: 10%;
+}
+
+.slide-1 h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.15;
+  color: var(--dark);
+  margin-bottom: 1.5rem;
+}
+
+.slide-1 h1 em {
+  color: var(--sage);
+  font-style: italic;
+}
+
+.slide-1 .subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  color: var(--umber);
+  margin-bottom: 3rem;
+  max-width: 500px;
+}
+
+.slide-1 .meta {
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.7;
+}
+
+.slide-1 .corner-mark {
+  position: absolute;
+  bottom: 3rem;
+  right: 4rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--sage);
+  opacity: 0.5;
+}
+
+/* Decorative botanical line */
+.slide-1 .stem {
+  position: absolute;
+  left: 8%;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--sage), transparent);
+  opacity: 0.2;
+}
+
+.slide-1 .stem-dot {
+  position: absolute;
+  left: calc(8% - 3px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--sage);
+  opacity: 0.3;
+}
+
+/* ========== SLIDE 2: CORE TENSION ========== */
+.slide-2 {
+  background: var(--cream);
+}
+
+.slide-2 .content {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  max-width: 85%;
+  width: 100%;
+  align-items: start;
+  gap: 0;
+  padding: 5vh 0;
+}
+
+.slide-2 .col {
+  padding: 3rem;
+}
+
+.slide-2 .col-left {
+  background: rgba(123, 127, 196, 0.06);
+  border-radius: 2px;
+  position: relative;
+}
+
+.slide-2 .col-right {
+  background: rgba(138, 154, 107, 0.06);
+  border-radius: 2px;
+  position: relative;
+}
+
+.slide-2 .divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--umber);
+  opacity: 0.4;
+  position: relative;
+}
+
+.slide-2 .divider::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--umber), transparent);
+  opacity: 0.2;
+}
+
+.slide-2 h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.slide-2 .col-left h2 { color: var(--periwinkle); }
+.slide-2 .col-right h2 { color: var(--sage); }
+
+.slide-2 p {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--dark);
+  opacity: 0.8;
+  margin-bottom: 1rem;
+}
+
+.slide-2 .stat {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin-top: 1.5rem;
+}
+
+.slide-2 .stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.6;
+  margin-top: 0.3rem;
+}
+
+.slide-2 .page-label {
+  position: absolute;
+  top: 2rem;
+  left: 4rem;
+}
+
+.slide-2 .bottom-line {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 600px;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--umber);
+  opacity: 0.7;
+  line-height: 1.6;
+}
+
+/* ========== SLIDE 3: WHY NOW ========== */
+.slide-3 {
+  background: var(--dark);
+  color: var(--cream);
+}
+
+.slide-3 .content {
+  max-width: 75%;
+  position: relative;
+  z-index: 2;
+}
+
+.slide-3 .wash {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 40%;
+  background: linear-gradient(to top, var(--moss), transparent);
+  opacity: 0.3;
+}
+
+.slide-3 .wash-2 {
+  position: absolute;
+  top: 0; right: 0;
+  width: 35%; height: 50%;
+  background: radial-gradient(ellipse, var(--periwinkle), transparent);
+  opacity: 0.06;
+}
+
+.slide-3 h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2.8rem;
+  margin-bottom: 3rem;
+  color: var(--bone);
+}
+
+.slide-3 .forces {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+}
+
+.slide-3 .force {
+  border-top: 1px solid rgba(237, 233, 216, 0.15);
+  padding-top: 1.5rem;
+}
+
+.slide-3 .force-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--sage);
+  opacity: 0.6;
+  margin-bottom: 0.8rem;
+}
+
+.slide-3 .force h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--bone);
+}
+
+.slide-3 .force p {
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: var(--bone);
+  opacity: 0.6;
+}
+
+.slide-3 .force .evidence {
+  margin-top: 1rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--salmon);
+  opacity: 0.8;
+}
+
+/* ========== SLIDE 4: THREE PIECES ARC ========== */
+.slide-4 {
+  background: var(--cream);
+  flex-direction: column;
+}
+
+.slide-4 .content {
+  max-width: 80%;
+  width: 100%;
+}
+
+.slide-4 .arc-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.slide-4 .arc-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2.2rem;
+  color: var(--dark);
+  margin-bottom: 0.8rem;
+}
+
+.slide-4 .arc-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.slide-4 .arc-step {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.4rem 1.2rem;
+  border-radius: 2px;
+}
+
+.slide-4 .arc-step:nth-child(1) { background: rgba(123,127,196,0.1); color: var(--periwinkle); }
+.slide-4 .arc-step:nth-child(3) { background: rgba(232,93,61,0.08); color: var(--coral); }
+.slide-4 .arc-step:nth-child(5) { background: rgba(138,154,107,0.1); color: var(--sage); }
+.slide-4 .arc-arrow { color: var(--umber); opacity: 0.3; font-size: 1.2rem; }
+
+.slide-4 .pieces {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+}
+
+.slide-4 .piece {
+  padding: 2rem;
+  position: relative;
+}
+
+.slide-4 .piece::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40px; height: 1px;
+}
+
+.slide-4 .piece:nth-child(1)::before { background: var(--periwinkle); }
+.slide-4 .piece:nth-child(2)::before { background: var(--coral); }
+.slide-4 .piece:nth-child(3)::before { background: var(--sage); }
+
+.slide-4 .piece .month {
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.5;
+  margin-bottom: 0.8rem;
+}
+
+.slide-4 .piece h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+
+.slide-4 .piece .piece-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--umber);
+  opacity: 0.7;
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+}
+
+.slide-4 .piece .companies {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sage);
+  opacity: 0.6;
+}
+
+/* ========== SLIDES 5-10: PIECE DETAILS ========== */
+.slide-detail {
+  background: var(--cream);
+  flex-direction: column;
+  padding: 6vh 10%;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.slide-detail .piece-indicator {
+  position: absolute;
+  top: 2.5rem;
+  left: 4rem;
+}
+
+.slide-detail .slide-num {
+  position: absolute;
+  top: 2.5rem;
+  right: 4rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--umber);
+  opacity: 0.4;
+}
+
+.slide-detail h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2.4rem;
+  margin-bottom: 0.5rem;
+  margin-top: 4rem;
+  line-height: 1.2;
+}
+
+.slide-detail .detail-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--umber);
+  opacity: 0.7;
+  margin-bottom: 2.5rem;
+}
+
+.slide-detail .sections {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem 3rem;
+  width: 100%;
+}
+
+.slide-detail .section-item {
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(42, 38, 34, 0.08);
+}
+
+.slide-detail .section-item .sec-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--umber);
+  opacity: 0.3;
+  float: left;
+  margin-right: 1rem;
+  line-height: 1;
+}
+
+.slide-detail .section-item h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark);
+}
+
+.slide-detail .section-item p {
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--dark);
+  opacity: 0.6;
+}
+
+/* Company slides */
+.slide-company {
+  background: var(--cream);
+  padding: 6vh 8%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.slide-company .company-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  width: 100%;
+}
+
+.slide-company .company-card {
+  padding: 2rem;
+  position: relative;
+}
+
+.slide-company .company-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+}
+
+.slide-company .company-card:nth-child(1)::before { background: var(--periwinkle); opacity: 0.4; }
+.slide-company .company-card:nth-child(2)::before { background: var(--sage); opacity: 0.4; }
+
+.slide-company .company-card h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.slide-company .company-card .company-type {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.5;
+  margin-bottom: 1.2rem;
+}
+
+.slide-company .company-card p {
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: var(--dark);
+  opacity: 0.75;
+  margin-bottom: 0.8rem;
+}
+
+.slide-company .company-card .insight {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--sage);
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(42,38,34,0.06);
+  line-height: 1.5;
+}
+
+.slide-company .piece-indicator {
+  position: absolute;
+  top: 2.5rem;
+  left: 4rem;
+}
+
+.slide-company .slide-num {
+  position: absolute;
+  top: 2.5rem;
+  right: 4rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--umber);
+  opacity: 0.4;
+}
+
+/* ========== SLIDE 11: INTEGRATION ========== */
+.slide-11 {
+  background: var(--bone);
+  flex-direction: column;
+  padding: 6vh 10%;
+}
+
+.slide-11 h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2.2rem;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.slide-11 .threads {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.slide-11 .thread {
+  padding: 1.5rem;
+  background: var(--cream);
+  border-radius: 2px;
+  position: relative;
+}
+
+.slide-11 .thread h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8rem;
+  color: var(--sage);
+}
+
+.slide-11 .thread p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--dark);
+  opacity: 0.7;
+}
+
+.slide-11 .thread .connection {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--umber);
+  margin-top: 0.8rem;
+}
+
+/* ========== SLIDE 12: WHY AMPLIFY ========== */
+.slide-12 {
+  background: var(--dark);
+  color: var(--cream);
+  flex-direction: column;
+  padding: 8vh 12%;
+}
+
+.slide-12 .accent-bar {
+  position: absolute;
+  left: 0; top: 0;
+  width: 6px; height: 100%;
+  background: linear-gradient(to bottom, var(--sage), var(--periwinkle), var(--coral));
+  opacity: 0.4;
+}
+
+.slide-12 h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2.5rem;
+  margin-bottom: 2.5rem;
+  color: var(--bone);
+  max-width: 700px;
+}
+
+.slide-12 p {
+  font-size: 0.85rem;
+  line-height: 1.75;
+  color: var(--bone);
+  opacity: 0.7;
+  max-width: 650px;
+  margin-bottom: 1.5rem;
+}
+
+.slide-12 .highlight {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--sage);
+  opacity: 0.9;
+  max-width: 600px;
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+
+/* ========== SLIDE 13: LOGISTICS ========== */
+.slide-13 {
+  background: var(--cream);
+  flex-direction: column;
+  padding: 6vh 10%;
+}
+
+.slide-13 h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 2rem;
+  margin-bottom: 3rem;
+}
+
+.slide-13 .logistics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.slide-13 .log-item {
+  border-top: 1px solid rgba(42,38,34,0.1);
+  padding-top: 1.5rem;
+}
+
+.slide-13 .log-item .log-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.5;
+  margin-bottom: 0.8rem;
+}
+
+.slide-13 .log-item .log-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--dark);
+  margin-bottom: 0.5rem;
+}
+
+.slide-13 .log-item p {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--dark);
+  opacity: 0.6;
+}
+
+/* ========== SLIDE 14: CLOSING ========== */
+.slide-14 {
+  background: var(--cream);
+  flex-direction: column;
+  text-align: center;
+}
+
+.slide-14 .closing-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  max-width: 700px;
+  line-height: 1.5;
+  color: var(--dark);
+  margin-bottom: 3rem;
+}
+
+.slide-14 .closing-meta {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--umber);
+  opacity: 0.5;
+}
+
+.slide-14 .stem-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  height: 25%;
+  background: linear-gradient(to top, var(--sage), transparent);
+  opacity: 0.15;
+}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide slide-1">
+  <div class="color-wash"></div>
+  <div class="stem"></div>
+  <div class="stem-dot" style="top: 18%"></div>
+  <div class="stem-dot" style="top: 45%"></div>
+  <div class="stem-dot" style="top: 72%"></div>
+  <div class="title-block">
+    <div class="label" style="margin-bottom: 2rem;">Amplify Partners Writing Fellowship</div>
+    <h1>The <em>Generator</em><br>and the Discriminator</h1>
+    <div class="subtitle">Scientific Intuition in the Age of AI Scientists</div>
+    <div class="meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
+  </div>
+  <div class="corner-mark">72 of 84 Nobel laureates<br>called it intuition</div>
+</div>
+
+<!-- SLIDE 2: CORE TENSION -->
+<div class="slide slide-2">
+  <div class="label page-label">The Core Tension</div>
+  <div class="content">
+    <div class="col col-left">
+      <h2 class="serif">Discriminator Taste</h2>
+      <p>Pattern-matching against institutional consensus. Calibrated against what has already been accepted, published, cited, funded.</p>
+      <p>Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
+      <p style="opacity: 0.5; font-style: italic; font-family: 'Cormorant Garamond', serif;">What has already won.</p>
+      <div class="stat" style="color: var(--periwinkle);">100+</div>
+      <div class="stat-label">AI companies building discriminators for biology</div>
+    </div>
+    <div class="divider">vs.</div>
+    <div class="col col-right">
+      <h2 class="serif">Generator Taste</h2>
+      <p>Identifying problems before the field has vocabulary for them. Sustaining attention on something unrewarding long enough for it to become rewarding.</p>
+      <p>The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
+      <p style="opacity: 0.5; font-style: italic; font-family: 'Cormorant Garamond', serif;">What nobody yet believes matters.</p>
+      <div class="stat" style="color: var(--sage);">0</div>
+      <div class="stat-label">AI systems designed to cultivate this capacity</div>
+    </div>
+  </div>
+  <div class="bottom-line">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
+</div>
+
+<!-- SLIDE 3: WHY NOW -->
+<div class="slide slide-3">
+  <div class="wash"></div>
+  <div class="wash-2"></div>
+  <div class="content">
+    <div class="label" style="color: var(--sage); opacity: 0.5; margin-bottom: 1.5rem;">Why This Matters Now</div>
+    <h2>Three converging forces</h2>
+    <div class="forces">
+      <div class="force">
+        <div class="force-num">01</div>
+        <h3>The Automation Inflection</h3>
+        <p>Self-driving labs at production scale. Ginkgo, Emerald Cloud Lab, Strateos running autonomous experiments. Recursion screening millions of compounds per week.</p>
+        <div class="evidence">Nobel 2024 → Hassabis, Jumper, Baker</div>
+      </div>
+      <div class="force">
+        <div class="force-num">02</div>
+        <h3>The Signal-to-Noise Crisis</h3>
+        <p>AI-assisted authorship flooding the literature. Autonomous agents fail 40% of physical tasks. More experiments, not more signal.</p>
+        <div class="evidence">Bergstrom 2026: "do more, less well"</div>
+      </div>
+      <div class="force">
+        <div class="force-num">03</div>
+        <h3>The Missing Piece</h3>
+        <p>No AI scientist system is designed to cultivate generative scientific intuition. All optimize for discriminator performance. The gap is structural, not accidental.</p>
+        <div class="evidence">Guo et al. 2026: ~40% failure rate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: THREE PIECES -->
+<div class="slide slide-4">
+  <div class="content">
+    <div class="arc-header">
+      <div class="label" style="margin-bottom: 1rem;">The Series</div>
+      <h2 class="serif">Three pieces. Three months. One argument.</h2>
+      <div class="arc-flow">
+        <span class="arc-step">Define</span>
+        <span class="arc-arrow">→</span>
+        <span class="arc-step">Diagnose</span>
+        <span class="arc-arrow">→</span>
+        <span class="arc-step">Resolve</span>
+      </div>
+    </div>
+    <div class="pieces">
+      <div class="piece">
+        <div class="month">Month 1</div>
+        <h3 class="serif">The Oracle and the Visionary</h3>
+        <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
+        <div class="companies">Recursion · Boltz</div>
+      </div>
+      <div class="piece">
+        <div class="month">Month 2</div>
+        <h3 class="serif">The Noise Floor</h3>
+        <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
+        <div class="companies">Modal · LangChain · DatologyAI</div>
+      </div>
+      <div class="piece">
+        <div class="month">Month 3</div>
+        <h3 class="serif">Designing for Intuition</h3>
+        <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
+        <div class="companies">VeriSIM Life · Antithesis · Scribe</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: PIECE 1 OUTLINE -->
+<div class="slide slide-detail">
+  <div class="label piece-indicator" style="color: var(--periwinkle);">Piece 1 · Month 1</div>
+  <div class="slide-num">05 / 14</div>
+  <h2 class="serif">The Oracle and the Visionary</h2>
+  <div class="detail-sub">8,000–9,000 words · Establishing the distinction</div>
+  <div class="sections">
+    <div class="section-item">
+      <span class="sec-num">1</span>
+      <h4>The Contrast</h4>
+      <p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. The interpolation/extrapolation distinction made visceral.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">2</span>
+      <h4>What Laureates Said</h4>
+      <p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">3</span>
+      <h4>What Cognitive Science Says</h4>
+      <p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge. Intuition as trainable faculty, not mysticism.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">4</span>
+      <h4>What AI Is Actually Learning</h4>
+      <p>Foundation models trained on PDB, published literature, citation patterns. All calibrated against consensus. The training distribution ≠ the frontier.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">5</span>
+      <h4>The Architecture of the Gap</h4>
+      <p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation. The legibility gradient.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">6</span>
+      <h4>What This Is Not Saying</h4>
+      <p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: PIECE 1 COMPANIES -->
+<div class="slide slide-company">
+  <div class="label piece-indicator" style="color: var(--periwinkle);">Piece 1 · Portfolio Companies</div>
+  <div class="slide-num">06 / 14</div>
+  <div class="company-grid" style="margin-top: 4rem;">
+    <div class="company-card">
+      <h3>Recursion Pharmaceuticals</h3>
+      <div class="company-type">NASDAQ: RXRX · Digital Biology</div>
+      <p>50PB+ phenomics data. Millions of cellular perturbation experiments per week. BioHive-2 supercomputer. The most complete realization of discriminator-taste science at industrial scale.</p>
+      <p>FAP clinical milestone (Feb 2026) — first full-stack AI OS validation. REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
+      <div class="insight">Key question: What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
+    </div>
+    <div class="company-card">
+      <h3>Boltz</h3>
+      <div class="company-type">Open-Source · Digital Biology</div>
+      <p>Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
+      <p>The clearest pedagogical exhibit for the discriminator argument: what a foundation model learns is bounded by what has been deposited and characterized.</p>
+      <div class="insight">Key question: What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: PIECE 2 OUTLINE -->
+<div class="slide slide-detail">
+  <div class="label piece-indicator" style="color: var(--coral);">Piece 2 · Month 2</div>
+  <div class="slide-num">07 / 14</div>
+  <h2 class="serif">The Noise Floor</h2>
+  <div class="detail-sub">7,500–8,500 words · Diagnosing the crisis</div>
+  <div class="sections">
+    <div class="section-item">
+      <span class="sec-num">1</span>
+      <h4>The Throughput Fallacy</h4>
+      <p>500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress. The noise floor rises with the throughput.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">2</span>
+      <h4>The Failure Modes at Scale</h4>
+      <p>Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding literature. The honest empirical ledger.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">3</span>
+      <h4>The Literature Flood</h4>
+      <p>Preprints growing faster than curation capacity. AI-assisted authorship producing more things that look like science. Signal-to-noise ratio decreasing.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">4</span>
+      <h4>The Agent Orchestration Problem</h4>
+      <p>Agent frameworks handle anomalies as noise, not signal. Current design: coverage and reliability. Missing design: generative flexibility at inflection points.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">5</span>
+      <h4>The Training Culture Problem</h4>
+      <p>Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices. A generation learning to operate, not to judge.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">6</span>
+      <h4>The Real Filter</h4>
+      <p>In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: PIECE 2 COMPANIES -->
+<div class="slide slide-company">
+  <div class="label piece-indicator" style="color: var(--coral);">Piece 2 · Portfolio Companies</div>
+  <div class="slide-num">08 / 14</div>
+  <div class="company-grid" style="margin-top: 4rem; grid-template-columns: repeat(3, 1fr);">
+    <div class="company-card">
+      <h3>Modal</h3>
+      <div class="company-type">Serverless Compute</div>
+      <p>The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
+      <div class="insight">What happens to question quality when compute stops being the constraint?</div>
+    </div>
+    <div class="company-card" style="border-top-color: var(--coral);">
+      <h3>LangChain</h3>
+      <div class="company-type">Agent Orchestration</div>
+      <p>LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
+      <div class="insight">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
+    </div>
+    <div class="company-card" style="border-top-color: var(--ochre);">
+      <h3>DatologyAI</h3>
+      <div class="company-type">Data Curation</div>
+      <p>Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
+      <div class="insight">What would a training dataset look like if optimized for novelty rather than consensus?</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: PIECE 3 OUTLINE -->
+<div class="slide slide-detail">
+  <div class="label piece-indicator" style="color: var(--sage);">Piece 3 · Month 3</div>
+  <div class="slide-num">09 / 14</div>
+  <h2 class="serif">Designing for Intuition</h2>
+  <div class="detail-sub">7,000–8,000 words · The constructive turn</div>
+  <div class="sections">
+    <div class="section-item">
+      <span class="sec-num">1</span>
+      <h4>The Constructive Frame</h4>
+      <p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">2</span>
+      <h4>Designed Friction</h4>
+      <p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">3</span>
+      <h4>Generator-Augmented Interfaces</h4>
+      <p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas. Finding what you don't know to look for.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">4</span>
+      <h4>Institutional Protection</h4>
+      <p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">5</span>
+      <h4>What an AI Generator Would Look Like</h4>
+      <p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p>
+    </div>
+    <div class="section-item">
+      <span class="sec-num">6</span>
+      <h4>The Long Game</h4>
+      <p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: PIECE 3 COMPANIES -->
+<div class="slide slide-company">
+  <div class="label piece-indicator" style="color: var(--sage);">Piece 3 · Portfolio Companies</div>
+  <div class="slide-num">10 / 14</div>
+  <div class="company-grid" style="margin-top: 4rem; grid-template-columns: repeat(3, 1fr);">
+    <div class="company-card">
+      <h3>VeriSIM Life</h3>
+      <div class="company-type">Biosimulation</div>
+      <p>BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
+      <div class="insight">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
+    </div>
+    <div class="company-card" style="border-top-color: var(--sage);">
+      <h3>Antithesis</h3>
+      <div class="company-type">Autonomous Testing</div>
+      <p>Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
+      <div class="insight">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
+    </div>
+    <div class="company-card" style="border-top-color: var(--ochre);">
+      <h3>Scribe</h3>
+      <div class="company-type">Workflow Documentation</div>
+      <p>AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
+      <div class="insight">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: INTEGRATION -->
+<div class="slide slide-11">
+  <div class="label" style="text-align: center; margin-bottom: 1.5rem;">Integration</div>
+  <h2 class="serif">How the pieces connect</h2>
+  <div class="threads">
+    <div class="thread">
+      <h4>Recursion ↔ Modal</h4>
+      <p>Throughput side of the argument. Recursion as discriminator science at scale, Modal as the infrastructure enabling that scale.</p>
+      <div class="connection">P1 and P2 in direct conversation</div>
+    </div>
+    <div class="thread">
+      <h4>Boltz ↔ DatologyAI</h4>
+      <p>What a model learns is a function of what's in training data. Boltz's PDB limits connect to DatologyAI's curation question.</p>
+      <div class="connection">P1 diagnosis → P2 mechanism</div>
+    </div>
+    <div class="thread">
+      <h4>LangChain ↔ Antithesis</h4>
+      <p>Agent orchestration that handles anomalies as noise vs. autonomous testing that seeks anomalies as signal.</p>
+      <div class="connection">P2 problem → P3 solution</div>
+    </div>
+    <div class="thread">
+      <h4>Productive Struggle Thread</h4>
+      <p>From tacit knowledge (P1) through atrophy under automation (P2) to designed friction (P3). The spine of the series.</p>
+      <div class="connection">Runs through all three pieces</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: WHY AMPLIFY -->
+<div class="slide slide-12">
+  <div class="accent-bar"></div>
+  <div class="label" style="color: var(--sage); opacity: 0.5; margin-bottom: 2rem;">Why This Matters to Amplify</div>
+  <h2 class="serif">The portfolio thesis, extended</h2>
+  <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
+  <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
+  <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
+</div>
+
+<!-- SLIDE 13: LOGISTICS -->
+<div class="slide slide-13">
+  <div class="label" style="margin-bottom: 1.5rem;">Reporting Plan</div>
+  <h2 class="serif">How I'll build it</h2>
+  <div class="logistics-grid">
+    <div class="log-item">
+      <div class="log-label">Interviews</div>
+      <div class="log-value">20–25</div>
+      <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-label">Duration</div>
+      <div class="log-value">3 months</div>
+      <p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-label">Word Count</div>
+      <div class="log-value">~24K</div>
+      <p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-label">Portfolio Companies</div>
+      <div class="log-value">8</div>
+      <p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-label">Bibliography</div>
+      <div class="log-value">78</div>
+      <p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-label">Builds From</div>
+      <div class="log-value">2 pieces</div>
+      <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 14: CLOSING -->
+<div class="slide slide-14">
+  <div class="stem-bottom"></div>
+  <div class="label" style="margin-bottom: 3rem;">Closing</div>
+  <div class="closing-quote">
+    "The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."
+  </div>
+  <div class="closing-meta">
+    Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026
+  </div>
+</div>
+
+</body>
+</html>
