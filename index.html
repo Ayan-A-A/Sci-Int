@@ -3,793 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Generator and the Discriminator</title>
+<title>The Generator and the Discriminator — Amplify Fellowship</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&family=IBM+Plex+Mono:wght@300&display=swap" rel="stylesheet">
 <style>
-/* ===== RESET & BASE ===== */
-*{margin:0;padding:0;box-sizing:border-box;}
+*{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --cream:#EDE8C8;
-  --bone:#E8E4DA;
-  --dark:#2A2622;
-  --forest-dark:#3a4a1f;
-  --forest-mid:#556b2a;
-  --forest-light:#6b7d35;
-  --gold-deep:#d4c56a;
-  --gold-light:#e8dc8f;
-  --navy:#1a2340;
-  --periwinkle:#7B7FC4;
-  --sage:#8A9A6B;
-  --coral:#E85D3D;
-  --rose:#D98BA0;
-  --ochre:#C4A855;
-  --cobalt:#1e3fd8;
-  --pink-soft:#f4a6a8;
-  --pink-coral:#ef9a86;
-  --mauve:#b0a0c4;
-  --lavender:#eae7ee;
-  --sage-cloud:#b8ceb0;
-  --blue-teal:#8fb4c4;
-  --olive:#c3cb9e;
-  --pale-green:#eef1ec;
+  --cream:#EDE8C8;--bone:#F5F5F0;--dark:#1a1a14;
+  --green-deep:#1a3012;--green-mid:#2d4a1f;--green-light:#3a5a28;
+  --gold:#d4c56a;--gold2:#c9a94a;--gold3:#b8923a;
+  --navy:#1a2340;--periwinkle:#7B7FC4;--coral:#E85D3D;
+  --rose:#D98BA0;--sage:#8A9A6B;--umber:#6B5D3F;
 }
-html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll;}
-body{
-  font-family:'Inter',sans-serif;
-  background:#1a1a1a;
-  -webkit-font-smoothing:antialiased;
-}
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
+body{font-family:'Inter',sans-serif;background:var(--green-deep);color:var(--cream);-webkit-font-smoothing:antialiased}
+.slide{width:100vw;height:100vh;scroll-snap-align:start;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.grain{position:absolute;inset:0;pointer-events:none;z-index:50;opacity:0.045;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px}
+.slide-num{position:absolute;top:2rem;right:3rem;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(237,232,200,0.3);letter-spacing:0.2em}
+.page-label{position:absolute;top:2rem;left:3rem;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(237,232,200,0.35);letter-spacing:0.3em;text-transform:uppercase}
 
-/* ===== SVG GRAIN FILTER ===== */
-.grain-overlay{
-  position:absolute;
-  top:0;left:0;right:0;bottom:0;
-  pointer-events:none;
-  z-index:200;
-  opacity:0.05;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size:300px 300px;
-}
+/* ===== SLIDE 1: HERO ===== */
+.s1{background:var(--green-deep)}
+.s1 canvas{position:absolute;inset:0;width:100%;height:100%}
+.s1-text{position:absolute;z-index:10;pointer-events:none;left:7%;top:50%;transform:translateY(-50%)}
+.s1-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:rgba(237,232,200,0.45);margin-bottom:2rem}
+.s1-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2.2rem,5vw,4.5rem);line-height:1.1;color:var(--cream);opacity:0.88}
+.s1-title em{font-style:italic;color:var(--gold)}
+.s1-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(0.9rem,1.5vw,1.25rem);color:rgba(237,232,200,0.55);margin-top:1.2rem}
+.s1-meta{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:rgba(237,232,200,0.3);margin-top:2.5rem}
+.s1-corner{position:absolute;bottom:3rem;right:4rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:rgba(237,232,200,0.28);text-align:right;line-height:1.5;z-index:10}
 
-/* ===== SLIDE BASE ===== */
-.slide{
-  width:100vw;height:100vh;
-  scroll-snap-align:start;
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* ===== TYPE ===== */
-.serif{font-family:'Cormorant Garamond',serif;}
-.mono{font-family:'IBM Plex Mono',monospace;}
-.label{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.58rem;
-  letter-spacing:0.25em;
-  text-transform:uppercase;
-  color:rgba(237,232,200,0.5);
-}
-.coord{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.5rem;
-  color:rgba(255,255,255,0.35);
-  letter-spacing:0.1em;
-}
-
-/* ===== BLUEPRINT ARC SVG ===== */
-.bp-svg{
-  position:absolute;
-  top:0;left:0;
-  width:100%;height:100%;
-  pointer-events:none;
-  z-index:2;
-}
-.bp-arc{stroke:rgba(255,255,255,0.12);stroke-width:0.5;fill:none;}
-.bp-arc-gold{stroke:rgba(212,197,106,0.2);stroke-width:0.5;fill:none;}
-
-/* ===== SPARKLE ===== */
-.sparkle{
-  position:absolute;
-  font-size:1rem;
-  color:rgba(212,197,106,0.7);
-  animation:sparkle-pulse 4s ease-in-out infinite;
-  z-index:5;
-  line-height:1;
-}
-@keyframes sparkle-pulse{0%,100%{opacity:0.4;transform:scale(1);}50%{opacity:1;transform:scale(1.2);}}
-
-/* ===== REGISTRATION CROSS ===== */
-.reg-cross{
-  position:absolute;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.6rem;
-  color:rgba(255,255,255,0.2);
-  z-index:5;
-}
-
-/* ===== GOLDEN GLOW ===== */
-.golden-glow{
-  position:absolute;
-  border-radius:50%;
-  mix-blend-mode:screen;
-  pointer-events:none;
-  z-index:1;
-  animation:glow-pulse 6s ease-in-out infinite;
-}
-@keyframes glow-pulse{0%,100%{transform:scale(1);opacity:0.3;}50%{transform:scale(1.08);opacity:0.45;}}
-
-/* ===== ASCII BLOOM CANVAS ===== */
-.ascii-bloom{
-  position:absolute;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:11px;
-  line-height:14px;
-  letter-spacing:1px;
-  white-space:pre;
-  color:#f5f5f0;
-  z-index:3;
-  pointer-events:none;
-}
-
-/* ===== CORNER BRACKET FRAME ===== */
-.corner-frame{
-  position:absolute;
-  pointer-events:none;
-  z-index:10;
-}
-.corner-frame .tl,.corner-frame .tr,.corner-frame .bl,.corner-frame .br{
-  position:absolute;
-  width:24px;height:24px;
-}
-.corner-frame .tl{top:20px;left:20px;border-top:1px solid rgba(255,255,255,0.25);border-left:1px solid rgba(255,255,255,0.25);}
-.corner-frame .tr{top:20px;right:20px;border-top:1px solid rgba(255,255,255,0.25);border-right:1px solid rgba(255,255,255,0.25);}
-.corner-frame .bl{bottom:20px;left:20px;border-bottom:1px solid rgba(255,255,255,0.25);border-left:1px solid rgba(255,255,255,0.25);}
-.corner-frame .br{bottom:20px;right:20px;border-bottom:1px solid rgba(255,255,255,0.25);border-right:1px solid rgba(255,255,255,0.25);}
-
-/* ===== CHROMATIC CLOUD ===== */
-.cloud-blob{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(60px);
-  mix-blend-mode:screen;
-  pointer-events:none;
-  animation:cloud-drift 18s ease-in-out infinite;
-}
-@keyframes cloud-drift{
-  0%{transform:translate(0,0) scale(1);}
-  33%{transform:translate(20px,-15px) scale(1.05);}
-  66%{transform:translate(-15px,20px) scale(0.97);}
-  100%{transform:translate(0,0) scale(1);}
-}
-
-/* ===== HALFTONE ===== */
-.halftone-canvas{
-  position:absolute;
-  top:0;left:0;
-  pointer-events:none;
-  z-index:1;
-}
-
-/* ===== CONCENTRIC RINGS ===== */
-.ring-svg{
-  position:absolute;
-  top:0;left:0;width:100%;height:100%;
-  pointer-events:none;
-  z-index:2;
-}
-.ring{fill:none;stroke-width:0.5;animation:ring-pulse 8s ease-in-out infinite;}
-@keyframes ring-pulse{0%,100%{opacity:0.15;}50%{opacity:0.35;}}
-
-/* ===== SLIDE 1: TITLE ===== */
-.slide-1{background:linear-gradient(145deg,#2a3a10 0%,#3a4a1f 30%,#4a5a25 55%,#3a4a1f 75%,#2a3212 100%);}
-.slide-1 .bg-text{
-  position:absolute;
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;
-  font-size:clamp(8rem,18vw,18rem);
-  color:rgba(237,232,200,0.06);
-  letter-spacing:-0.02em;
-  line-height:0.85;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  white-space:nowrap;
-  z-index:0;
-  pointer-events:none;
-  user-select:none;
-}
-.slide-1 .title-content{
-  position:relative;
-  z-index:10;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  padding:0 8% 0 10%;
-  width:100%;
-  max-width:1100px;
-}
-.slide-1 h1{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;
-  font-size:clamp(2.4rem,4.5vw,4.2rem);
-  line-height:1.15;
-  color:var(--cream);
-  margin-bottom:1.2rem;
-  position:relative;
-  z-index:12;
-}
-.slide-1 h1 em{color:var(--gold-light);font-style:italic;}
-.slide-1 .subtitle{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;
-  font-size:clamp(0.9rem,1.5vw,1.25rem);
-  color:rgba(237,232,200,0.65);
-  margin-bottom:2.5rem;
-  max-width:480px;
-  line-height:1.55;
-}
-.slide-1 .meta{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.6rem;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:rgba(237,232,200,0.4);
-}
-.slide-1 .corner-mark{
-  position:absolute;
-  bottom:3rem;
-  right:4rem;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;
-  font-size:0.78rem;
-  color:rgba(212,197,106,0.45);
-  text-align:right;
-  line-height:1.5;
-  z-index:10;
-}
-
-/* ===== SLIDE 2: CORE TENSION ===== */
-.slide-2{background:#1c1d2e;}
-.slide-2 .content{
-  display:grid;
-  grid-template-columns:1fr 60px 1fr;
-  max-width:88%;
-  width:100%;
-  align-items:center;
-  gap:0;
-  position:relative;
-  z-index:10;
-}
-.slide-2 .col{padding:2.5rem;}
-.slide-2 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:400;
-  font-size:1.7rem;
-  margin-bottom:1.2rem;
-  line-height:1.2;
-}
-.slide-2 .col-left h2{color:#9b9fd4;}
-.slide-2 .col-right h2{color:#a8ba85;}
-.slide-2 p{font-size:0.8rem;line-height:1.7;color:rgba(237,232,200,0.65);margin-bottom:0.8rem;}
-.slide-2 .stat{
-  font-family:'Cormorant Garamond',serif;
-  font-size:2.8rem;
-  font-weight:300;
-  margin-top:1.5rem;
-}
-.slide-2 .col-left .stat{color:#7B7FC4;}
-.slide-2 .col-right .stat{color:#8A9A6B;}
-.slide-2 .stat-label{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;
-  letter-spacing:0.18em;
-  text-transform:uppercase;
-  color:rgba(237,232,200,0.4);
-  margin-top:0.3rem;
-}
-.slide-2 .vs-divider{
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:1.2rem;
-  color:rgba(237,232,200,0.3);
-}
-.slide-2 .editorial-label{
-  position:absolute;
-  top:2rem;left:2.5rem;
-  z-index:12;
-}
-.slide-2 .bottom-line{
-  position:absolute;
-  bottom:3rem;left:50%;
-  transform:translateX(-50%);
-  max-width:600px;
-  text-align:center;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;
-  font-size:0.95rem;
-  color:rgba(237,232,200,0.5);
-  line-height:1.6;
-  z-index:12;
-}
-/* Halftone left panel */
-.slide-2 .ht-panel{
-  position:absolute;
-  top:0;left:0;
-  width:45%;height:100%;
-  overflow:hidden;
-  opacity:0.12;
-  z-index:0;
-}
-/* Cloud right panel */
-.slide-2 .cloud-panel{
-  position:absolute;
-  top:0;right:0;
-  width:45%;height:100%;
-  overflow:hidden;
-  z-index:0;
-}
+/* ===== SLIDE 2: TENSION ===== */
+.s2{background:var(--green-deep)}
+.s2 canvas.bg-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.s2-content{position:relative;z-index:5;display:grid;grid-template-columns:1fr 60px 1fr;max-width:90%;width:100%;align-items:start;padding:5vh 0;gap:0}
+.s2-col{padding:2.5rem}
+.s2-col h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.8rem;margin-bottom:1.2rem;line-height:1.2}
+.s2-col p{font-size:0.8rem;line-height:1.75;color:rgba(237,232,200,0.7);margin-bottom:0.9rem}
+.s2-col .stat{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;margin-top:1.5rem}
+.s2-col .stat-lbl{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(237,232,200,0.4);margin-top:0.3rem}
+.s2-left{background:rgba(123,127,196,0.07);border-radius:2px;border-top:1px solid rgba(123,127,196,0.2)}
+.s2-right{background:rgba(138,154,107,0.07);border-radius:2px;border-top:1px solid rgba(138,154,107,0.2)}
+.s2-divider{display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:rgba(237,232,200,0.3)}
+.s2-bottom{position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);max-width:600px;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:rgba(237,232,200,0.45);line-height:1.6;z-index:5}
+.s2-can-wrap{position:relative;height:140px;margin-bottom:1rem;border-radius:2px;overflow:hidden}
+.s2-can-wrap canvas{width:100%;height:100%}
 
 /* ===== SLIDE 3: WHY NOW ===== */
-.slide-3{background:#1e1c18;}
-.slide-3 .content{
-  max-width:80%;
-  position:relative;
-  z-index:10;
-  width:100%;
-}
-.slide-3 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;
-  font-size:2.6rem;
-  margin-bottom:3rem;
-  color:var(--bone);
-}
-.slide-3 .forces{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;}
-.slide-3 .force{border-top:1px solid rgba(237,232,200,0.12);padding-top:1.5rem;position:relative;}
-.slide-3 .force-num{
-  font-family:'Cormorant Garamond',serif;
-  font-size:2rem;font-weight:300;
-  opacity:0.5;margin-bottom:0.8rem;
-}
-.slide-3 .force:nth-child(1) .force-num{color:#f4a6a8;}
-.slide-3 .force:nth-child(2) .force-num{color:#e8dc8f;}
-.slide-3 .force:nth-child(3) .force-num{color:#b8ceb0;}
-.slide-3 .force h3{font-weight:400;font-size:0.82rem;margin-bottom:0.8rem;color:var(--bone);}
-.slide-3 .force p{font-size:0.72rem;line-height:1.65;color:rgba(237,232,200,0.55);}
-.slide-3 .force .evidence{
-  margin-top:0.8rem;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.82rem;
-  color:rgba(212,197,106,0.7);
-}
-.slide-3 .force-cloud{
-  position:absolute;
-  top:-30px;right:-20px;
-  width:120px;height:120px;
-  border-radius:50%;
-  filter:blur(40px);
-  opacity:0.15;
-  pointer-events:none;
-}
+.s3{background:linear-gradient(160deg,#0e1e08 0%,var(--green-deep) 60%,#0a1520 100%)}
+.s3-content{max-width:78%;position:relative;z-index:5}
+.s3 canvas.bg-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0.6}
+.s3 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.6rem;margin-bottom:2.5rem;color:var(--bone)}
+.forces{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem}
+.force{border-top:1px solid rgba(237,232,200,0.1);padding-top:1.5rem}
+.force-num{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(237,232,200,0.3);letter-spacing:0.2em;margin-bottom:0.8rem}
+.force h3{font-family:'Cormorant Garamond',serif;font-size:1.15rem;margin-bottom:0.7rem;color:var(--cream)}
+.force p{font-size:0.78rem;line-height:1.7;color:rgba(237,232,200,0.6)}
+.evidence{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:rgba(212,197,106,0.6);margin-top:0.8rem;letter-spacing:0.05em}
+.blob-wrap{position:absolute;pointer-events:none;z-index:2}
 
 /* ===== SLIDE 4: THREE PIECES ===== */
-.slide-4{background:#f0ece0;}
-.slide-4 .content{max-width:82%;width:100%;position:relative;z-index:10;}
-.slide-4 .arc-header{text-align:center;margin-bottom:3.5rem;}
-.slide-4 .arc-header h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2rem;
-  color:#2A2622;margin-bottom:0.8rem;
-}
-.slide-4 .arc-flow{display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-top:0.5rem;}
-.slide-4 .arc-step{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;
-  padding:0.35rem 1rem;border-radius:1px;
-}
-.slide-4 .arc-step:nth-child(1){background:rgba(123,127,196,0.1);color:#7B7FC4;border:1px solid rgba(123,127,196,0.2);}
-.slide-4 .arc-step:nth-child(3){background:rgba(232,93,61,0.08);color:#E85D3D;border:1px solid rgba(232,93,61,0.15);}
-.slide-4 .arc-step:nth-child(5){background:rgba(138,154,107,0.1);color:#8A9A6B;border:1px solid rgba(138,154,107,0.2);}
-.slide-4 .arc-arrow{color:rgba(42,38,34,0.25);font-size:1rem;}
-.slide-4 .pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;}
-.slide-4 .piece{
-  padding:1.8rem;
-  background:rgba(255,255,255,0.5);
-  border:1px solid rgba(42,38,34,0.06);
-  position:relative;
-}
-.slide-4 .piece-art{
-  height:120px;
-  margin-bottom:1.2rem;
-  position:relative;
-  overflow:hidden;
-}
-.slide-4 .piece .month{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
-  color:rgba(42,38,34,0.4);margin-bottom:0.6rem;
-}
-.slide-4 .piece h3{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:400;font-size:1.3rem;margin-bottom:0.4rem;line-height:1.25;
-  color:#2A2622;
-}
-.slide-4 .piece .piece-sub{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.78rem;
-  color:rgba(42,38,34,0.55);margin-bottom:0.8rem;line-height:1.45;
-}
-.slide-4 .piece .companies{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;
-  color:rgba(138,154,107,0.8);
-}
+.s4{background:var(--green-mid)}
+.s4-content{max-width:88%;width:100%}
+.s4-content .arc-header{text-align:center;margin-bottom:2.5rem}
+.s4-content h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:var(--cream);margin-bottom:1rem}
+.arc-flow{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:rgba(237,232,200,0.4);display:flex;gap:0.5rem;align-items:center;justify-content:center;margin-top:0.5rem}
+.arc-arrow{color:var(--gold2)}
+.pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.piece{background:rgba(0,0,0,0.2);border-radius:2px;overflow:hidden}
+.piece-canvas-wrap{height:160px;position:relative;overflow:hidden}
+.piece-canvas-wrap canvas{width:100%;height:100%}
+.piece-body{padding:1.5rem}
+.piece .month{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.25em;color:var(--gold2);margin-bottom:0.6rem;text-transform:uppercase}
+.piece h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:0.5rem;color:var(--cream)}
+.piece .piece-sub{font-size:0.72rem;line-height:1.6;color:rgba(237,232,200,0.55)}
+.piece .companies{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(237,232,200,0.3);margin-top:0.8rem;letter-spacing:0.05em}
 
-/* ===== SLIDE DETAIL / COMPANY (5-10) ===== */
-.slide-detail,.slide-company{
-  background:#f5f1e4;
-  flex-direction:column;
-  padding:5vh 9%;
-  align-items:flex-start;
-  justify-content:flex-start;
-}
-.slide-detail .piece-ind,.slide-company .piece-ind{
-  position:absolute;top:2rem;left:3.5rem;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
-}
-.slide-detail .slide-num,.slide-company .slide-num{
-  position:absolute;top:2rem;right:3.5rem;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;letter-spacing:0.15em;
-  color:rgba(42,38,34,0.3);
-}
-.slide-detail h2,.slide-company h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.2rem;
-  margin-bottom:0.4rem;margin-top:3.5rem;
-  line-height:1.2;color:#2A2622;
-}
-.slide-detail .detail-sub{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.9rem;
-  color:rgba(42,38,34,0.55);margin-bottom:2rem;
-}
-.slide-detail .sections{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:1.2rem 3rem;width:100%;
-}
-.slide-detail .section-item{
-  padding:1rem 0;
-  border-top:1px solid rgba(42,38,34,0.07);
-}
-.slide-detail .sec-num{
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.5rem;font-weight:300;
-  color:rgba(42,38,34,0.2);
-  float:left;margin-right:0.8rem;line-height:1;
-}
-.slide-detail .section-item h4{
-  font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:#2A2622;
-}
-.slide-detail .section-item p{
-  font-size:0.68rem;line-height:1.6;color:rgba(42,38,34,0.58);
-}
-.slide-company .company-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:2.5rem;width:100%;margin-top:3.5rem;
-}
-.slide-company .company-card{
-  padding:1.8rem;
-  border-top:2px solid rgba(42,38,34,0.1);
-  position:relative;
-}
-.slide-company .company-card h3{
-  font-weight:500;font-size:0.9rem;margin-bottom:0.25rem;color:#2A2622;
-}
-.slide-company .company-type{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;
-  color:rgba(42,38,34,0.4);margin-bottom:1rem;
-}
-.slide-company .company-card p{font-size:0.73rem;line-height:1.65;color:rgba(42,38,34,0.65);margin-bottom:0.7rem;}
-.slide-company .insight{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.85rem;
-  color:#8A9A6B;margin-top:0.8rem;
-  padding-top:0.8rem;border-top:1px solid rgba(42,38,34,0.06);line-height:1.45;
-}
-/* Accent clouds for detail slides */
-.detail-cloud{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(80px);
-  pointer-events:none;
-  opacity:0.08;
-  z-index:0;
-  animation:cloud-drift 20s ease-in-out infinite;
-}
+/* ===== SLIDES 5-10: DETAIL/COMPANY ===== */
+.s-detail,.s-company{background:var(--green-deep);flex-direction:column;padding:6vh 10%;align-items:flex-start;justify-content:center}
+.s-detail h2,.s-company h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:var(--cream);margin-bottom:0.5rem}
+.detail-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.85rem;color:rgba(237,232,200,0.45);margin-bottom:2rem}
+.sections{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.section-item{border-top:1px solid rgba(237,232,200,0.1);padding-top:1rem}
+.sec-num{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:rgba(212,197,106,0.5);letter-spacing:0.2em;margin-bottom:0.5rem}
+.section-item h4{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--cream);margin-bottom:0.5rem}
+.section-item p{font-size:0.73rem;line-height:1.65;color:rgba(237,232,200,0.55)}
+.piece-indicator{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:0.4rem}
+.company-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;width:100%;margin-top:2rem}
+.company-grid.cols3{grid-template-columns:repeat(3,1fr)}
+.company-card{background:rgba(0,0,0,0.2);border-top:2px solid rgba(123,127,196,0.4);padding:1.5rem;border-radius:1px}
+.company-card h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--cream);margin-bottom:0.3rem}
+.company-type{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.15em;color:rgba(212,197,106,0.55);margin-bottom:0.8rem;text-transform:uppercase}
+.company-card p{font-size:0.73rem;line-height:1.65;color:rgba(237,232,200,0.6);margin-bottom:0.6rem}
+.insight{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.78rem;color:rgba(212,197,106,0.65);border-left:1px solid rgba(212,197,106,0.25);padding-left:0.8rem;margin-top:0.8rem;line-height:1.5}
+.corner-canvas{position:absolute;pointer-events:none;z-index:1}
 
 /* ===== SLIDE 11: INTEGRATION ===== */
-.slide-11{background:#1e1e1e;}
-.slide-11 .content{
-  max-width:85%;width:100%;
-  position:relative;z-index:10;
-  display:flex;flex-direction:column;align-items:center;
-}
-.slide-11 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.2rem;
-  margin-bottom:2.5rem;text-align:center;
-  color:var(--bone);
-}
-.slide-11 .threads{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:1.5rem;width:100%;max-width:860px;
-}
-.slide-11 .thread{
-  padding:1.4rem;
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);
-}
-.slide-11 .thread h4{
-  font-weight:400;font-size:0.7rem;letter-spacing:0.08em;
-  margin-bottom:0.6rem;color:#8A9A6B;
-}
-.slide-11 .thread p{font-size:0.7rem;line-height:1.6;color:rgba(237,232,200,0.55);}
-.slide-11 .thread .connection{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:0.75rem;
-  color:rgba(212,197,106,0.55);margin-top:0.6rem;
-}
+.s11{background:var(--green-deep);flex-direction:column;padding:5vh 10%}
+.s11 canvas.bg-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0.5}
+.s11-inner{position:relative;z-index:5;width:100%}
+.s11 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:var(--cream);margin-bottom:2rem;text-align:center}
+.threads{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem}
+.thread{background:rgba(0,0,0,0.2);padding:1.5rem;border-radius:2px;border-top:1px solid rgba(237,232,200,0.08)}
+.thread h4{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--gold);margin-bottom:0.5rem}
+.thread p{font-size:0.73rem;line-height:1.65;color:rgba(237,232,200,0.6)}
+.connection{font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(138,154,107,0.7);margin-top:0.8rem;letter-spacing:0.08em}
 
 /* ===== SLIDE 12: WHY AMPLIFY ===== */
-.slide-12{background:#1a1a16;color:var(--cream);}
-.slide-12 .content{
-  max-width:72%;
-  position:relative;z-index:10;
-}
-.slide-12 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2.4rem;
-  margin-bottom:2rem;color:var(--bone);max-width:700px;
-}
-.slide-12 p{font-size:0.82rem;line-height:1.75;color:rgba(237,232,200,0.6);max-width:640px;margin-bottom:1.3rem;}
-.slide-12 .highlight{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:1.15rem;
-  color:rgba(138,154,107,0.9);max-width:600px;line-height:1.5;margin-top:1rem;
-}
+.s12{background:linear-gradient(160deg,#0a1014 0%,var(--green-deep) 100%);flex-direction:column;padding:8vh 12%}
+.s12 canvas.bg-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.s12-inner{position:relative;z-index:5;max-width:740px}
+.s12 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.4rem;color:var(--bone);margin-bottom:2rem}
+.s12 p{font-size:0.82rem;line-height:1.8;color:rgba(237,232,200,0.65);margin-bottom:1.2rem}
+.s12 .highlight{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--gold);opacity:0.85;border-left:2px solid rgba(212,197,106,0.3);padding-left:1.2rem;line-height:1.55;margin-top:1.5rem}
+.accent-bar{position:absolute;left:0;top:0;width:5px;height:100%;background:linear-gradient(to bottom,var(--sage),var(--periwinkle),var(--coral));opacity:0.35;z-index:5}
 
 /* ===== SLIDE 13: LOGISTICS ===== */
-.slide-13{background:#f0ece0;}
-.slide-13 .content{
-  max-width:82%;width:100%;
-  position:relative;z-index:10;
-}
-.slide-13 h2{
-  font-family:'Cormorant Garamond',serif;
-  font-weight:300;font-size:2rem;
-  margin-bottom:2.5rem;color:#2A2622;
-}
-.slide-13 .logistics-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;
-}
-.slide-13 .log-item{border-top:1px solid rgba(42,38,34,0.1);padding-top:1.2rem;position:relative;}
-.slide-13 .log-label{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
-  color:rgba(42,38,34,0.4);margin-bottom:0.6rem;
-}
-.slide-13 .log-value{
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.8rem;font-weight:300;
-  color:#2A2622;margin-bottom:0.4rem;
-}
-.slide-13 .log-item p{font-size:0.7rem;line-height:1.5;color:rgba(42,38,34,0.55);}
-
-/* Blueprint node dots */
-.bp-node{
-  position:absolute;
-  width:6px;height:6px;
-  border-radius:50%;
-  border:1px solid rgba(42,38,34,0.3);
-  background:transparent;
-}
-.bp-label{
-  position:absolute;
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.45rem;
-  color:rgba(42,38,34,0.35);
-  letter-spacing:0.1em;
-}
+.s13{background:var(--green-deep);flex-direction:column;padding:6vh 10%}
+.s13 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:var(--cream);margin-bottom:2.5rem}
+.logistics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;max-width:900px}
+.log-item{border-top:1px solid rgba(237,232,200,0.1);padding-top:1.2rem}
+.log-label{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.6rem}
+.log-value{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;color:var(--cream);margin-bottom:0.4rem}
+.log-item p{font-size:0.72rem;line-height:1.6;color:rgba(237,232,200,0.5)}
 
 /* ===== SLIDE 14: CLOSING ===== */
-.slide-14{background:linear-gradient(145deg,#2a3a10 0%,#3a4a1f 40%,#4a5a25 60%,#2a3212 100%);}
-.slide-14 .content{
-  position:relative;z-index:10;
-  display:flex;flex-direction:column;
-  align-items:center;text-align:center;
-  max-width:760px;
-  padding:0 2rem;
-}
-.slide-14 .closing-quote{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-weight:300;
-  font-size:clamp(1.2rem,2.2vw,1.75rem);
-  max-width:700px;line-height:1.55;
-  color:var(--cream);margin-bottom:2.5rem;
-}
-.slide-14 .closing-meta{
-  font-family:'IBM Plex Mono',monospace;
-  font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;
-  color:rgba(237,232,200,0.4);
-}
-
-/* ===== HALFTONE DOT ANIMATION ===== */
-@keyframes dot-pulse{0%,100%{r:attr(r);}50%{r:calc(attr(r) * 1.3);}}
+.s14{background:var(--green-deep);flex-direction:column;text-align:center}
+.s14 canvas{position:absolute;inset:0;width:100%;height:100%}
+.s14-inner{position:relative;z-index:5;padding:2rem}
+.closing-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(1.2rem,2vw,1.75rem);max-width:720px;line-height:1.6;color:var(--cream);margin:0 auto 3rem;opacity:0.88}
+.closing-meta{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(237,232,200,0.3)}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 1 — TITLE (ASCII BLOOM)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-1" id="s1">
-  <!-- Golden radial glow -->
-  <div class="golden-glow" id="s1-glow" style="width:500px;height:500px;background:radial-gradient(circle,rgba(212,197,106,0.35) 0%,rgba(180,160,60,0.15) 40%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-  <!-- Blueprint SVG arcs -->
-  <svg class="bp-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-    <g style="animation:rotate-slow 30s linear infinite;transform-origin:720px 450px;">
-      <circle class="bp-arc" cx="720" cy="450" r="280"/>
-      <circle class="bp-arc" cx="720" cy="450" r="380"/>
-      <circle class="bp-arc-gold" cx="720" cy="450" r="180"/>
-    </g>
-    <line class="bp-arc" x1="440" y1="450" x2="200" y2="450"/>
-    <line class="bp-arc" x1="1000" y1="450" x2="1240" y2="450"/>
-    <line class="bp-arc" x1="720" y1="170" x2="720" y2="50"/>
-    <line class="bp-arc" x1="720" y1="730" x2="720" y2="870"/>
-    <path class="bp-arc-gold" d="M 520 250 Q 720 150 920 250"/>
-    <path class="bp-arc-gold" d="M 520 650 Q 720 750 920 650"/>
-    <!-- Tick marks -->
-    <g fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5">
-      <line x1="716" y1="168" x2="724" y2="168"/>
-      <line x1="720" y1="164" x2="720" y2="172"/>
-      <line x1="436" y1="446" x2="444" y2="446"/>
-      <line x1="440" y1="442" x2="440" y2="450"/>
-      <line x1="996" y1="446" x2="1004" y2="446"/>
-      <line x1="1000" y1="442" x2="1000" y2="450"/>
-    </g>
-  </svg>
-  <!-- ASCII Bloom (generated by JS below) -->
-  <div id="bloom-container" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;"></div>
-  <!-- Large background serif text -->
-  <div class="bg-text" style="writing-mode:horizontal-tb;">Bloom</div>
-  <!-- Sparkles -->
-  <span class="sparkle" style="top:22%;left:15%;">✦</span>
-  <span class="sparkle" style="top:70%;right:18%;animation-delay:-2s;">✦</span>
-  <span class="sparkle" style="top:35%;right:30%;animation-delay:-4s;font-size:0.7rem;">✦</span>
-  <!-- Coordinate labels -->
-  <span class="coord" style="position:absolute;top:28%;left:68%;z-index:12;">3 × 10⁴¹ – 647</span>
-  <span class="coord" style="position:absolute;bottom:32%;left:20%;z-index:12;">894,350</span>
-  <span class="coord" style="position:absolute;top:65%;right:22%;z-index:12;">602,594</span>
-  <!-- Registration marks -->
-  <span class="reg-cross" style="top:18%;right:42%;z-index:12;">+</span>
-  <span class="reg-cross" style="bottom:22%;left:40%;z-index:12;">+</span>
-  <!-- Title content -->
-  <div class="title-content">
-    <div class="label" style="margin-bottom:1.5rem;">Amplify Partners Writing Fellowship</div>
-    <h1>The <em>Generator</em><br>and the Discriminator</h1>
-    <div class="subtitle">Scientific Intuition in the Age of AI Scientists</div>
-    <div class="meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
+<!-- SLIDE 1: HERO BLOOM -->
+<div class="slide s1" id="slide1">
+  <div class="grain"></div>
+  <canvas id="c1"></canvas>
+  <div class="s1-text">
+    <div class="s1-label">Amplify Partners Writing Fellowship</div>
+    <div class="s1-title">The <em>Generator</em><br>and the<br>Discriminator</div>
+    <div class="s1-sub">Scientific Intuition in the Age of AI Scientists</div>
+    <div class="s1-meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
   </div>
-  <div class="corner-mark">72 of 84 Nobel laureates<br>called it intuition</div>
-  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
-    <div class="tl"></div><div class="tr"></div>
-    <div class="bl"></div><div class="br"></div>
-  </div>
-  <div class="grain-overlay"></div>
+  <div class="s1-corner">72 of 84 Nobel laureates<br>called it intuition</div>
+  <div class="slide-num">01 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 2 — CORE TENSION (HALFTONE + CLOUD)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-2" id="s2">
-  <!-- Left halftone panel (Discriminator) -->
-  <canvas class="halftone-canvas" id="ht-s2" style="position:absolute;top:0;left:0;width:47%;height:100%;opacity:0.18;z-index:0;"></canvas>
-  <!-- Right cloud panel (Generator) -->
-  <div class="cloud-blob" style="width:300px;height:300px;background:rgba(176,160,196,0.6);top:20%;right:5%;animation-delay:0s;z-index:1;"></div>
-  <div class="cloud-blob" style="width:220px;height:220px;background:rgba(184,206,176,0.5);top:40%;right:20%;animation-delay:-6s;z-index:1;"></div>
-  <div class="cloud-blob" style="width:180px;height:180px;background:rgba(143,180,196,0.4);bottom:15%;right:8%;animation-delay:-12s;z-index:1;"></div>
-  <!-- Blueprint SVG -->
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;">
-    <line stroke="rgba(255,255,255,0.08)" stroke-width="0.5" x1="720" y1="0" x2="720" y2="900"/>
-    <line stroke="rgba(255,255,255,0.08)" stroke-width="0.5" x1="0" y1="450" x2="1440" y2="450"/>
-    <text x="730" y="30" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="9">(II.)</text>
-  </svg>
-  <div class="editorial-label">
-    <span class="label">The Core Tension</span>
-  </div>
-  <div class="content" style="z-index:10;">
-    <div class="col col-left">
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(155,159,212,0.6);margin-bottom:0.5rem;">(I.) Discriminator</div>
-      <h2>Discriminator Taste</h2>
+<!-- SLIDE 2: CORE TENSION -->
+<div class="slide s2" id="slide2">
+  <div class="grain"></div>
+  <canvas class="bg-canvas" id="c2bg"></canvas>
+  <div class="page-label">The Core Tension</div>
+  <div class="s2-content">
+    <div class="s2-col s2-left">
+      <div class="s2-can-wrap"><canvas id="c2L"></canvas></div>
+      <h2 style="color:var(--periwinkle)">Discriminator Taste</h2>
       <p>Pattern-matching against institutional consensus. Calibrated against what has already been accepted, published, cited, funded.</p>
       <p>Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
-      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;">What has already won.</p>
-      <div class="stat">100+</div>
-      <div class="stat-label">AI companies building discriminators for biology</div>
+      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;font-size:0.82rem">What has already won.</p>
+      <div class="stat" style="color:var(--periwinkle)">100+</div>
+      <div class="stat-lbl">AI companies building discriminators for biology</div>
     </div>
-    <div class="vs-divider" style="position:relative;">
-      <div style="position:absolute;top:10%;bottom:10%;left:50%;width:1px;background:linear-gradient(to bottom,transparent,rgba(237,232,200,0.15),transparent);"></div>
-      <span style="position:relative;z-index:1;background:#1c1d2e;padding:0.3rem 0;">vs.</span>
-    </div>
-    <div class="col col-right">
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(168,186,133,0.6);margin-bottom:0.5rem;">(II.) Generator</div>
-      <h2>Generator Taste</h2>
+    <div class="s2-divider">vs.</div>
+    <div class="s2-col s2-right">
+      <div class="s2-can-wrap"><canvas id="c2R"></canvas></div>
+      <h2 style="color:var(--sage)">Generator Taste</h2>
       <p>Identifying problems before the field has vocabulary for them. Sustaining attention on something unrewarding long enough for it to become rewarding.</p>
-      <p>Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
-      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;">What nobody yet believes matters.</p>
-      <div class="stat">0</div>
-      <div class="stat-label">AI systems designed to cultivate this capacity</div>
+      <p>The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
+      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;font-size:0.82rem">What nobody yet believes matters.</p>
+      <div class="stat" style="color:var(--sage)">0</div>
+      <div class="stat-lbl">AI systems designed to cultivate this capacity</div>
     </div>
   </div>
-  <div class="bottom-line">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
-  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
-    <div class="tl"></div><div class="tr"></div>
-    <div class="bl"></div><div class="br"></div>
-  </div>
-  <div class="grain-overlay"></div>
+  <div class="s2-bottom">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
+  <div class="slide-num">02 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 3 — WHY NOW (CHROMATIC CLOUDS)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-3" id="s3">
-  <!-- Cloud blobs per force -->
-  <div class="cloud-blob" style="width:280px;height:280px;background:rgba(244,166,168,0.7);top:10%;left:5%;animation-delay:0s;z-index:0;"></div>
-  <div class="cloud-blob" style="width:250px;height:250px;background:rgba(232,220,143,0.6);top:5%;left:38%;animation-delay:-7s;z-index:0;"></div>
-  <div class="cloud-blob" style="width:260px;height:260px;background:rgba(184,206,176,0.6);top:8%;right:5%;animation-delay:-14s;z-index:0;"></div>
-  <!-- Dim secondary blobs -->
-  <div class="cloud-blob" style="width:180px;height:120px;background:rgba(244,166,168,0.3);bottom:20%;left:8%;animation-delay:-3s;z-index:0;"></div>
-  <div class="cloud-blob" style="width:150px;height:150px;background:rgba(232,220,143,0.25);bottom:15%;left:40%;animation-delay:-10s;z-index:0;"></div>
-  <div class="cloud-blob" style="width:160px;height:130px;background:rgba(184,206,176,0.3);bottom:18%;right:8%;animation-delay:-5s;z-index:0;"></div>
-  <!-- Blueprint connection lines -->
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <line stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4 6" x1="250" y1="200" x2="480" y2="200"/>
-    <line stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4 6" x1="720" y1="200" x2="960" y2="200"/>
-    <circle cx="250" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-    <circle cx="720" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-    <circle cx="1190" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-    <text x="16" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.01 — 248,100</text>
-    <text x="580" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.02 — 719,100</text>
-    <text x="1120" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.03 — 1190,100</text>
-  </svg>
-  <div class="content" style="z-index:10;padding-top:8vh;">
-    <div class="label" style="margin-bottom:1.2rem;">Why This Matters Now</div>
+<!-- SLIDE 3: WHY NOW -->
+<div class="slide s3" id="slide3">
+  <div class="grain"></div>
+  <canvas class="bg-canvas" id="c3bg"></canvas>
+  <div class="s3-content">
+    <div class="page-label" style="position:static;margin-bottom:1.5rem;color:rgba(138,154,107,0.6)">Why This Matters Now</div>
     <h2>Three converging forces</h2>
     <div class="forces">
       <div class="force">
-        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(244,166,168,0.15);filter:blur(20px);pointer-events:none;"></div>
         <div class="force-num">01</div>
         <h3>The Automation Inflection</h3>
         <p>Self-driving labs at production scale. Ginkgo, Emerald Cloud Lab, Strateos running autonomous experiments. Recursion screening millions of compounds per week.</p>
         <div class="evidence">Nobel 2024 → Hassabis, Jumper, Baker</div>
       </div>
       <div class="force">
-        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(232,220,143,0.12);filter:blur(20px);pointer-events:none;"></div>
         <div class="force-num">02</div>
         <h3>The Signal-to-Noise Crisis</h3>
         <p>AI-assisted authorship flooding the literature. Autonomous agents fail 40% of physical tasks. More experiments, not more signal.</p>
         <div class="evidence">Bergstrom 2026: "do more, less well"</div>
       </div>
       <div class="force">
-        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(184,206,176,0.12);filter:blur(20px);pointer-events:none;"></div>
         <div class="force-num">03</div>
         <h3>The Missing Piece</h3>
         <p>No AI scientist system is designed to cultivate generative scientific intuition. All optimize for discriminator performance. The gap is structural, not accidental.</p>
@@ -797,20 +210,15 @@ body{
       </div>
     </div>
   </div>
-  <span class="sparkle" style="bottom:10%;right:5%;font-size:0.8rem;color:rgba(212,197,106,0.5);">✦</span>
-  <div class="grain-overlay"></div>
+  <div class="slide-num">03 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 4 — THREE PIECES (MINI ASCII MOTIFS)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-4" id="s4">
-  <!-- Soft bg blobs -->
-  <div style="position:absolute;top:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:rgba(123,127,196,0.06);filter:blur(80px);pointer-events:none;z-index:0;"></div>
-  <div style="position:absolute;bottom:-80px;right:-80px;width:350px;height:350px;border-radius:50%;background:rgba(138,154,107,0.06);filter:blur(80px);pointer-events:none;z-index:0;"></div>
-  <div class="content" style="z-index:10;">
+<!-- SLIDE 4: THREE PIECES -->
+<div class="slide s4" id="slide4">
+  <div class="grain"></div>
+  <div class="s4-content">
     <div class="arc-header">
-      <div class="label" style="color:rgba(42,38,34,0.4);margin-bottom:0.8rem;">The Series</div>
+      <div class="page-label" style="position:static;color:rgba(237,232,200,0.4);margin-bottom:0.5rem">The Series</div>
       <h2>Three pieces. Three months. One argument.</h2>
       <div class="arc-flow">
         <span class="arc-step">Define</span>
@@ -822,80 +230,70 @@ body{
     </div>
     <div class="pieces">
       <div class="piece">
-        <!-- Crystal/molecular mini ASCII -->
-        <div class="piece-art" id="art-p1"></div>
-        <div class="month">Month 1</div>
-        <h3>The Oracle and the Visionary</h3>
-        <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
-        <div class="companies">Recursion · Boltz</div>
+        <div class="piece-canvas-wrap"><canvas id="c4a"></canvas></div>
+        <div class="piece-body">
+          <div class="month">Month 1</div>
+          <h3>The Oracle and the Visionary</h3>
+          <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
+          <div class="companies">Recursion · Boltz</div>
+        </div>
       </div>
       <div class="piece">
-        <!-- Noise/static mini ASCII -->
-        <div class="piece-art" id="art-p2"></div>
-        <div class="month">Month 2</div>
-        <h3>The Noise Floor</h3>
-        <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
-        <div class="companies">Modal · LangChain · DatologyAI</div>
+        <div class="piece-canvas-wrap"><canvas id="c4b"></canvas></div>
+        <div class="piece-body">
+          <div class="month" style="color:var(--coral)">Month 2</div>
+          <h3>The Noise Floor</h3>
+          <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
+          <div class="companies">Modal · LangChain · DatologyAI</div>
+        </div>
       </div>
       <div class="piece">
-        <!-- Branching/dendritic mini ASCII -->
-        <div class="piece-art" id="art-p3"></div>
-        <div class="month">Month 3</div>
-        <h3>Designing for Intuition</h3>
-        <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
-        <div class="companies">VeriSIM Life · Antithesis · Scribe</div>
+        <div class="piece-canvas-wrap"><canvas id="c4c"></canvas></div>
+        <div class="piece-body">
+          <div class="month" style="color:var(--sage)">Month 3</div>
+          <h3>Designing for Intuition</h3>
+          <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
+          <div class="companies">VeriSIM Life · Antithesis · Scribe</div>
+        </div>
       </div>
     </div>
   </div>
-  <div class="grain-overlay" style="background:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");opacity:0.03;"></div>
+  <div class="slide-num">04 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDES 5-6: PIECE 1 (Periwinkle/mauve cloud)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-detail" id="s5">
-  <div class="detail-cloud" style="width:500px;height:400px;background:rgba(123,127,196,0.5);top:-100px;right:-100px;animation-delay:0s;"></div>
-  <div class="detail-cloud" style="width:300px;height:300px;background:rgba(176,160,196,0.4);bottom:-50px;left:200px;animation-delay:-8s;"></div>
-  <!-- Blueprint arcs -->
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <path d="M 1200 0 Q 1440 200 1440 450" stroke="rgba(123,127,196,0.12)" stroke-width="0.5" fill="none"/>
-    <path d="M 1100 0 Q 1300 300 1440 350" stroke="rgba(123,127,196,0.08)" stroke-width="0.5" fill="none"/>
-    <text x="1340" y="50" fill="rgba(123,127,196,0.3)" font-family="IBM Plex Mono" font-size="8">(I.)</text>
-  </svg>
-  <div class="piece-ind" style="color:#7B7FC4;">Piece 1 · Month 1</div>
+<!-- SLIDE 5: PIECE 1 OUTLINE -->
+<div class="slide s-detail" id="slide5">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c5corner" style="right:0;bottom:0;width:300px;height:300px;opacity:0.35"></canvas>
+  <div class="piece-indicator" style="color:var(--periwinkle)">Piece 1 · Month 1</div>
   <div class="slide-num">05 / 14</div>
-  <h2 style="margin-top:4rem;">The Oracle and the Visionary</h2>
+  <h2 class="serif">The Oracle and the Visionary</h2>
   <div class="detail-sub">8,000–9,000 words · Establishing the distinction</div>
   <div class="sections">
-    <div class="section-item"><span class="sec-num">1</span><h4>The Contrast</h4><p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. The interpolation/extrapolation distinction made visceral.</p></div>
-    <div class="section-item"><span class="sec-num">2</span><h4>What Laureates Said</h4><p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p></div>
-    <div class="section-item"><span class="sec-num">3</span><h4>What Cognitive Science Says</h4><p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge. Intuition as trainable faculty, not mysticism.</p></div>
-    <div class="section-item"><span class="sec-num">4</span><h4>What AI Is Actually Learning</h4><p>Foundation models trained on PDB, published literature, citation patterns. All calibrated against consensus. The training distribution ≠ the frontier.</p></div>
-    <div class="section-item"><span class="sec-num">5</span><h4>The Architecture of the Gap</h4><p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation. The legibility gradient.</p></div>
-    <div class="section-item"><span class="sec-num">6</span><h4>What This Is Not Saying</h4><p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p></div>
+    <div class="section-item"><div class="sec-num">1</div><h4>The Contrast</h4><p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. The interpolation/extrapolation distinction made visceral.</p></div>
+    <div class="section-item"><div class="sec-num">2</div><h4>What Laureates Said</h4><p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p></div>
+    <div class="section-item"><div class="sec-num">3</div><h4>What Cognitive Science Says</h4><p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge. Intuition as trainable faculty, not mysticism.</p></div>
+    <div class="section-item"><div class="sec-num">4</div><h4>What AI Is Actually Learning</h4><p>Foundation models trained on PDB, published literature, citation patterns. All calibrated against consensus. The training distribution ≠ the frontier.</p></div>
+    <div class="section-item"><div class="sec-num">5</div><h4>The Architecture of the Gap</h4><p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation. The legibility gradient.</p></div>
+    <div class="section-item"><div class="sec-num">6</div><h4>What This Is Not Saying</h4><p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p></div>
   </div>
-  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<div class="slide slide-company" id="s6">
-  <div class="detail-cloud" style="width:400px;height:350px;background:rgba(123,127,196,0.4);top:-80px;right:-60px;animation-delay:-4s;"></div>
-  <div class="detail-cloud" style="width:250px;height:250px;background:rgba(176,160,196,0.35);bottom:0;left:100px;animation-delay:-11s;"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <path d="M 1300 0 Q 1440 150 1440 400" stroke="rgba(123,127,196,0.1)" stroke-width="0.5" fill="none"/>
-    <text x="1340" y="50" fill="rgba(123,127,196,0.3)" font-family="IBM Plex Mono" font-size="8">(I.)</text>
-    <text x="20" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">894,350 — 602,594</text>
-  </svg>
-  <div class="piece-ind" style="color:#7B7FC4;">Piece 1 · Portfolio Companies</div>
+<!-- SLIDE 6: PIECE 1 COMPANIES -->
+<div class="slide s-company" id="slide6">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c6corner" style="right:0;top:0;width:280px;height:280px;opacity:0.3"></canvas>
+  <div class="piece-indicator" style="color:var(--periwinkle)">Piece 1 · Portfolio Companies</div>
   <div class="slide-num">06 / 14</div>
-  <div class="company-grid" style="margin-top:4rem;">
-    <div class="company-card" style="border-top-color:rgba(123,127,196,0.5);">
+  <div class="company-grid" style="margin-top:3rem">
+    <div class="company-card">
       <h3>Recursion Pharmaceuticals</h3>
       <div class="company-type">NASDAQ: RXRX · Digital Biology</div>
       <p>50PB+ phenomics data. Millions of cellular perturbation experiments per week. BioHive-2 supercomputer. The most complete realization of discriminator-taste science at industrial scale.</p>
-      <p>FAP clinical milestone (Feb 2026). REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
+      <p>FAP clinical milestone (Feb 2026) — first full-stack AI OS validation. REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
       <div class="insight">Key question: What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
     </div>
-    <div class="company-card" style="border-top-color:rgba(176,160,196,0.5);">
+    <div class="company-card">
       <h3>Boltz</h3>
       <div class="company-type">Open-Source · Digital Biology</div>
       <p>Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
@@ -903,173 +301,106 @@ body{
       <div class="insight">Key question: What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
     </div>
   </div>
-  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDES 7-8: PIECE 2 (Dense halftone noise field)
-     ═══════════════════════════════════════════════ -->
-<div class="slide" id="s7" style="background:#141414;flex-direction:column;padding:5vh 9%;align-items:flex-start;justify-content:flex-start;">
-  <canvas id="ht-s7" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.22;z-index:0;pointer-events:none;"></canvas>
-  <!-- Golden dots breaking through -->
-  <div style="position:absolute;top:38%;left:55%;width:8px;height:8px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 20px 8px rgba(232,220,143,0.4);z-index:5;animation:glow-pulse 4s ease-in-out infinite;"></div>
-  <div style="position:absolute;top:52%;left:70%;width:6px;height:6px;border-radius:50%;background:#d4c56a;box-shadow:0 0 15px 6px rgba(212,197,106,0.35);z-index:5;animation:glow-pulse 6s ease-in-out infinite;animation-delay:-2s;"></div>
-  <div style="position:absolute;top:62%;left:45%;width:5px;height:5px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 12px 5px rgba(232,220,143,0.3);z-index:5;animation:glow-pulse 5s ease-in-out infinite;animation-delay:-3s;"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <text x="16" y="30" fill="rgba(232,93,61,0.4)" font-family="IBM Plex Mono" font-size="8">(II.) The Noise Floor</text>
-    <text x="1300" y="880" fill="rgba(255,255,255,0.12)" font-family="IBM Plex Mono" font-size="7">07/14</text>
-  </svg>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:#E85D3D;position:relative;z-index:10;margin-top:2rem;">Piece 2 · Month 2</div>
-  <h2 class="serif" style="font-size:2.2rem;font-weight:300;color:var(--bone);margin-bottom:0.4rem;margin-top:3rem;position:relative;z-index:10;">The Noise Floor</h2>
-  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.9rem;color:rgba(237,232,200,0.5);margin-bottom:2rem;position:relative;z-index:10;">7,500–8,500 words · Diagnosing the crisis</div>
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem 3rem;width:100%;position:relative;z-index:10;">
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">1</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Throughput Fallacy</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress. The noise floor rises with the throughput.</p>
+<!-- SLIDE 7: PIECE 2 OUTLINE -->
+<div class="slide s-detail" id="slide7">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c7corner" style="right:0;bottom:0;width:300px;height:300px;opacity:0.35"></canvas>
+  <div class="piece-indicator" style="color:var(--coral)">Piece 2 · Month 2</div>
+  <div class="slide-num">07 / 14</div>
+  <h2>The Noise Floor</h2>
+  <div class="detail-sub">7,500–8,500 words · Diagnosing the crisis</div>
+  <div class="sections">
+    <div class="section-item"><div class="sec-num">1</div><h4>The Throughput Fallacy</h4><p>500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress. The noise floor rises with the throughput.</p></div>
+    <div class="section-item"><div class="sec-num">2</div><h4>The Failure Modes at Scale</h4><p>Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding literature. The honest empirical ledger.</p></div>
+    <div class="section-item"><div class="sec-num">3</div><h4>The Literature Flood</h4><p>Preprints growing faster than curation capacity. AI-assisted authorship producing more things that look like science. Signal-to-noise ratio decreasing.</p></div>
+    <div class="section-item"><div class="sec-num">4</div><h4>The Agent Orchestration Problem</h4><p>Agent frameworks handle anomalies as noise, not signal. Current design: coverage and reliability. Missing design: generative flexibility at inflection points.</p></div>
+    <div class="section-item"><div class="sec-num">5</div><h4>The Training Culture Problem</h4><p>Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices. A generation learning to operate, not to judge.</p></div>
+    <div class="section-item"><div class="sec-num">6</div><h4>The Real Filter</h4><p>In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p></div>
+  </div>
+</div>
+
+<!-- SLIDE 8: PIECE 2 COMPANIES -->
+<div class="slide s-company" id="slide8">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c8corner" style="left:0;bottom:0;width:280px;height:280px;opacity:0.3"></canvas>
+  <div class="piece-indicator" style="color:var(--coral)">Piece 2 · Portfolio Companies</div>
+  <div class="slide-num">08 / 14</div>
+  <div class="company-grid cols3" style="margin-top:3rem">
+    <div class="company-card" style="border-top-color:rgba(232,93,61,0.4)">
+      <h3>Modal</h3>
+      <div class="company-type">Serverless Compute</div>
+      <p>The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
+      <div class="insight">What happens to question quality when compute stops being the constraint?</div>
     </div>
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">2</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Failure Modes at Scale</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding literature. The honest empirical ledger.</p>
+    <div class="company-card" style="border-top-color:rgba(232,93,61,0.4)">
+      <h3>LangChain</h3>
+      <div class="company-type">Agent Orchestration</div>
+      <p>LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
+      <div class="insight">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
     </div>
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">3</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Literature Flood</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Preprints growing faster than curation capacity. AI-assisted authorship producing more things that look like science.</p>
-    </div>
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">4</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Agent Orchestration Problem</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Agent frameworks handle anomalies as noise, not signal. Current design: coverage and reliability. Missing design: generative flexibility at inflection points.</p>
-    </div>
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">5</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Training Culture Problem</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices. A generation learning to operate, not to judge.</p>
-    </div>
-    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">6</span>
-      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Real Filter</h4>
-      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p>
+    <div class="company-card" style="border-top-color:rgba(212,197,106,0.4)">
+      <h3>DatologyAI</h3>
+      <div class="company-type">Data Curation</div>
+      <p>Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
+      <div class="insight">What would a training dataset look like if optimized for novelty rather than consensus?</div>
     </div>
   </div>
-  <div class="grain-overlay"></div>
 </div>
 
-<div class="slide" id="s8" style="background:#181818;flex-direction:column;padding:5vh 9%;align-items:flex-start;justify-content:center;">
-  <canvas id="ht-s8" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.2;z-index:0;pointer-events:none;"></canvas>
-  <div style="position:absolute;top:30%;left:60%;width:10px;height:10px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 25px 10px rgba(232,220,143,0.45);z-index:5;animation:glow-pulse 3.5s ease-in-out infinite;"></div>
-  <div style="position:absolute;top:55%;left:42%;width:7px;height:7px;border-radius:50%;background:#d4c56a;box-shadow:0 0 18px 7px rgba(212,197,106,0.4);z-index:5;animation:glow-pulse 5s ease-in-out infinite;animation-delay:-1.5s;"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <text x="16" y="30" fill="rgba(232,93,61,0.35)" font-family="IBM Plex Mono" font-size="8">(II.) Portfolio</text>
-    <text x="1300" y="880" fill="rgba(255,255,255,0.1)" font-family="IBM Plex Mono" font-size="7">08/14</text>
-  </svg>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:#E85D3D;position:relative;z-index:10;margin-bottom:1rem;">Piece 2 · Portfolio Companies</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;max-width:1000px;position:relative;z-index:10;">
-    <div style="padding:1.6rem;border-top:2px solid rgba(232,93,61,0.35);">
-      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">Modal</h3>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Serverless Compute</div>
-      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">What happens to question quality when compute stops being the constraint?</div>
-    </div>
-    <div style="padding:1.6rem;border-top:2px solid rgba(232,93,61,0.2);">
-      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">LangChain</h3>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Agent Orchestration</div>
-      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
-    </div>
-    <div style="padding:1.6rem;border-top:2px solid rgba(196,168,85,0.35);">
-      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">DatologyAI</h3>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Data Curation</div>
-      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">What would a training dataset look like if optimized for novelty rather than consensus?</div>
-    </div>
-  </div>
-  <div class="grain-overlay"></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     SLIDES 9-10: PIECE 3 (Sage cloud + ripple rings)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-detail" id="s9" style="background:#f4f1e8;">
-  <div class="detail-cloud" style="width:450px;height:400px;background:rgba(184,206,176,0.5);top:-80px;right:-60px;animation-delay:0s;"></div>
-  <div class="detail-cloud" style="width:280px;height:280px;background:rgba(195,203,158,0.4);bottom:-40px;left:150px;animation-delay:-9s;"></div>
-  <!-- Concentric ripple rings -->
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <circle class="ring" cx="1200" cy="200" r="80" stroke="rgba(138,154,107,0.3)" style="animation-delay:0s;"/>
-    <circle class="ring" cx="1200" cy="200" r="140" stroke="rgba(138,154,107,0.2)" style="animation-delay:-2s;"/>
-    <circle class="ring" cx="1200" cy="200" r="200" stroke="rgba(138,154,107,0.12)" style="animation-delay:-4s;"/>
-    <circle class="ring" cx="1200" cy="200" r="260" stroke="rgba(138,154,107,0.07)" style="animation-delay:-6s;"/>
-    <text x="16" y="30" fill="rgba(138,154,107,0.4)" font-family="IBM Plex Mono" font-size="8">(III.) Designing for Intuition</text>
-    <text x="1360" y="880" fill="rgba(42,38,34,0.15)" font-family="IBM Plex Mono" font-size="7">09/14</text>
-  </svg>
-  <div class="piece-ind" style="color:#8A9A6B;">Piece 3 · Month 3</div>
-  <div class="slide-num" style="color:rgba(42,38,34,0.3);">09 / 14</div>
-  <h2 style="margin-top:4rem;color:#2A2622;">Designing for Intuition</h2>
+<!-- SLIDE 9: PIECE 3 OUTLINE -->
+<div class="slide s-detail" id="slide9">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c9corner" style="right:0;bottom:0;width:300px;height:300px;opacity:0.35"></canvas>
+  <div class="piece-indicator" style="color:var(--sage)">Piece 3 · Month 3</div>
+  <div class="slide-num">09 / 14</div>
+  <h2>Designing for Intuition</h2>
   <div class="detail-sub">7,000–8,000 words · The constructive turn</div>
   <div class="sections">
-    <div class="section-item"><span class="sec-num">1</span><h4>The Constructive Frame</h4><p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p></div>
-    <div class="section-item"><span class="sec-num">2</span><h4>Designed Friction</h4><p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p></div>
-    <div class="section-item"><span class="sec-num">3</span><h4>Generator-Augmented Interfaces</h4><p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas.</p></div>
-    <div class="section-item"><span class="sec-num">4</span><h4>Institutional Protection</h4><p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p></div>
-    <div class="section-item"><span class="sec-num">5</span><h4>What an AI Generator Would Look Like</h4><p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p></div>
-    <div class="section-item"><span class="sec-num">6</span><h4>The Long Game</h4><p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p></div>
+    <div class="section-item"><div class="sec-num">1</div><h4>The Constructive Frame</h4><p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p></div>
+    <div class="section-item"><div class="sec-num">2</div><h4>Designed Friction</h4><p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p></div>
+    <div class="section-item"><div class="sec-num">3</div><h4>Generator-Augmented Interfaces</h4><p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas. Finding what you don't know to look for.</p></div>
+    <div class="section-item"><div class="sec-num">4</div><h4>Institutional Protection</h4><p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p></div>
+    <div class="section-item"><div class="sec-num">5</div><h4>What an AI Generator Would Look Like</h4><p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p></div>
+    <div class="section-item"><div class="sec-num">6</div><h4>The Long Game</h4><p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p></div>
   </div>
-  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<div class="slide slide-company" id="s10" style="background:#f4f1e8;">
-  <div class="detail-cloud" style="width:380px;height:320px;background:rgba(184,206,176,0.45);top:-60px;right:-40px;animation-delay:-5s;"></div>
-  <div class="detail-cloud" style="width:220px;height:220px;background:rgba(143,180,196,0.3);bottom:0;left:80px;animation-delay:-13s;"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <circle class="ring" cx="1280" cy="180" r="70" stroke="rgba(138,154,107,0.25)" style="animation-delay:-1s;"/>
-    <circle class="ring" cx="1280" cy="180" r="120" stroke="rgba(138,154,107,0.15)" style="animation-delay:-3s;"/>
-    <text x="16" y="30" fill="rgba(138,154,107,0.35)" font-family="IBM Plex Mono" font-size="8">(III.) Portfolio</text>
-    <text x="1360" y="880" fill="rgba(42,38,34,0.15)" font-family="IBM Plex Mono" font-size="7">10/14</text>
-  </svg>
-  <div class="piece-ind" style="color:#8A9A6B;">Piece 3 · Portfolio Companies</div>
-  <div class="slide-num" style="color:rgba(42,38,34,0.3);">10 / 14</div>
-  <div class="company-grid" style="margin-top:4rem;grid-template-columns:repeat(3,1fr);">
-    <div class="company-card" style="border-top-color:rgba(138,154,107,0.5);">
+<!-- SLIDE 10: PIECE 3 COMPANIES -->
+<div class="slide s-company" id="slide10">
+  <div class="grain"></div>
+  <canvas class="corner-canvas" id="c10corner" style="right:0;top:0;width:280px;height:280px;opacity:0.3"></canvas>
+  <div class="piece-indicator" style="color:var(--sage)">Piece 3 · Portfolio Companies</div>
+  <div class="slide-num">10 / 14</div>
+  <div class="company-grid cols3" style="margin-top:3rem">
+    <div class="company-card" style="border-top-color:rgba(138,154,107,0.5)">
       <h3>VeriSIM Life</h3>
       <div class="company-type">Biosimulation</div>
       <p>BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
       <div class="insight">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
     </div>
-    <div class="company-card" style="border-top-color:rgba(143,180,196,0.5);">
+    <div class="company-card" style="border-top-color:rgba(138,154,107,0.5)">
       <h3>Antithesis</h3>
       <div class="company-type">Autonomous Testing</div>
       <p>Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
       <div class="insight">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
     </div>
-    <div class="company-card" style="border-top-color:rgba(195,203,158,0.5);">
+    <div class="company-card" style="border-top-color:rgba(212,197,106,0.4)">
       <h3>Scribe</h3>
       <div class="company-type">Workflow Documentation</div>
       <p>AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
       <div class="insight">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
     </div>
   </div>
-  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 11 — INTEGRATION (All three styles)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-11" id="s11">
-  <!-- Chromatic clouds -->
-  <div class="cloud-blob" style="width:350px;height:300px;background:rgba(123,127,196,0.35);top:0;left:0;z-index:0;animation-delay:0s;"></div>
-  <div class="cloud-blob" style="width:280px;height:280px;background:rgba(184,206,176,0.3);bottom:0;right:0;z-index:0;animation-delay:-9s;"></div>
-  <div class="cloud-blob" style="width:200px;height:200px;background:rgba(232,220,143,0.2);top:30%;left:40%;z-index:0;animation-delay:-5s;"></div>
-  <!-- Halftone canvas overlay -->
-  <canvas id="ht-s11" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.06;z-index:1;pointer-events:none;"></canvas>
-  <!-- ASCII element -->
-  <div id="bloom-s11" style="position:absolute;top:50%;right:5%;transform:translateY(-50%);z-index:3;opacity:0.25;pointer-events:none;font-family:'IBM Plex Mono',monospace;font-size:9px;line-height:12px;white-space:pre;color:#f5f5f0;"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:4;pointer-events:none;">
-    <text x="16" y="30" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="8">Integration — 11/14</text>
-  </svg>
-  <div class="content" style="z-index:10;">
-    <div class="label" style="text-align:center;margin-bottom:1.2rem;">Integration</div>
+<!-- SLIDE 11: INTEGRATION -->
+<div class="slide s11" id="slide11">
+  <div class="grain"></div>
+  <canvas class="bg-canvas" id="c11bg"></canvas>
+  <div class="s11-inner">
+    <div class="page-label" style="position:static;text-align:center;margin-bottom:1rem">Integration</div>
     <h2>How the pieces connect</h2>
     <div class="threads">
       <div class="thread">
@@ -1094,396 +425,669 @@ body{
       </div>
     </div>
   </div>
-  <div class="grain-overlay"></div>
+  <div class="slide-num">11 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 12 — WHY AMPLIFY (Minimal, golden glow)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-12" id="s12">
-  <!-- Single golden glow spot -->
-  <div class="golden-glow" style="width:600px;height:600px;background:radial-gradient(circle,rgba(212,197,106,0.2) 0%,rgba(180,160,60,0.08) 50%,transparent 70%);top:50%;left:30%;transform:translate(-50%,-50%);z-index:1;"></div>
-  <!-- Sparkle star -->
-  <span class="sparkle" style="top:38%;left:58%;font-size:1.4rem;color:rgba(212,197,106,0.6);z-index:5;">✦</span>
-  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
-    <text x="16" y="30" fill="rgba(255,255,255,0.12)" font-family="IBM Plex Mono" font-size="7">12/14</text>
-    <text x="16" y="880" fill="rgba(212,197,106,0.2)" font-family="IBM Plex Mono" font-size="7">amplify.partners — writing fellowship</text>
-  </svg>
-  <div class="content" style="z-index:10;margin-left:8%;">
-    <div class="label" style="margin-bottom:1.5rem;">Why This Matters to Amplify</div>
+<!-- SLIDE 12: WHY AMPLIFY -->
+<div class="slide s12" id="slide12">
+  <div class="grain"></div>
+  <canvas class="bg-canvas" id="c12bg"></canvas>
+  <div class="accent-bar"></div>
+  <div class="s12-inner">
+    <div class="page-label" style="position:static;color:rgba(138,154,107,0.5);margin-bottom:1.5rem">Why This Matters to Amplify</div>
     <h2>The portfolio thesis, extended</h2>
     <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
     <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
     <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
   </div>
-  <div class="grain-overlay"></div>
+  <div class="slide-num">12 / 14</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 13 — LOGISTICS (Blueprint style)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-13" id="s13">
-  <!-- Blueprint SVG network -->
-  <svg style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;" viewBox="0 0 1440 900">
-    <!-- Connecting lines between log items (approximate positions) -->
-    <line x1="240" y1="540" x2="480" y2="540" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
-    <line x1="720" y1="540" x2="960" y2="540" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
-    <line x1="240" y1="700" x2="480" y2="700" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
-    <line x1="720" y1="700" x2="960" y2="700" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
-    <circle cx="240" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <circle cx="720" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <circle cx="1200" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <circle cx="240" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <circle cx="720" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <circle cx="1200" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
-    <!-- Coordinate labels -->
-    <text x="50" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">node: 240,540 — reporting.plan</text>
-    <text x="1280" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">13/14</text>
-    <text x="50" y="30" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">Reporting Plan — Amplify Partners Writing Fellowship</text>
-  </svg>
-  <div class="content" style="z-index:10;margin-top:0;">
-    <div class="label" style="color:rgba(42,38,34,0.4);margin-bottom:1.2rem;">Reporting Plan</div>
-    <h2>How I'll build it</h2>
-    <div class="logistics-grid">
-      <div class="log-item">
-        <div class="log-label">Interviews</div>
-        <div class="log-value">20–25</div>
-        <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
-      </div>
-      <div class="log-item">
-        <div class="log-label">Duration</div>
-        <div class="log-value">3 months</div>
-        <p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p>
-      </div>
-      <div class="log-item">
-        <div class="log-label">Word Count</div>
-        <div class="log-value">~24K</div>
-        <p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p>
-      </div>
-      <div class="log-item">
-        <div class="log-label">Portfolio Companies</div>
-        <div class="log-value">8</div>
-        <p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p>
-      </div>
-      <div class="log-item">
-        <div class="log-label">Bibliography</div>
-        <div class="log-value">78</div>
-        <p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p>
-      </div>
-      <div class="log-item">
-        <div class="log-label">Builds From</div>
-        <div class="log-value">2 pieces</div>
-        <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
-      </div>
-    </div>
+<!-- SLIDE 13: LOGISTICS -->
+<div class="slide s13" id="slide13">
+  <div class="grain"></div>
+  <div class="page-label">Reporting Plan</div>
+  <div class="slide-num">13 / 14</div>
+  <h2>How I'll build it</h2>
+  <div class="logistics-grid">
+    <div class="log-item"><div class="log-label">Interviews</div><div class="log-value">20–25</div><p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p></div>
+    <div class="log-item"><div class="log-label">Duration</div><div class="log-value">3 months</div><p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p></div>
+    <div class="log-item"><div class="log-label">Word Count</div><div class="log-value">~24K</div><p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p></div>
+    <div class="log-item"><div class="log-label">Portfolio Companies</div><div class="log-value">8</div><p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p></div>
+    <div class="log-item"><div class="log-label">Bibliography</div><div class="log-value">78</div><p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p></div>
+    <div class="log-item"><div class="log-label">Builds From</div><div class="log-value">2 pieces</div><p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p></div>
   </div>
-  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     SLIDE 14 — CLOSING (Echo of slide 1)
-     ═══════════════════════════════════════════════ -->
-<div class="slide slide-14" id="s14">
-  <div class="golden-glow" id="s14-glow" style="width:600px;height:600px;background:radial-gradient(circle,rgba(212,197,106,0.4) 0%,rgba(180,160,60,0.18) 40%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
-  <svg class="bp-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
-    <g style="animation:rotate-slow 40s linear infinite;transform-origin:720px 450px;">
-      <circle class="bp-arc-gold" cx="720" cy="450" r="320"/>
-      <circle class="bp-arc" cx="720" cy="450" r="420"/>
-    </g>
-    <circle class="bp-arc-gold" cx="720" cy="450" r="220"/>
-    <path class="bp-arc-gold" d="M 520 250 Q 720 150 920 250"/>
-    <path class="bp-arc-gold" d="M 520 650 Q 720 750 920 650"/>
-    <text x="16" y="880" fill="rgba(212,197,106,0.25)" font-family="IBM Plex Mono" font-size="7">14/14 — The Generator and the Discriminator</text>
-  </svg>
-  <div id="bloom-s14" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;"></div>
-  <span class="sparkle" style="top:25%;left:18%;color:rgba(212,197,106,0.6);">✦</span>
-  <span class="sparkle" style="bottom:28%;right:20%;animation-delay:-3s;color:rgba(212,197,106,0.5);font-size:0.8rem;">✦</span>
-  <span class="sparkle" style="top:40%;right:15%;animation-delay:-6s;font-size:1.2rem;">✦</span>
-  <span class="coord" style="position:absolute;top:30%;left:65%;z-index:12;">894,350 × 10⁴¹</span>
-  <span class="coord" style="position:absolute;bottom:35%;left:18%;z-index:12;">602,594 — 0.3s</span>
-  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
-    <div class="tl" style="border-color:rgba(212,197,106,0.3);"></div>
-    <div class="tr" style="border-color:rgba(212,197,106,0.3);"></div>
-    <div class="bl" style="border-color:rgba(212,197,106,0.3);"></div>
-    <div class="br" style="border-color:rgba(212,197,106,0.3);"></div>
-  </div>
-  <div class="content" style="z-index:10;position:relative;">
-    <div class="label" style="margin-bottom:2rem;color:rgba(237,232,200,0.4);">Closing</div>
+<!-- SLIDE 14: CLOSING -->
+<div class="slide s14" id="slide14">
+  <div class="grain"></div>
+  <canvas id="c14"></canvas>
+  <div class="s14-inner">
+    <div class="page-label" style="position:static;text-align:center;margin-bottom:2.5rem">Closing</div>
     <div class="closing-quote">"The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."</div>
     <div class="closing-meta">Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026</div>
   </div>
-  <div class="grain-overlay"></div>
+  <div class="slide-num">14 / 14</div>
 </div>
 
-<style>
-@keyframes rotate-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-@keyframes ascii-flicker{0%,90%,100%{opacity:1;}92%,98%{opacity:0.3;}}
-</style>
-
 <script>
-// ═══════════════════════════════════════
-// ASCII BLOOM GENERATOR
-// ═══════════════════════════════════════
-function generateBloom(cx, cy, radius, opts = {}) {
-  const {
-    chars = ['.','·',':','+','×','*','#','○','◌','◦','●','▪','─','│','╱','╲','=','|','/','\\','-'],
-    denseChars = ['#','●','▪','*','×','=','#','|'],
-    midChars = ['+',':','○','◌','◦','─','│'],
-    sparseChars = ['.','·','-','/','\\','╱','╲'],
-    gridStep = 12,
-    colorPrimary = '#f5f5f0',
-    colorGold = '#e8dc8f',
-    colorNavy = '#1a2340',
-    animate = true,
-    scale = 1.0
-  } = opts;
+// ============================================================
+// NOISE UTILITIES
+// ============================================================
+(function(){
+const P=[];for(let i=0;i<256;i++)P.push(i);
+for(let i=255;i>0;i--){const j=Math.floor(Math.random()*(i+1));[P[i],P[j]]=[P[j],P[i]];}
+const PERM=[...P,...P];
+window._perm=PERM;
+})();
+function fade(t){return t*t*t*(t*(t*6-15)+10)}
+function lerp(a,b,t){return a+t*(b-a)}
+function grad2(h,x,y){h=h&3;const u=h<2?x:y,v=h<2?y:x;return((h&1)?-u:u)+((h&2)?-v:v)}
+function noise2(x,y){
+  const P=window._perm;
+  const X=Math.floor(x)&255,Y=Math.floor(y)&255;
+  x-=Math.floor(x);y-=Math.floor(y);
+  const u=fade(x),v=fade(y);
+  const a=P[X]+Y,b=P[X+1]+Y;
+  return lerp(lerp(grad2(P[a],x,y),grad2(P[b],x-1,y),u),
+              lerp(grad2(P[a+1],x,y-1),grad2(P[b+1],x-1,y-1),u),v);
+}
 
-  const container = document.createElement('div');
-  container.style.cssText = `position:relative;width:${radius*2*scale}px;height:${radius*2*scale}px;font-family:'IBM Plex Mono',monospace;font-size:${Math.round(10*scale)}px;line-height:${Math.round(13*scale)}px;`;
+// ============================================================
+// FLOWER PARTICLE SYSTEM
+// ============================================================
+function flowerWeight(x,y,cx,cy,scale,k){
+  const dx=(x-cx)/scale,dy=(y-cy)/scale;
+  const r=Math.sqrt(dx*dx+dy*dy);
+  const theta=Math.atan2(dy,dx);
+  const petalR=Math.abs(Math.cos(k*theta));
+  return Math.max(0,1-(r/(petalR+0.15)));
+}
 
-  const cols = Math.ceil(radius * 2 * scale / (gridStep * scale * 0.7));
-  const rows = Math.ceil(radius * 2 * scale / (gridStep * scale));
-  const cellW = radius * 2 * scale / cols;
-  const cellH = radius * 2 * scale / rows;
+function createParticle(cx,cy,maxR,k,rng){
+  let x,y,w;
+  for(let t=0;t<80;t++){
+    const angle=rng()*Math.PI*2;
+    const r=rng()*maxR;
+    x=cx+Math.cos(angle)*r;y=cy+Math.sin(angle)*r;
+    w=flowerWeight(x,y,cx,cy,maxR,k);
+    if(rng()<w*1.2)break;
+  }
+  const isShadow=rng()<0.12;
+  const isGold=rng()<0.04;
+  return {
+    x,y,
+    ox:x,oy:y,
+    vx:0,vy:0,
+    w:rng()*22+3,
+    h:rng()*3+1,
+    alpha:rng()*0.65+0.25,
+    isShadow,isGold,
+    phaseOff:rng()*Math.PI*2,
+    noiseOff:rng()*100
+  };
+}
 
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const px = c * cellW;
-      const py = r * cellH;
-      const dx = px - radius * scale;
-      const dy = py - radius * scale;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const normDist = dist / (radius * scale);
+class BloomSystem{
+  constructor(canvas,opts={}){
+    this.canvas=canvas;
+    this.ctx=canvas.getContext('2d');
+    this.opts={
+      count:opts.count||900,
+      k:opts.k||5,
+      bgColor:opts.bgColor||'#1a3012',
+      showGlow:opts.showGlow!==false,
+      showArcs:opts.showArcs!==false,
+      showCoords:opts.showCoords!==false,
+      showLensFlare:opts.showLensFlare!==false,
+      arcRotSpeed:opts.arcRotSpeed||0.0003,
+      flowSpeed:opts.flowSpeed||0.00015,
+      noiseScale:opts.noiseScale||0.003,
+      maxR:opts.maxR||null,
+      rng:opts.rng||Math.random
+    };
+    this.t=0;
+    this.particles=[];
+    this.arcAngle=0;
+    this.coords=[];
+    this.init();
+  }
+  init(){
+    const c=this.canvas,opts=this.opts,rng=opts.rng;
+    c.width=c.offsetWidth||c.width;
+    c.height=c.offsetHeight||c.height;
+    this.cx=c.width/2;this.cy=c.height/2;
+    this.maxR=opts.maxR||(Math.min(c.width,c.height)*0.42);
+    for(let i=0;i<opts.count;i++){
+      this.particles.push(createParticle(this.cx,this.cy,this.maxR,opts.k,rng));
+    }
+    // coordinate labels
+    for(let i=0;i<6;i++){
+      this.coords.push({
+        x:rng()*c.width*0.8+c.width*0.1,
+        y:rng()*c.height*0.8+c.height*0.1,
+        txt:`${Math.floor(rng()*900+100)},${Math.floor(rng()*700+100)}`
+      });
+    }
+  }
+  resize(){this.init()}
+  step(){
+    const {ctx,canvas,opts,particles}=this;
+    const W=canvas.width,H=canvas.height,t=this.t;
+    this.t+=1;
+    this.arcAngle+=opts.arcRotSpeed;
 
-      if (normDist > 1.08) continue;
+    // BG
+    ctx.fillStyle=opts.bgColor;ctx.fillRect(0,0,W,H);
 
-      // Petal shape: use angle to create organic form
-      const angle = Math.atan2(dy, dx);
-      const petalMod = 1 + 0.18 * Math.cos(6 * angle) + 0.08 * Math.cos(12 * angle);
-      const effectiveDist = normDist / petalMod;
+    // Golden glow
+    if(opts.showGlow){
+      const grd=ctx.createRadialGradient(this.cx,this.cy,0,this.cx,this.cy,this.maxR*1.3);
+      grd.addColorStop(0,'rgba(212,197,106,0.18)');
+      grd.addColorStop(0.4,'rgba(201,169,74,0.08)');
+      grd.addColorStop(1,'rgba(26,48,18,0)');
+      ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+    }
 
-      if (effectiveDist > 1.0) continue;
+    // Lens flare (green, left side)
+    if(opts.showLensFlare){
+      const lx=this.cx-this.maxR*0.6,ly=this.cy-this.maxR*0.1;
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,this.maxR*0.7);
+      lg.addColorStop(0,'rgba(138,255,68,0.09)');
+      lg.addColorStop(1,'rgba(138,255,68,0)');
+      ctx.fillStyle=lg;ctx.fillRect(0,0,W,H);
+    }
 
-      let char, color, opacity;
+    // Blueprint arcs
+    if(opts.showArcs){
+      ctx.save();ctx.translate(this.cx,this.cy);ctx.rotate(this.arcAngle);
+      ctx.strokeStyle='rgba(255,255,255,0.055)';ctx.lineWidth=0.7;
+      for(let r=this.maxR*0.3;r<this.maxR*1.6;r+=this.maxR*0.18){
+        ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+      }
+      // radial lines
+      for(let a=0;a<Math.PI*2;a+=Math.PI/6){
+        ctx.beginPath();ctx.moveTo(0,0);
+        ctx.lineTo(Math.cos(a)*this.maxR*1.5,Math.sin(a)*this.maxR*1.5);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
-      if (effectiveDist < 0.25) {
-        // Dense core
-        char = denseChars[Math.floor(Math.random() * denseChars.length)];
-        opacity = 0.85 + Math.random() * 0.15;
-        color = Math.random() < 0.3 ? colorGold : colorPrimary;
-      } else if (effectiveDist < 0.55) {
-        // Mid petal
-        char = midChars[Math.floor(Math.random() * midChars.length)];
-        opacity = 0.5 + Math.random() * 0.35;
-        color = Math.random() < 0.15 ? colorGold : (Math.random() < 0.1 ? colorNavy : colorPrimary);
-      } else if (effectiveDist < 0.8) {
-        // Outer petal
-        char = sparseChars[Math.floor(Math.random() * sparseChars.length)];
-        opacity = 0.2 + Math.random() * 0.3;
-        color = colorPrimary;
+    // Update & draw particles
+    const ns=opts.noiseScale,fs=opts.flowSpeed;
+    for(const p of particles){
+      const nx=(p.x+p.noiseOff)*ns,ny=(p.y+p.noiseOff)*ns;
+      const angle=noise2(nx+t*fs,ny+t*fs)*Math.PI*4;
+      p.vx+=(Math.cos(angle)*0.08-p.vx)*0.04;
+      p.vy+=(Math.sin(angle)*0.08-p.vy)*0.04;
+      // drift back toward original position gently
+      const dx=p.ox-p.x,dy=p.oy-p.y;
+      p.vx+=dx*0.0006;p.vy+=dy*0.0006;
+      p.x+=p.vx;p.y+=p.vy;
+
+      // alpha pulse
+      const alphaShift=Math.sin(t*0.01+p.phaseOff)*0.12;
+      const a=Math.max(0.1,Math.min(1,p.alpha+alphaShift));
+
+      // width breathe
+      const wShift=Math.sin(t*0.008+p.phaseOff*1.3)*2;
+
+      if(p.isShadow){
+        ctx.fillStyle=`rgba(26,35,64,${a*0.9})`;
+      } else if(p.isGold){
+        ctx.fillStyle=`rgba(212,197,106,${a*0.75})`;
       } else {
-        // Very edge — sparse scatter
-        if (Math.random() > 0.45) continue;
-        char = sparseChars[Math.floor(Math.random() * sparseChars.length)];
-        opacity = 0.1 + Math.random() * 0.15;
-        color = colorPrimary;
+        ctx.fillStyle=`rgba(245,245,240,${a})`;
       }
+      ctx.fillRect(p.x-p.w/2,p.y-p.h/2,p.w+wShift,p.h);
+    }
 
-      const span = document.createElement('span');
-      span.textContent = char;
-      span.style.cssText = `position:absolute;left:${px}px;top:${py}px;color:${color};opacity:${opacity.toFixed(2)};`;
-
-      if (animate && Math.random() < 0.12) {
-        const delay = (Math.random() * 14).toFixed(1);
-        const dur = (8 + Math.random() * 7).toFixed(1);
-        span.style.animation = `ascii-flicker ${dur}s ${delay}s ease-in-out infinite`;
-      }
-
-      container.appendChild(span);
+    // Coord labels
+    if(opts.showCoords){
+      ctx.font="300 9px 'IBM Plex Mono',monospace";
+      ctx.fillStyle='rgba(237,232,200,0.18)';
+      for(const c of this.coords){ctx.fillText(c.txt,c.x,c.y);}
     }
   }
-  return container;
 }
 
-// Slide 1 bloom
-const bloom1 = generateBloom(0, 0, 200, {scale: 1.4});
-bloom1.style.position = 'absolute';
-bloom1.style.top = '50%';
-bloom1.style.left = '50%';
-bloom1.style.transform = 'translate(-50%, -52%)';
-bloom1.style.zIndex = '3';
-document.getElementById('bloom-container').appendChild(bloom1);
+// ============================================================
+// DISCRIMINATOR SYSTEM (ordered grid, minimal motion)
+// ============================================================
+class GridParticles{
+  constructor(canvas,color='rgba(123,127,196,0.7)'){
+    this.canvas=canvas;this.ctx=canvas.getContext('2d');
+    this.color=color;this.t=0;this.cells=[];this.init();
+  }
+  init(){
+    const c=this.canvas;
+    c.width=c.offsetWidth||c.width;c.height=c.offsetHeight||c.height;
+    this.cells=[];
+    const cols=Math.floor(c.width/12),rows=Math.floor(c.height/7);
+    for(let r=0;r<rows;r++){for(let col=0;col<cols;col++){
+      this.cells.push({x:col*12+2,y:r*7+2,w:Math.random()*6+4,h:3,alpha:Math.random()*0.5+0.3,ph:Math.random()*Math.PI*2});
+    }}
+  }
+  step(){
+    const{ctx,canvas,cells}=this;
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    this.t+=1;
+    for(const c of cells){
+      const a=c.alpha+Math.sin(this.t*0.012+c.ph)*0.04;
+      ctx.fillStyle=this.color.replace('0.7',a.toFixed(2));
+      ctx.fillRect(c.x,c.y,c.w,c.h);
+    }
+  }
+}
 
-// Slide 14 bloom (more complete — denser)
-const bloom14 = generateBloom(0, 0, 200, {
-  scale: 1.5,
-  colorGold: '#e8dc8f',
-  colorPrimary: 'rgba(245,245,240,0.7)',
-});
-bloom14.style.position = 'relative';
-document.getElementById('bloom-s14').appendChild(bloom14);
+// ============================================================
+// ORGANIC FLOW SYSTEM (right side slide 2)
+// ============================================================
+class FlowParticles{
+  constructor(canvas,color='rgba(138,154,107,'){
+    this.canvas=canvas;this.ctx=canvas.getContext('2d');
+    this.colorBase=color;this.t=0;this.ps=[];this.init();
+  }
+  init(){
+    const c=this.canvas;
+    c.width=c.offsetWidth||c.width;c.height=c.offsetHeight||c.height;
+    this.ps=[];
+    for(let i=0;i<180;i++){
+      this.ps.push({
+        x:Math.random()*c.width,y:Math.random()*c.height,
+        w:Math.random()*18+3,h:Math.random()*2.5+1,
+        vx:0,vy:0,alpha:Math.random()*0.7+0.2,
+        ph:Math.random()*Math.PI*2,no:Math.random()*50
+      });
+    }
+  }
+  step(){
+    const{ctx,canvas,ps}=this;
+    const W=canvas.width,H=canvas.height,t=this.t;
+    ctx.clearRect(0,0,W,H);this.t+=1;
+    for(const p of ps){
+      const a=noise2((p.x+p.no)*0.007+t*0.0001,(p.y+p.no)*0.007)*Math.PI*3;
+      p.vx+=(Math.cos(a)*0.6-p.vx)*0.05;
+      p.vy+=(Math.sin(a)*0.6-p.vy)*0.05;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      const al=p.alpha+Math.sin(t*0.02+p.ph)*0.1;
+      ctx.fillStyle=`${this.colorBase}${al.toFixed(2)})`;
+      ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  }
+}
 
-// Slide 11 mini bloom
-const bloom11 = generateBloom(0, 0, 80, {scale: 0.9});
-bloom11.style.position = 'relative';
-document.getElementById('bloom-s11').appendChild(bloom11);
+// ============================================================
+// BLOB / GLOW SYSTEM (slide 3 bg)
+// ============================================================
+class BlobSystem{
+  constructor(canvas,colors=['#e85d9f','#d4c56a','#8aff44']){
+    this.canvas=canvas;this.ctx=canvas.getContext('2d');
+    this.colors=colors;this.t=0;this.blobs=[];this.init();
+  }
+  init(){
+    const c=this.canvas;
+    c.width=c.offsetWidth||c.width;c.height=c.offsetHeight||c.height;
+    const cols=this.colors;
+    const positions=[[0.2,0.3],[0.6,0.2],[0.45,0.7]];
+    this.blobs=positions.map((p,i)=>({
+      x:p[0]*c.width,y:p[1]*c.height,
+      r:c.width*0.18,color:cols[i%cols.length],
+      ph:i*(Math.PI*2/3),speed:0.008+i*0.003
+    }));
+  }
+  step(){
+    const{ctx,canvas,blobs}=this;
+    ctx.clearRect(0,0,canvas.width,canvas.height);this.t+=1;
+    for(const b of blobs){
+      const pulse=Math.sin(this.t*b.speed+b.ph)*0.25+0.75;
+      const r=b.r*pulse;
+      const grd=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,r);
+      grd.addColorStop(0,b.color.replace('#','rgba(')+'08)');
+      // parse hex to rgb
+      const hx=b.color.slice(1);
+      const ri=parseInt(hx.slice(0,2),16),gi=parseInt(hx.slice(2,4),16),bi2=parseInt(hx.slice(4,6),16);
+      grd.addColorStop(0,`rgba(${ri},${gi},${bi2},0.12)`);
+      grd.addColorStop(0.4,`rgba(${ri},${gi},${bi2},0.04)`);
+      grd.addColorStop(1,`rgba(${ri},${gi},${bi2},0)`);
+      ctx.fillStyle=grd;ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
+    // connection lines between blobs
+    ctx.strokeStyle='rgba(237,232,200,0.04)';ctx.lineWidth=0.5;
+    for(let i=0;i<blobs.length;i++){
+      for(let j=i+1;j<blobs.length;j++){
+        const dash=((this.t*0.5)%20);
+        ctx.setLineDash([4,16]);ctx.lineDashOffset=dash;
+        ctx.beginPath();ctx.moveTo(blobs[i].x,blobs[i].y);ctx.lineTo(blobs[j].x,blobs[j].y);ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+  }
+}
 
-// ═══════════════════════════════════════
-// MINI ASCII ART FOR SLIDE 4
-// ═══════════════════════════════════════
+// ============================================================
+// MINI SYSTEMS FOR SLIDE 4 PIECE CANVASES
+// ============================================================
+// P1: crystalline (ordered pixels with pulse)
+function makeCrystal(canvas,color){
+  const ctx=canvas.getContext('2d');
+  let t=0,pts=[];
+  function init(){
+    canvas.width=canvas.offsetWidth||canvas.width;
+    canvas.height=canvas.offsetHeight||canvas.height;
+    pts=[];
+    const W=canvas.width,H=canvas.height;
+    for(let i=0;i<200;i++){
+      const a=Math.random()*Math.PI*2,r=Math.random()*Math.min(W,H)*0.4;
+      pts.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,
+        w:Math.random()*15+3,h:Math.random()*3+1,
+        a:Math.random()*0.8+0.1,ph:Math.random()*Math.PI*2});
+    }
+  }
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='#0e1e08';ctx.fillRect(0,0,W,H);
+    const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,H*0.5);
+    grd.addColorStop(0,color+'22)');grd.addColorStop(1,color+'00)');
+    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+    t++;
+    for(const p of pts){
+      const al=p.a+Math.sin(t*0.015+p.ph)*0.15;
+      ctx.fillStyle=`rgba(245,245,240,${al})`;ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  },resize:init};
+}
 
-// P1: Crystalline/molecular
-function drawCrystal(container) {
-  const patterns = [
-    '    ·   ○   ·    ',
-    '  ·   ╱─╲   ·  ',
-    '    ╱   │   ╲    ',
-    '  ○─    ●    ─○  ',
-    '    ╲   │   ╱    ',
-    '  ·   ╲─╱   ·  ',
-    '    ·   ○   ·    ',
-    '  ╱─○     ○─╲  ',
-    ' ─   ╲   ╱   ─  ',
-    '  ·    ─●─    ·  ',
+// P2: chaotic noise scatter
+function makeChaos(canvas,color){
+  const ctx=canvas.getContext('2d');
+  let t=0,pts=[];
+  function init(){
+    canvas.width=canvas.offsetWidth||canvas.width;
+    canvas.height=canvas.offsetHeight||canvas.height;
+    pts=[];
+    const W=canvas.width,H=canvas.height;
+    for(let i=0;i<250;i++){
+      pts.push({x:Math.random()*W,y:Math.random()*H,
+        vx:0,vy:0,w:Math.random()*12+2,h:Math.random()*2+1,
+        a:Math.random()*0.6+0.2,no:Math.random()*100,ph:Math.random()*Math.PI*2});
+    }
+  }
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='rgba(14,24,20,0.85)';ctx.fillRect(0,0,W,H);
+    t++;
+    for(const p of pts){
+      const a=noise2((p.x+p.no)*0.009+t*0.0002,p.y*0.009)*Math.PI*4;
+      p.vx+=(Math.cos(a)*0.5-p.vx)*0.04;p.vy+=(Math.sin(a)*0.5-p.vy)*0.04;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      const al=p.a+Math.sin(t*0.02+p.ph)*0.1;
+      ctx.fillStyle=`rgba(232,93,61,${al*0.85})`;ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  },resize:init};
+}
+
+// P3: branching growth
+function makeBranch(canvas){
+  const ctx=canvas.getContext('2d');
+  let t=0,pts=[];
+  function init(){
+    canvas.width=canvas.offsetWidth||canvas.width;
+    canvas.height=canvas.offsetHeight||canvas.height;
+    pts=[];
+    const W=canvas.width,H=canvas.height;
+    // spawn from center upward, branching
+    function branch(x,y,angle,len,depth){
+      if(depth>5||len<4)return;
+      for(let i=0;i<Math.ceil(len/4);i++){
+        const fx=x+Math.cos(angle)*i*4,fy=y+Math.sin(angle)*i*4;
+        pts.push({x:fx,y:fy,w:Math.random()*8+2,h:1.5,
+          a:Math.random()*0.6+0.2,ph:Math.random()*Math.PI*2,depth});
+      }
+      if(Math.random()<0.7)branch(x+Math.cos(angle)*len,y+Math.sin(angle)*len,angle-0.4+Math.random()*0.3,len*0.65,depth+1);
+      if(Math.random()<0.7)branch(x+Math.cos(angle)*len,y+Math.sin(angle)*len,angle+0.4-Math.random()*0.3,len*0.65,depth+1);
+    }
+    branch(W/2,H*0.8,-Math.PI/2,H*0.25,0);
+  }
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='rgba(10,20,12,0.9)';ctx.fillRect(0,0,W,H);
+    t++;
+    for(const p of pts){
+      const al=p.a+Math.sin(t*0.02+p.ph)*0.1;
+      const g=Math.floor(138+p.depth*12);
+      ctx.fillStyle=`rgba(100,${g},80,${al})`;ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  },resize:init};
+}
+
+// ============================================================
+// CORNER ACCENT (subtle particle cloud for detail slides)
+// ============================================================
+function makeCorner(canvas,hue){
+  const ctx=canvas.getContext('2d');
+  let t=0,pts=[];
+  function init(){
+    canvas.width=canvas.offsetWidth||Number(canvas.style.width)||200;
+    canvas.height=canvas.offsetHeight||Number(canvas.style.height)||200;
+    pts=[];
+    const W=canvas.width,H=canvas.height;
+    for(let i=0;i<120;i++){
+      pts.push({x:Math.random()*W,y:Math.random()*H,
+        w:Math.random()*14+2,h:Math.random()*2+1,
+        vx:0,vy:0,a:Math.random()*0.5+0.1,
+        no:Math.random()*50,ph:Math.random()*Math.PI*2});
+    }
+  }
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);t++;
+    for(const p of pts){
+      const a=noise2((p.x+p.no)*0.01+t*0.0001,p.y*0.01)*Math.PI*4;
+      p.vx+=(Math.cos(a)*0.3-p.vx)*0.05;p.vy+=(Math.sin(a)*0.3-p.vy)*0.05;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      const al=p.a+Math.sin(t*0.018+p.ph)*0.08;
+      ctx.fillStyle=hue.replace('AA',Math.floor(al*255).toString(16).padStart(2,'0'));
+      ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  },resize:init};
+}
+
+// ============================================================
+// INTEGRATED BLEND (slide 11)
+// ============================================================
+function makeBlend(canvas){
+  const ctx=canvas.getContext('2d');
+  let t=0,pts=[];
+  function init(){
+    canvas.width=canvas.offsetWidth||canvas.width;
+    canvas.height=canvas.offsetHeight||canvas.height;
+    pts=[];
+    const W=canvas.width,H=canvas.height;
+    const styles=['crystal','chaos','branch'];
+    for(let i=0;i<400;i++){
+      const s=styles[i%3];
+      let color;
+      if(s==='crystal')color='rgba(123,127,196,AA)';
+      else if(s==='chaos')color='rgba(232,93,61,AA)';
+      else color='rgba(138,154,107,AA)';
+      pts.push({x:Math.random()*W,y:Math.random()*H,
+        vx:0,vy:0,w:Math.random()*16+2,h:Math.random()*2+1,
+        a:Math.random()*0.5+0.1,no:Math.random()*80,
+        ph:Math.random()*Math.PI*2,color});
+    }
+  }
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='rgba(26,48,18,0.15)';ctx.fillRect(0,0,W,H);t++;
+    for(const p of pts){
+      const a=noise2((p.x+p.no)*0.006+t*0.00008,p.y*0.006)*Math.PI*4;
+      p.vx+=(Math.cos(a)*0.25-p.vx)*0.04;p.vy+=(Math.sin(a)*0.25-p.vy)*0.04;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      const al=p.a+Math.sin(t*0.015+p.ph)*0.1;
+      ctx.fillStyle=p.color.replace('AA',Math.floor(al*255).toString(16).padStart(2,'0'));
+      ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+  },resize:init};
+}
+
+// ============================================================
+// GOLDEN PULSE (slide 12)
+// ============================================================
+function makeGoldPulse(canvas){
+  const ctx=canvas.getContext('2d');
+  let t=0;
+  function init(){canvas.width=canvas.offsetWidth||canvas.width;canvas.height=canvas.offsetHeight||canvas.height;}
+  init();
+  return {step:()=>{
+    const W=canvas.width,H=canvas.height;
+    ctx.fillStyle='rgba(10,16,10,0.1)';ctx.fillRect(0,0,W,H);t++;
+    const pulse=Math.sin(t*0.008)*0.3+0.7;
+    const grd=ctx.createRadialGradient(W*0.5,H*0.5,0,W*0.5,H*0.5,W*0.55*pulse);
+    grd.addColorStop(0,'rgba(212,197,106,0.07)');
+    grd.addColorStop(0.5,'rgba(184,146,58,0.03)');
+    grd.addColorStop(1,'rgba(26,48,18,0)');
+    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+  },resize:init};
+}
+
+// ============================================================
+// INSTANTIATE & RUN LOOP
+// ============================================================
+function resize(cv,system){
+  if(!cv)return;
+  cv.width=cv.offsetWidth||cv.clientWidth;
+  cv.height=cv.offsetHeight||cv.clientHeight;
+  if(system&&system.resize)system.resize();
+}
+
+const systems=[];
+
+window.addEventListener('load',()=>{
+  // ---- Slide 1 hero ----
+  const c1=document.getElementById('c1');
+  c1.width=window.innerWidth;c1.height=window.innerHeight;
+  const bloom1=new BloomSystem(c1,{
+    count:950,k:5,bgColor:'#1a3012',
+    showGlow:true,showArcs:true,showCoords:true,showLensFlare:true,
+    arcRotSpeed:0.00025,flowSpeed:0.00012,noiseScale:0.0028
+  });
+  systems.push(bloom1);
+
+  // ---- Slide 2 bg ----
+  const c2bg=document.getElementById('c2bg');
+  c2bg.width=window.innerWidth;c2bg.height=window.innerHeight;
+  // Very subtle bg bloom for slide 2
+  const bloom2bg=new BloomSystem(c2bg,{
+    count:300,k:5,bgColor:'#1a3012',
+    showGlow:false,showArcs:true,showCoords:false,showLensFlare:false,
+    arcRotSpeed:0.0002,flowSpeed:0.00008,noiseScale:0.004,
+    maxR:Math.min(window.innerWidth,window.innerHeight)*0.35
+  });
+  systems.push(bloom2bg);
+
+  // Slide 2 left (discriminator grid)
+  const c2L=document.getElementById('c2L');
+  c2L.width=c2L.offsetWidth||400;c2L.height=c2L.offsetHeight||140;
+  const grid2=new GridParticles(c2L,'rgba(123,127,196,');
+  systems.push(grid2);
+
+  // Slide 2 right (generator flow)
+  const c2R=document.getElementById('c2R');
+  c2R.width=c2R.offsetWidth||400;c2R.height=c2R.offsetHeight||140;
+  const flow2=new FlowParticles(c2R,'rgba(138,154,107,');
+  systems.push(flow2);
+
+  // ---- Slide 3 bg blobs ----
+  const c3bg=document.getElementById('c3bg');
+  c3bg.width=window.innerWidth;c3bg.height=window.innerHeight;
+  const blob3=new BlobSystem(c3bg,['#e85d9f','#d4c56a','#8aff44']);
+  systems.push(blob3);
+
+  // ---- Slide 4 piece canvases ----
+  const c4a=document.getElementById('c4a');
+  c4a.width=c4a.offsetWidth||300;c4a.height=160;
+  const p4a=makeCrystal(c4a,'rgba(123,127,196,');
+  systems.push(p4a);
+
+  const c4b=document.getElementById('c4b');
+  c4b.width=c4b.offsetWidth||300;c4b.height=160;
+  const p4b=makeChaos(c4b,'rgba(232,93,61,');
+  systems.push(p4b);
+
+  const c4c=document.getElementById('c4c');
+  c4c.width=c4c.offsetWidth||300;c4c.height=160;
+  const p4c=makeBranch(c4c);
+  systems.push(p4c);
+
+  // ---- Corner accents slides 5-10 ----
+  const cornerData=[
+    ['c5corner','#7B7FC4AA'],['c6corner','#7B7FC4AA'],
+    ['c7corner','#E85D3DAA'],['c8corner','#E85D3DAA'],
+    ['c9corner','#8A9A6BAA'],['c10corner','#8A9A6BAA']
   ];
-  const pre = document.createElement('pre');
-  pre.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:9px;line-height:13px;color:#7B7FC4;opacity:0.8;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);';
-  pre.textContent = patterns.join('\n');
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-  container.style.background = 'rgba(123,127,196,0.05)';
-  container.appendChild(pre);
-}
+  for(const[id,hue]of cornerData){
+    const cv=document.getElementById(id);
+    if(!cv)continue;
+    cv.width=parseInt(cv.style.width)||280;
+    cv.height=parseInt(cv.style.height)||280;
+    systems.push(makeCorner(cv,hue));
+  }
 
-// P2: Noise/static scatter
-function drawNoise(container) {
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-  container.style.background = 'rgba(42,38,34,0.04)';
-  const rows = 9, cols = 20;
-  const noiseChars = ['.','·',':','+','*','#','·','·','.','.','·'];
-  let html = '<pre style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;line-height:13px;color:#E85D3D;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">';
-  for (let r = 0; r < rows; r++) {
-    let row = '';
-    for (let c = 0; c < cols; c++) {
-      const rnd = Math.random();
-      const ch = rnd < 0.15 ? '#' : rnd < 0.35 ? ':' : rnd < 0.6 ? '·' : ' ';
-      row += ch;
+  // ---- Slide 11 blend ----
+  const c11bg=document.getElementById('c11bg');
+  c11bg.width=window.innerWidth;c11bg.height=window.innerHeight;
+  systems.push(makeBlend(c11bg));
+
+  // ---- Slide 12 gold pulse ----
+  const c12bg=document.getElementById('c12bg');
+  c12bg.width=window.innerWidth;c12bg.height=window.innerHeight;
+  systems.push(makeGoldPulse(c12bg));
+
+  // ---- Slide 14 closing bloom (smaller, more distant) ----
+  const c14=document.getElementById('c14');
+  c14.width=window.innerWidth;c14.height=window.innerHeight;
+  const bloom14=new BloomSystem(c14,{
+    count:600,k:5,bgColor:'#1a3012',
+    showGlow:true,showArcs:true,showCoords:true,showLensFlare:false,
+    arcRotSpeed:0.00015,flowSpeed:0.00008,noiseScale:0.0022,
+    maxR:Math.min(window.innerWidth,window.innerHeight)*0.28
+  });
+  systems.push(bloom14);
+
+  // ---- Main loop ----
+  let lastTime=0;
+  function loop(ts){
+    const dt=ts-lastTime;
+    if(dt>16){// ~60fps cap
+      lastTime=ts;
+      for(const s of systems){if(s&&s.step)s.step();}
     }
-    html += row + '\n';
+    requestAnimationFrame(loop);
   }
-  html += '</pre>';
-  container.innerHTML = html;
-  // Golden signal dots
-  for (let i = 0; i < 3; i++) {
-    const dot = document.createElement('div');
-    dot.style.cssText = `position:absolute;width:5px;height:5px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 8px 3px rgba(232,220,143,0.5);top:${20+Math.random()*60}%;left:${15+Math.random()*70}%;animation:glow-pulse ${3+Math.random()*2}s ease-in-out infinite;animation-delay:${Math.random()*3}s;`;
-    container.appendChild(dot);
-  }
-}
+  requestAnimationFrame(loop);
 
-// P3: Branching/dendritic
-function drawDendritic(container) {
-  container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-  container.style.background = 'rgba(138,154,107,0.05)';
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('width','100%');
-  svg.setAttribute('height','100%');
-  svg.style.cssText = 'position:absolute;top:0;left:0;';
-  svg.innerHTML = `
-    <line x1="50%" y1="95%" x2="50%" y2="60%" stroke="rgba(138,154,107,0.6)" stroke-width="1"/>
-    <line x1="50%" y1="60%" x2="30%" y2="35%" stroke="rgba(138,154,107,0.55)" stroke-width="0.8"/>
-    <line x1="50%" y1="60%" x2="70%" y2="35%" stroke="rgba(138,154,107,0.55)" stroke-width="0.8"/>
-    <line x1="30%" y1="35%" x2="18%" y2="15%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
-    <line x1="30%" y1="35%" x2="38%" y2="12%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
-    <line x1="70%" y1="35%" x2="62%" y2="12%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
-    <line x1="70%" y1="35%" x2="82%" y2="15%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
-    <circle cx="50%" cy="60%" r="3" fill="rgba(138,154,107,0.7)"/>
-    <circle cx="30%" cy="35%" r="2.5" fill="rgba(138,154,107,0.6)"/>
-    <circle cx="70%" cy="35%" r="2.5" fill="rgba(138,154,107,0.6)"/>
-    <circle cx="18%" cy="15%" r="2" fill="rgba(232,220,143,0.7)"/>
-    <circle cx="38%" cy="12%" r="2" fill="rgba(232,220,143,0.7)"/>
-    <circle cx="62%" cy="12%" r="2" fill="rgba(232,220,143,0.7)"/>
-    <circle cx="82%" cy="15%" r="2" fill="rgba(232,220,143,0.7)"/>
-  `;
-  container.appendChild(svg);
-}
-
-drawCrystal(document.getElementById('art-p1'));
-drawNoise(document.getElementById('art-p2'));
-drawDendritic(document.getElementById('art-p3'));
-
-// ═══════════════════════════════════════
-// HALFTONE DOT RENDERER
-// ═══════════════════════════════════════
-function drawHalftone(canvasEl, opts = {}) {
-  const {
-    bgColor = '#1e3fd8',
-    dotColor = 'rgba(255,255,255,0.9)',
-    spacing = 18,
-    baseRadius = 3,
-    varianceMode = 'uniform', // 'uniform' | 'radial' | 'noise'
-    darkBg = true
-  } = opts;
-
-  const W = canvasEl.offsetWidth || canvasEl.width || 800;
-  const H = canvasEl.offsetHeight || canvasEl.height || 600;
-  canvasEl.width = W;
-  canvasEl.height = H;
-  const ctx = canvasEl.getContext('2d');
-
-  if (bgColor) {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0,0,W,H);
-  }
-
-  ctx.fillStyle = dotColor;
-  const cols = Math.ceil(W / spacing) + 2;
-  const rows = Math.ceil(H / spacing) + 2;
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const x = c * spacing;
-      const y = r * spacing;
-      let radius = baseRadius;
-
-      if (varianceMode === 'radial') {
-        const dx = x - W/2, dy = y - H/2;
-        const dist = Math.sqrt(dx*dx+dy*dy) / Math.max(W,H);
-        radius = baseRadius * (1.5 - dist * 1.2);
-      } else if (varianceMode === 'noise') {
-        // Simple pseudo-noise
-        const n = Math.sin(c * 12.9898 + r * 78.233) * 43758.5453;
-        const nv = n - Math.floor(n);
-        radius = baseRadius * 0.3 + nv * baseRadius * 1.4;
-      }
-
-      radius = Math.max(0.3, radius);
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI*2);
-      ctx.fill();
+  // resize handler
+  window.addEventListener('resize',()=>{
+    for(const cv of[c1,c2bg,c3bg,c11bg,c12bg,c14]){
+      if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight;}
     }
-  }
-}
-
-// Slide 2: halftone for discriminator side
-setTimeout(() => {
-  const c2 = document.getElementById('ht-s2');
-  if (c2) drawHalftone(c2, {bgColor: null, dotColor:'rgba(123,127,196,0.8)', spacing:20, baseRadius:3, varianceMode:'uniform'});
-
-  // Slide 7: dense chaos (noise floor)
-  const c7 = document.getElementById('ht-s7');
-  if (c7) drawHalftone(c7, {bgColor: null, dotColor:'rgba(255,255,255,0.6)', spacing:14, baseRadius:2.5, varianceMode:'noise'});
-
-  // Slide 8: also noise, darker
-  const c8 = document.getElementById('ht-s8');
-  if (c8) drawHalftone(c8, {bgColor: null, dotColor:'rgba(255,255,255,0.5)', spacing:16, baseRadius:2.2, varianceMode:'noise'});
-
-  // Slide 11: faint halftone
-  const c11 = document.getElementById('ht-s11');
-  if (c11) drawHalftone(c11, {bgColor: null, dotColor:'rgba(255,255,255,0.4)', spacing:22, baseRadius:2, varianceMode:'radial'});
-}, 100);
+    bloom1.init();bloom2bg.init();blob3.init();bloom14.init();
+  });
+});
 </script>
 </body>
 </html>
