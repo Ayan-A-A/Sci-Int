@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Generator and the Discriminator</title>
+<title>The Generator and the Discriminator — v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -18,11 +18,10 @@
   --coral: #E85D3D;
   --rose: #D98BA0;
   --periwinkle: #7B7FC4;
-  --mint: #7FC4A8;
   --ochre: #C4A855;
   --salmon: #E89B8B;
   --dark: #2A2622;
-  --translucent: rgba(237, 233, 216, 0.85);
+  --dark2: #1C1916;
 }
 
 html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
@@ -33,6 +32,30 @@ body {
   color: var(--dark);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ===================== GLOBAL UTILITIES ===================== */
+
+.serif { font-family: 'Cormorant Garamond', serif; }
+.italic { font-style: italic; }
+.sans { font-family: 'Inter', sans-serif; }
+
+.label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--umber);
+}
+
+.annotation {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--umber);
+  opacity: 0.8;
+}
+
+/* ===================== SLIDE BASE ===================== */
 
 .slide {
   width: 100vw;
@@ -45,105 +68,262 @@ body {
   justify-content: center;
 }
 
-/* Grain overlay */
+/* Heavy grain overlay */
 .slide::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  opacity: 0.06;
+  inset: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px;
-  z-index: 100;
+  z-index: 200;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 280px 280px;
+  mix-blend-mode: multiply;
 }
 
-.serif { font-family: 'Cormorant Garamond', serif; }
-.italic { font-style: italic; }
-.sans { font-family: 'Inter', sans-serif; }
+/* ===================== CATALOG INDEX ===================== */
 
-.label {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--umber);
-}
-
-.annotation {
-  font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
-  font-size: 0.9rem;
-  color: var(--umber);
-  opacity: 0.8;
-}
-
-/* Leader lines */
-.leader {
+.catalog-num {
   position: absolute;
-  border-top: 1px solid rgba(106, 93, 63, 0.3);
+  bottom: 2.2rem;
+  right: 3.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.3;
+  z-index: 10;
 }
 
-/* Bounding box highlight */
+.catalog-series {
+  position: absolute;
+  bottom: 2.2rem;
+  left: 3.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.25;
+  z-index: 10;
+}
+
+/* ===================== DOT GRID ===================== */
+
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: radial-gradient(circle, rgba(107,93,63,0.18) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0;
+}
+
+.dot-grid.visible { opacity: 1; }
+
+/* ===================== BBOX / BRACKET MARKS ===================== */
+
 .bbox {
-  border: 1.5px solid var(--ochre);
-  padding: 1.2rem 1.5rem;
+  border: 1px solid var(--ochre);
+  padding: 1.1rem 1.4rem;
   position: relative;
 }
 
-.bbox::before {
+.bbox::before,
+.bbox::after {
   content: '';
   position: absolute;
-  top: -4px; left: -4px;
-  width: 8px; height: 8px;
+  width: 9px; height: 9px;
+}
+
+.bbox::before {
+  top: -3px; left: -3px;
   border-top: 1.5px solid var(--ochre);
   border-left: 1.5px solid var(--ochre);
 }
 
 .bbox::after {
-  content: '';
-  position: absolute;
-  bottom: -4px; right: -4px;
-  width: 8px; height: 8px;
+  bottom: -3px; right: -3px;
   border-bottom: 1.5px solid var(--ochre);
   border-right: 1.5px solid var(--ochre);
 }
 
-/* Color blocks */
-.block {
-  position: absolute;
-  mix-blend-mode: multiply;
-  opacity: 0.15;
+.bbox-full {
+  position: relative;
 }
 
-/* ========== SLIDE 1: TITLE ========== */
+.bbox-full::before,
+.bbox-full::after,
+.bbox-full .bcorner-tr,
+.bbox-full .bcorner-bl {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  pointer-events: none;
+}
+
+.bbox-full::before {
+  top: -1px; left: -1px;
+  border-top: 1.5px solid rgba(196,168,85,0.5);
+  border-left: 1.5px solid rgba(196,168,85,0.5);
+}
+
+.bbox-full::after {
+  top: -1px; right: -1px;
+  border-top: 1.5px solid rgba(196,168,85,0.5);
+  border-right: 1.5px solid rgba(196,168,85,0.5);
+}
+
+.bbox-full .bcorner-tr {
+  bottom: -1px; right: -1px;
+  border-bottom: 1.5px solid rgba(196,168,85,0.5);
+  border-right: 1.5px solid rgba(196,168,85,0.5);
+}
+
+.bbox-full .bcorner-bl {
+  bottom: -1px; left: -1px;
+  border-bottom: 1.5px solid rgba(196,168,85,0.5);
+  border-left: 1.5px solid rgba(196,168,85,0.5);
+}
+
+/* ===================== LEADER LINES ===================== */
+
+.leader-h {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(to right, rgba(107,93,63,0.25), transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.leader-v {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(107,93,63,0.2), transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ===================== RISOGRAPH COLOR BLOCKS ===================== */
+
+.riso-block {
+  position: absolute;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 1px;
+}
+
+/* ===================== IMAGE TREATMENTS ===================== */
+
+.img-wrap {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Risograph underlay treatment */
+.img-riso {
+  mix-blend-mode: multiply;
+  filter: grayscale(1) contrast(1.1);
+  opacity: 0.18;
+}
+
+/* Duotone-ish */
+.img-duotone {
+  mix-blend-mode: multiply;
+  filter: grayscale(1) sepia(0.4) contrast(1.15);
+  opacity: 0.22;
+}
+
+/* Very faint watermark */
+.img-ghost {
+  mix-blend-mode: multiply;
+  filter: grayscale(1) contrast(0.9);
+  opacity: 0.12;
+}
+
+/* Screen blend — for dark slides */
+.img-screen {
+  mix-blend-mode: screen;
+  filter: grayscale(1) contrast(0.85);
+  opacity: 0.13;
+}
+
+/* Soft overlay */
+.img-soft {
+  mix-blend-mode: soft-light;
+  filter: grayscale(0.8) sepia(0.3);
+  opacity: 0.2;
+}
+
+/* ===================== SLIDE 1 — TITLE ===================== */
+
 .slide-1 {
   background: var(--cream);
   flex-direction: column;
-  gap: 2rem;
+}
+
+/* Botanical watermark — full right panel */
+.s1-botanical {
+  top: 0; right: 0;
+  width: 44%;
+  height: 100%;
+}
+
+.s1-botanical img { object-position: center center; }
+
+/* Manuscript fragment — bottom-left corner */
+.s1-manuscript {
+  bottom: 0; left: 0;
+  width: 28%;
+  height: 35%;
+  clip-path: polygon(0 30%, 100% 0%, 100% 100%, 0% 100%);
 }
 
 .slide-1 .color-wash {
   position: absolute;
   top: 0; right: 0;
-  width: 45%;
+  width: 44%;
   height: 100%;
-  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 50%, transparent 100%);
-  opacity: 0.08;
+  background: linear-gradient(150deg, rgba(138,154,107,0.55) 0%, rgba(196,168,85,0.2) 40%, transparent 75%);
+  mix-blend-mode: multiply;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.slide-1 .cream-veil {
+  position: absolute;
+  top: 0; left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(to right, var(--cream) 60%, transparent 100%);
+  z-index: 3;
+  pointer-events: none;
 }
 
 .slide-1 .title-block {
   position: relative;
-  z-index: 2;
+  z-index: 10;
   text-align: left;
   max-width: 70%;
-  padding-left: 10%;
+  padding-left: 9%;
+  padding-right: 4%;
 }
 
 .slide-1 h1 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-  line-height: 1.15;
+  font-size: clamp(2.6rem, 5vw, 4.8rem);
+  line-height: 1.1;
   color: var(--dark);
   margin-bottom: 1.5rem;
 }
@@ -156,81 +336,139 @@ body {
 .slide-1 .subtitle {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  font-size: clamp(1rem, 1.7vw, 1.35rem);
   color: var(--umber);
-  margin-bottom: 3rem;
-  max-width: 500px;
+  margin-bottom: 2.8rem;
+  max-width: 480px;
+  line-height: 1.5;
 }
 
 .slide-1 .meta {
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
-.slide-1 .corner-mark {
+.slide-1 .corner-annotation {
   position: absolute;
-  bottom: 3rem;
-  right: 4rem;
+  bottom: 3.5rem;
+  right: 5rem;
+  z-index: 10;
+  text-align: right;
+}
+
+.slide-1 .corner-annotation .ann-text {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.85rem;
-  color: var(--sage);
-  opacity: 0.5;
+  font-size: 0.82rem;
+  color: var(--umber);
+  opacity: 0.55;
+  line-height: 1.55;
 }
 
-/* Decorative botanical line */
+/* Botanical decoration: vertical stem */
 .slide-1 .stem {
   position: absolute;
-  left: 8%;
-  top: 15%;
-  height: 70%;
+  left: 7.5%;
+  top: 12%;
+  height: 76%;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, var(--sage), transparent);
-  opacity: 0.2;
+  background: linear-gradient(to bottom, transparent, var(--sage) 20%, var(--sage) 80%, transparent);
+  opacity: 0.18;
+  z-index: 5;
 }
 
 .slide-1 .stem-dot {
   position: absolute;
-  left: calc(8% - 3px);
-  width: 7px;
-  height: 7px;
+  left: calc(7.5% - 4px);
+  width: 9px; height: 9px;
   border-radius: 50%;
   border: 1px solid var(--sage);
-  opacity: 0.3;
+  opacity: 0.28;
+  z-index: 5;
 }
 
-/* ========== SLIDE 2: CORE TENSION ========== */
+/* Leader line from corner annotation */
+.slide-1 .leader-ann {
+  position: absolute;
+  bottom: 5.5rem;
+  right: 5rem;
+  width: 70px;
+  height: 1px;
+  background: linear-gradient(to left, rgba(107,93,63,0.3), transparent);
+  z-index: 10;
+}
+
+/* ===================== SLIDE 2 — CORE TENSION ===================== */
+
 .slide-2 {
   background: var(--cream);
 }
 
+/* Microscopy on discriminator side */
+.s2-micro {
+  top: 0; left: 0;
+  width: 42%;
+  height: 100%;
+}
+
+/* Botanical on generator side */
+.s2-botanical {
+  top: 0; right: 0;
+  width: 42%;
+  height: 100%;
+}
+
+.slide-2 .periwinkle-wash {
+  position: absolute;
+  top: 0; left: 0;
+  width: 45%;
+  height: 100%;
+  background: rgba(123,127,196,0.12);
+  mix-blend-mode: multiply;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.slide-2 .sage-wash {
+  position: absolute;
+  top: 0; right: 0;
+  width: 45%;
+  height: 100%;
+  background: rgba(138,154,107,0.12);
+  mix-blend-mode: multiply;
+  z-index: 3;
+  pointer-events: none;
+}
+
 .slide-2 .content {
   display: grid;
-  grid-template-columns: 1fr 80px 1fr;
-  max-width: 85%;
+  grid-template-columns: 1fr 72px 1fr;
+  max-width: 86%;
   width: 100%;
   align-items: start;
   gap: 0;
-  padding: 5vh 0;
+  padding: 4.5vh 0;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-2 .col {
-  padding: 3rem;
+  padding: 2.5rem 2.8rem;
 }
 
 .slide-2 .col-left {
-  background: rgba(123, 127, 196, 0.06);
+  background: rgba(237,233,216,0.7);
+  backdrop-filter: blur(2px);
   border-radius: 2px;
-  position: relative;
 }
 
 .slide-2 .col-right {
-  background: rgba(138, 154, 107, 0.06);
+  background: rgba(237,233,216,0.7);
+  backdrop-filter: blur(2px);
   border-radius: 2px;
-  position: relative;
 }
 
 .slide-2 .divider {
@@ -239,17 +477,16 @@ body {
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--umber);
-  opacity: 0.4;
+  opacity: 0.45;
   position: relative;
 }
 
 .slide-2 .divider::before {
   content: '';
   position: absolute;
-  top: 10%;
-  bottom: 10%;
+  top: 10%; bottom: 10%;
   left: 50%;
   width: 1px;
   background: linear-gradient(to bottom, transparent, var(--umber), transparent);
@@ -259,8 +496,8 @@ body {
 .slide-2 h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 400;
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.7rem;
+  margin-bottom: 1.2rem;
   line-height: 1.2;
 }
 
@@ -268,152 +505,229 @@ body {
 .slide-2 .col-right h2 { color: var(--sage); }
 
 .slide-2 p {
-  font-size: 0.85rem;
-  line-height: 1.7;
+  font-size: 0.8rem;
+  line-height: 1.72;
   color: var(--dark);
-  opacity: 0.8;
-  margin-bottom: 1rem;
+  opacity: 0.78;
+  margin-bottom: 0.85rem;
+}
+
+.slide-2 .stat-box {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  position: relative;
 }
 
 .slide-2 .stat {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 2.5rem;
+  font-size: 2.6rem;
   font-weight: 300;
-  margin-top: 1.5rem;
+  line-height: 1;
 }
 
 .slide-2 .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.6;
-  margin-top: 0.3rem;
+  opacity: 0.55;
+  margin-top: 0.4rem;
+  line-height: 1.5;
 }
 
 .slide-2 .page-label {
   position: absolute;
-  top: 2rem;
-  left: 4rem;
+  top: 2.2rem;
+  left: 3.8rem;
+  z-index: 10;
 }
 
 .slide-2 .bottom-line {
   position: absolute;
-  bottom: 4rem;
+  bottom: 3.5rem;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 600px;
+  max-width: 580px;
+  width: 90%;
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--umber);
-  opacity: 0.7;
-  line-height: 1.6;
+  opacity: 0.65;
+  line-height: 1.65;
+  z-index: 10;
+  padding: 0.8rem 0;
+  border-top: 1px solid rgba(107,93,63,0.12);
 }
 
-/* ========== SLIDE 3: WHY NOW ========== */
+/* ===================== SLIDE 3 — WHY NOW ===================== */
+
 .slide-3 {
-  background: var(--dark);
+  background: var(--dark2);
   color: var(--cream);
 }
 
-.slide-3 .content {
-  max-width: 75%;
-  position: relative;
-  z-index: 2;
+/* DNA structure ghost */
+.s3-dna {
+  top: -5%;
+  right: -3%;
+  width: 45%;
+  height: 65%;
+  clip-path: ellipse(70% 80% at 70% 40%);
+}
+
+.s3-dna img {
+  mix-blend-mode: screen;
+  filter: grayscale(1) contrast(0.7) brightness(0.6);
+  opacity: 0.1;
 }
 
 .slide-3 .wash {
   position: absolute;
   bottom: 0; left: 0;
-  width: 100%; height: 40%;
+  width: 100%; height: 45%;
   background: linear-gradient(to top, var(--moss), transparent);
-  opacity: 0.3;
+  opacity: 0.25;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.slide-3 .wash-2 {
+.slide-3 .wash-periwinkle {
   position: absolute;
   top: 0; right: 0;
-  width: 35%; height: 50%;
-  background: radial-gradient(ellipse, var(--periwinkle), transparent);
-  opacity: 0.06;
+  width: 40%; height: 55%;
+  background: radial-gradient(ellipse at top right, rgba(123,127,196,0.15), transparent 70%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slide-3 .dot-grid-dark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: radial-gradient(circle, rgba(237,233,216,0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.slide-3 .content {
+  max-width: 78%;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-3 h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2.8rem;
-  margin-bottom: 3rem;
+  font-size: 2.6rem;
+  margin-bottom: 2.8rem;
   color: var(--bone);
 }
 
 .slide-3 .forces {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
+  gap: 2.5rem;
 }
 
 .slide-3 .force {
-  border-top: 1px solid rgba(237, 233, 216, 0.15);
-  padding-top: 1.5rem;
+  border-top: 1px solid rgba(237,233,216,0.12);
+  padding-top: 1.4rem;
+  position: relative;
 }
 
 .slide-3 .force-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 300;
   color: var(--sage);
-  opacity: 0.6;
-  margin-bottom: 0.8rem;
+  opacity: 0.55;
+  margin-bottom: 0.7rem;
+  line-height: 1;
 }
 
 .slide-3 .force h3 {
   font-family: 'Inter', sans-serif;
   font-weight: 400;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.9rem;
   color: var(--bone);
+  letter-spacing: 0.02em;
 }
 
 .slide-3 .force p {
-  font-size: 0.78rem;
-  line-height: 1.65;
+  font-size: 0.74rem;
+  line-height: 1.68;
   color: var(--bone);
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .slide-3 .force .evidence {
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--salmon);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
-/* ========== SLIDE 4: THREE PIECES ARC ========== */
+/* ===================== SLIDE 4 — THREE PIECES ===================== */
+
 .slide-4 {
   background: var(--cream);
   flex-direction: column;
 }
 
+.slide-4 .dot-grid { opacity: 0.65; }
+
+/* Small science image fragments above piece headers */
+.s4-frag-1, .s4-frag-2, .s4-frag-3 {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.s4-frag-1 {
+  top: 0; left: 0;
+  width: 33.33%;
+  height: 28%;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%);
+}
+
+.s4-frag-2 {
+  top: 0; left: 33.33%;
+  width: 33.34%;
+  height: 28%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 70%);
+}
+
+.s4-frag-3 {
+  top: 0; right: 0;
+  width: 33.33%;
+  height: 28%;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 70%);
+}
+
 .slide-4 .content {
-  max-width: 80%;
+  max-width: 82%;
   width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-4 .arc-header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 3.5rem;
 }
 
 .slide-4 .arc-header h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2.2rem;
+  font-size: 2rem;
   color: var(--dark);
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
 }
 
 .slide-4 .arc-flow {
@@ -421,58 +735,64 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .slide-4 .arc-step {
   font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  padding: 0.4rem 1.2rem;
-  border-radius: 2px;
+  padding: 0.35rem 1.1rem;
+  border-radius: 1px;
 }
 
-.slide-4 .arc-step:nth-child(1) { background: rgba(123,127,196,0.1); color: var(--periwinkle); }
-.slide-4 .arc-step:nth-child(3) { background: rgba(232,93,61,0.08); color: var(--coral); }
-.slide-4 .arc-step:nth-child(5) { background: rgba(138,154,107,0.1); color: var(--sage); }
-.slide-4 .arc-arrow { color: var(--umber); opacity: 0.3; font-size: 1.2rem; }
+.slide-4 .arc-step:nth-child(1) { background: rgba(123,127,196,0.12); color: var(--periwinkle); }
+.slide-4 .arc-step:nth-child(3) { background: rgba(232,93,61,0.09); color: var(--coral); }
+.slide-4 .arc-step:nth-child(5) { background: rgba(138,154,107,0.12); color: var(--sage); }
+.slide-4 .arc-arrow { color: var(--umber); opacity: 0.28; font-size: 1.1rem; }
 
 .slide-4 .pieces {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
+  gap: 0;
 }
 
 .slide-4 .piece {
-  padding: 2rem;
+  padding: 2rem 2rem;
   position: relative;
+  border-top: 1px solid rgba(42,38,34,0.07);
 }
 
 .slide-4 .piece::before {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 40px; height: 1px;
+  width: 38px; height: 2px;
 }
 
 .slide-4 .piece:nth-child(1)::before { background: var(--periwinkle); }
 .slide-4 .piece:nth-child(2)::before { background: var(--coral); }
 .slide-4 .piece:nth-child(3)::before { background: var(--sage); }
 
+.slide-4 .piece:nth-child(2) {
+  border-left: 1px solid rgba(42,38,34,0.06);
+  border-right: 1px solid rgba(42,38,34,0.06);
+}
+
 .slide-4 .piece .month {
-  font-size: 0.6rem;
-  letter-spacing: 0.25em;
+  font-size: 0.57rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.5;
+  opacity: 0.45;
   margin-bottom: 0.8rem;
 }
 
 .slide-4 .piece h3 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 400;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   margin-bottom: 0.5rem;
   line-height: 1.25;
 }
@@ -480,82 +800,92 @@ body {
 .slide-4 .piece .piece-sub {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--umber);
-  opacity: 0.7;
+  opacity: 0.65;
   margin-bottom: 1.2rem;
   line-height: 1.5;
 }
 
 .slide-4 .piece .companies {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--sage);
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-/* ========== SLIDES 5-10: PIECE DETAILS ========== */
+/* ===================== SLIDES 5–10: PIECE DETAIL PAGES ===================== */
+
 .slide-detail {
   background: var(--cream);
   flex-direction: column;
-  padding: 6vh 10%;
+  padding: 5.5vh 9%;
   align-items: flex-start;
   justify-content: flex-start;
 }
 
 .slide-detail .piece-indicator {
   position: absolute;
-  top: 2.5rem;
-  left: 4rem;
+  top: 2.4rem;
+  left: 3.8rem;
+  z-index: 10;
 }
 
 .slide-detail .slide-num {
   position: absolute;
-  top: 2.5rem;
-  right: 4rem;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  top: 2.4rem;
+  right: 3.8rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
   color: var(--umber);
-  opacity: 0.4;
+  opacity: 0.38;
+  z-index: 10;
 }
 
 .slide-detail h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2.4rem;
-  margin-bottom: 0.5rem;
-  margin-top: 4rem;
+  font-size: 2.3rem;
+  margin-bottom: 0.45rem;
+  margin-top: 3.8rem;
   line-height: 1.2;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-detail .detail-sub {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--umber);
-  opacity: 0.7;
-  margin-bottom: 2.5rem;
+  opacity: 0.65;
+  margin-bottom: 2.2rem;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-detail .sections {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem 3rem;
+  gap: 1.3rem 3.5rem;
   width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-detail .section-item {
-  padding: 1.2rem 0;
-  border-top: 1px solid rgba(42, 38, 34, 0.08);
+  padding: 1.1rem 0;
+  border-top: 1px solid rgba(42,38,34,0.07);
+  position: relative;
 }
 
 .slide-detail .section-item .sec-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   font-weight: 300;
   color: var(--umber);
-  opacity: 0.3;
+  opacity: 0.22;
   float: left;
   margin-right: 1rem;
   line-height: 1;
@@ -563,23 +893,33 @@ body {
 
 .slide-detail .section-item h4 {
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+  margin-bottom: 0.45rem;
   color: var(--dark);
+  letter-spacing: 0.01em;
 }
 
 .slide-detail .section-item p {
-  font-size: 0.72rem;
-  line-height: 1.6;
+  font-size: 0.7rem;
+  line-height: 1.62;
   color: var(--dark);
-  opacity: 0.6;
+  opacity: 0.58;
 }
 
-/* Company slides */
+/* Accent image strip on detail slides */
+.detail-img-strip {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* ===================== COMPANY SLIDES ===================== */
+
 .slide-company {
   background: var(--cream);
-  padding: 6vh 8%;
+  padding: 5.5vh 7.5%;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
@@ -588,13 +928,16 @@ body {
 .slide-company .company-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: 2.5rem;
   width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-company .company-card {
-  padding: 2rem;
+  padding: 2rem 2rem;
   position: relative;
+  background: rgba(237,233,216,0.5);
 }
 
 .slide-company .company-card::before {
@@ -602,237 +945,413 @@ body {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 2px;
+  opacity: 0.45;
 }
 
-.slide-company .company-card:nth-child(1)::before { background: var(--periwinkle); opacity: 0.4; }
-.slide-company .company-card:nth-child(2)::before { background: var(--sage); opacity: 0.4; }
+.slide-company .company-card:nth-child(1)::before { background: var(--periwinkle); }
+.slide-company .company-card:nth-child(2)::before { background: var(--sage); }
+.slide-company .company-card:nth-child(3)::before { background: var(--coral); }
+.slide-company .company-card:nth-child(4)::before { background: var(--ochre); }
 
 .slide-company .company-card h3 {
   font-family: 'Inter', sans-serif;
   font-weight: 500;
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  color: var(--dark);
 }
 
 .slide-company .company-card .company-type {
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.5;
-  margin-bottom: 1.2rem;
+  opacity: 0.48;
+  margin-bottom: 1.1rem;
 }
 
 .slide-company .company-card p {
-  font-size: 0.78rem;
-  line-height: 1.65;
+  font-size: 0.74rem;
+  line-height: 1.68;
   color: var(--dark);
-  opacity: 0.75;
-  margin-bottom: 0.8rem;
+  opacity: 0.72;
+  margin-bottom: 0.7rem;
 }
 
 .slide-company .company-card .insight {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--sage);
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(42,38,34,0.06);
-  line-height: 1.5;
+  border-top: 1px solid rgba(42,38,34,0.07);
+  line-height: 1.55;
 }
 
 .slide-company .piece-indicator {
   position: absolute;
-  top: 2.5rem;
-  left: 4rem;
+  top: 2.4rem;
+  left: 3.8rem;
+  z-index: 10;
 }
 
 .slide-company .slide-num {
   position: absolute;
-  top: 2.5rem;
-  right: 4rem;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  top: 2.4rem;
+  right: 3.8rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
   color: var(--umber);
-  opacity: 0.4;
+  opacity: 0.38;
+  z-index: 10;
 }
 
-/* ========== SLIDE 11: INTEGRATION ========== */
+/* ===================== SLIDE 5 — PIECE 1 OUTLINE ===================== */
+
+.slide-5 {
+  background: var(--cream);
+}
+
+/* Lab science strip — right edge */
+.s5-lab {
+  top: 0; right: 0;
+  width: 18%;
+  height: 100%;
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Periwinkle riso block */
+.s5-riso {
+  top: 0; right: 0;
+  width: 18%;
+  height: 100%;
+  background: var(--periwinkle);
+  opacity: 0.07;
+}
+
+/* ===================== SLIDE 7 — PIECE 2 OUTLINE ===================== */
+
+.s7-abstract {
+  top: 5%;
+  right: 0;
+  width: 20%;
+  height: 55%;
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.s7-riso {
+  top: 0; right: 0;
+  width: 20%;
+  height: 100%;
+  background: var(--coral);
+  opacity: 0.06;
+}
+
+/* ===================== SLIDE 9 — PIECE 3 OUTLINE ===================== */
+
+.s9-botanical {
+  top: 0; right: 0;
+  width: 22%;
+  height: 100%;
+  clip-path: polygon(25% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.s9-riso {
+  top: 0; right: 0;
+  width: 22%;
+  height: 100%;
+  background: var(--sage);
+  opacity: 0.07;
+}
+
+/* ===================== SLIDE 11 — INTEGRATION ===================== */
+
 .slide-11 {
   background: var(--bone);
   flex-direction: column;
-  padding: 6vh 10%;
+  padding: 5.5vh 9%;
 }
+
+/* Collage of multiple images at very low opacity */
+.s11-img-1 {
+  top: 0; left: 0;
+  width: 35%;
+  height: 50%;
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 0 85%);
+}
+
+.s11-img-2 {
+  bottom: 0; right: 0;
+  width: 40%;
+  height: 55%;
+  clip-path: polygon(20% 0, 100% 15%, 100% 100%, 0 100%);
+}
+
+.s11-img-3 {
+  top: 20%;
+  left: 20%;
+  width: 30%;
+  height: 40%;
+  clip-path: ellipse(50% 50% at 50% 50%);
+}
+
+.s11-img-1 img { mix-blend-mode: multiply; filter: grayscale(1) sepia(0.2); opacity: 0.12; }
+.s11-img-2 img { mix-blend-mode: multiply; filter: grayscale(1) contrast(1.1); opacity: 0.1; }
+.s11-img-3 img { mix-blend-mode: soft-light; filter: grayscale(0.9) sepia(0.3); opacity: 0.15; }
 
 .slide-11 h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2.2rem;
-  margin-bottom: 3rem;
+  font-size: 2rem;
+  margin-bottom: 2.8rem;
   text-align: center;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-11 .threads {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  gap: 1.8rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 880px;
   margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-11 .thread {
-  padding: 1.5rem;
-  background: var(--cream);
+  padding: 1.4rem 1.6rem;
+  background: rgba(237,233,216,0.8);
   border-radius: 2px;
   position: relative;
 }
 
+.slide-11 .thread::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 28px; height: 2px;
+}
+
+.slide-11 .thread:nth-child(1)::before { background: var(--periwinkle); opacity: 0.5; }
+.slide-11 .thread:nth-child(2)::before { background: var(--sage); opacity: 0.5; }
+.slide-11 .thread:nth-child(3)::before { background: var(--coral); opacity: 0.5; }
+.slide-11 .thread:nth-child(4)::before { background: var(--ochre); opacity: 0.5; }
+
 .slide-11 .thread h4 {
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.8rem;
-  color: var(--sage);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.7rem;
+  color: var(--dark);
+  opacity: 0.8;
 }
 
 .slide-11 .thread p {
-  font-size: 0.75rem;
-  line-height: 1.6;
+  font-size: 0.72rem;
+  line-height: 1.62;
   color: var(--dark);
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .slide-11 .thread .connection {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 0.8rem;
-  color: var(--umber);
-  margin-top: 0.8rem;
+  font-size: 0.78rem;
+  color: var(--sage);
+  margin-top: 0.75rem;
 }
 
-/* ========== SLIDE 12: WHY AMPLIFY ========== */
+/* ===================== SLIDE 12 — WHY AMPLIFY ===================== */
+
 .slide-12 {
-  background: var(--dark);
+  background: var(--dark2);
   color: var(--cream);
   flex-direction: column;
-  padding: 8vh 12%;
+  padding: 7.5vh 11%;
+}
+
+/* Manuscript paper texture */
+.s12-manuscript {
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.s12-manuscript img {
+  mix-blend-mode: screen;
+  filter: grayscale(1) contrast(0.6) brightness(0.4);
+  opacity: 0.08;
+  object-position: center;
 }
 
 .slide-12 .accent-bar {
   position: absolute;
   left: 0; top: 0;
-  width: 6px; height: 100%;
+  width: 5px; height: 100%;
   background: linear-gradient(to bottom, var(--sage), var(--periwinkle), var(--coral));
-  opacity: 0.4;
+  opacity: 0.5;
+  z-index: 5;
 }
 
 .slide-12 h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2.5rem;
-  margin-bottom: 2.5rem;
+  font-size: 2.4rem;
+  margin-bottom: 2.2rem;
   color: var(--bone);
-  max-width: 700px;
+  max-width: 680px;
+  line-height: 1.2;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-12 p {
-  font-size: 0.85rem;
-  line-height: 1.75;
+  font-size: 0.82rem;
+  line-height: 1.78;
   color: var(--bone);
-  opacity: 0.7;
-  max-width: 650px;
-  margin-bottom: 1.5rem;
+  opacity: 0.65;
+  max-width: 630px;
+  margin-bottom: 1.4rem;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-12 .highlight {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   color: var(--sage);
-  opacity: 0.9;
-  max-width: 600px;
-  line-height: 1.5;
-  margin-top: 1rem;
+  opacity: 0.92;
+  max-width: 590px;
+  line-height: 1.55;
+  margin-top: 1.2rem;
+  position: relative;
+  z-index: 10;
+  padding-left: 1.4rem;
+  border-left: 2px solid rgba(138,154,107,0.35);
 }
 
-/* ========== SLIDE 13: LOGISTICS ========== */
+/* ===================== SLIDE 13 — LOGISTICS ===================== */
+
 .slide-13 {
   background: var(--cream);
   flex-direction: column;
-  padding: 6vh 10%;
+  padding: 5.5vh 9%;
 }
+
+.slide-13 .dot-grid { opacity: 0.55; }
 
 .slide-13 h2 {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 2rem;
-  margin-bottom: 3rem;
+  font-size: 1.9rem;
+  margin-bottom: 2.8rem;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-13 .logistics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
+  gap: 2.2rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 880px;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-13 .log-item {
   border-top: 1px solid rgba(42,38,34,0.1);
-  padding-top: 1.5rem;
+  padding-top: 1.4rem;
+  position: relative;
 }
 
 .slide-13 .log-item .log-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.25em;
+  font-size: 0.58rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.5;
-  margin-bottom: 0.8rem;
+  opacity: 0.45;
+  margin-bottom: 0.75rem;
 }
 
 .slide-13 .log-item .log-value {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 300;
   color: var(--dark);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  line-height: 1;
 }
 
 .slide-13 .log-item p {
-  font-size: 0.75rem;
-  line-height: 1.5;
+  font-size: 0.72rem;
+  line-height: 1.55;
   color: var(--dark);
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-/* ========== SLIDE 14: CLOSING ========== */
+/* ===================== SLIDE 14 — CLOSING ===================== */
+
 .slide-14 {
   background: var(--cream);
   flex-direction: column;
   text-align: center;
 }
 
+/* Botanical echoing slide 1 */
+.s14-botanical {
+  bottom: 0; left: 0;
+  width: 30%;
+  height: 50%;
+  clip-path: polygon(0 40%, 100% 10%, 100% 100%, 0 100%);
+}
+
+.s14-botanical-r {
+  bottom: 0; right: 0;
+  width: 28%;
+  height: 45%;
+  clip-path: polygon(0 10%, 100% 35%, 100% 100%, 0 100%);
+}
+
+.s14-botanical img { mix-blend-mode: multiply; filter: grayscale(1) sepia(0.3) contrast(1.1); opacity: 0.15; }
+.s14-botanical-r img { mix-blend-mode: multiply; filter: grayscale(1) sepia(0.25); opacity: 0.12; }
+
+.slide-14 .sage-wash {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 35%;
+  background: linear-gradient(to top, rgba(138,154,107,0.12), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .slide-14 .closing-quote {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 300;
-  font-size: clamp(1.4rem, 2.5vw, 2rem);
-  max-width: 700px;
-  line-height: 1.5;
+  font-size: clamp(1.3rem, 2.3vw, 1.9rem);
+  max-width: 680px;
+  line-height: 1.58;
   color: var(--dark);
   margin-bottom: 3rem;
+  position: relative;
+  z-index: 10;
+  padding: 0 2rem;
 }
 
 .slide-14 .closing-meta {
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--umber);
-  opacity: 0.5;
+  opacity: 0.45;
+  position: relative;
+  z-index: 10;
 }
 
 .slide-14 .stem-bottom {
@@ -840,61 +1359,169 @@ body {
   bottom: 0;
   left: 50%;
   width: 1px;
-  height: 25%;
+  height: 22%;
   background: linear-gradient(to top, var(--sage), transparent);
-  opacity: 0.15;
+  opacity: 0.18;
+  z-index: 5;
 }
+
+.slide-14 .stem-top {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 20%;
+  background: linear-gradient(to bottom, var(--sage), transparent);
+  opacity: 0.14;
+  z-index: 5;
+}
+
+/* ===================== COMPANY SLIDE COLOR VARIANTS ===================== */
+
+.company-grid-3 {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
 </style>
 </head>
 <body>
 
+<!-- ================================================================ -->
 <!-- SLIDE 1: TITLE -->
+<!-- ================================================================ -->
 <div class="slide slide-1">
+
+  <!-- Images -->
+  <div class="img-wrap s1-botanical">
+    <img src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=800"
+         alt="" class="img-riso" style="opacity:0.2; filter: grayscale(1) sepia(0.35) contrast(1.05);">
+  </div>
+  <div class="img-wrap s1-manuscript">
+    <img src="https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800"
+         alt="" class="img-ghost" style="opacity:0.1; filter: grayscale(1) sepia(0.5);">
+  </div>
+
+  <!-- Washes -->
   <div class="color-wash"></div>
+  <div class="cream-veil"></div>
+
+  <!-- Risograph color block — top right corner accent -->
+  <div class="riso-block" style="top:0;right:0;width:200px;height:200px;background:var(--ochre);opacity:0.07;clip-path:polygon(100% 0,0 0,100% 100%);"></div>
+
+  <!-- Botanical stem decorations -->
   <div class="stem"></div>
-  <div class="stem-dot" style="top: 18%"></div>
-  <div class="stem-dot" style="top: 45%"></div>
-  <div class="stem-dot" style="top: 72%"></div>
+  <div class="stem-dot" style="top:17%"></div>
+  <div class="stem-dot" style="top:42%"></div>
+  <div class="stem-dot" style="top:68%"></div>
+
+  <!-- Leader line from annotation -->
+  <div class="leader-ann"></div>
+
+  <!-- Content -->
   <div class="title-block">
-    <div class="label" style="margin-bottom: 2rem;">Amplify Partners Writing Fellowship</div>
+    <div class="label" style="margin-bottom: 2.2rem;">Amplify Partners Writing Fellowship</div>
     <h1>The <em>Generator</em><br>and the Discriminator</h1>
     <div class="subtitle">Scientific Intuition in the Age of AI Scientists</div>
     <div class="meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
   </div>
-  <div class="corner-mark">72 of 84 Nobel laureates<br>called it intuition</div>
+
+  <!-- Corner annotation with bbox brackets -->
+  <div class="corner-annotation">
+    <div class="bbox-full" style="padding:0.7rem 1rem;">
+      <div class="bcorner-tr"></div>
+      <div class="bcorner-bl"></div>
+      <div class="ann-text">72 of 84 Nobel laureates<br>called it intuition</div>
+    </div>
+  </div>
+
+  <!-- Catalog numbers -->
+  <div class="catalog-num" style="color:var(--umber);">01 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 2: CORE TENSION -->
+<!-- ================================================================ -->
 <div class="slide slide-2">
+
+  <!-- Images -->
+  <div class="img-wrap s2-micro">
+    <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800"
+         alt="" style="mix-blend-mode:multiply;filter:grayscale(1) sepia(0.2) contrast(1.05);opacity:0.15;">
+  </div>
+  <div class="img-wrap s2-botanical">
+    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800"
+         alt="" style="mix-blend-mode:multiply;filter:grayscale(1) sepia(0.3) contrast(0.95);opacity:0.15;">
+  </div>
+
+  <!-- Washes -->
+  <div class="periwinkle-wash"></div>
+  <div class="sage-wash"></div>
+
+  <!-- Labels -->
   <div class="label page-label">The Core Tension</div>
+
+  <!-- Content -->
   <div class="content">
     <div class="col col-left">
       <h2 class="serif">Discriminator Taste</h2>
       <p>Pattern-matching against institutional consensus. Calibrated against what has already been accepted, published, cited, funded.</p>
       <p>Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
-      <p style="opacity: 0.5; font-style: italic; font-family: 'Cormorant Garamond', serif;">What has already won.</p>
-      <div class="stat" style="color: var(--periwinkle);">100+</div>
-      <div class="stat-label">AI companies building discriminators for biology</div>
+      <p style="opacity:0.45; font-style:italic; font-family:'Cormorant Garamond',serif;">What has already won.</p>
+      <div class="stat-box bbox-full" style="margin-top:1.5rem;">
+        <div class="bcorner-tr"></div><div class="bcorner-bl"></div>
+        <div class="stat" style="color:var(--periwinkle);">100+</div>
+        <div class="stat-label">AI companies building discriminators<br>for biology</div>
+      </div>
     </div>
+
     <div class="divider">vs.</div>
+
     <div class="col col-right">
       <h2 class="serif">Generator Taste</h2>
       <p>Identifying problems before the field has vocabulary for them. Sustaining attention on something unrewarding long enough for it to become rewarding.</p>
       <p>The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
-      <p style="opacity: 0.5; font-style: italic; font-family: 'Cormorant Garamond', serif;">What nobody yet believes matters.</p>
-      <div class="stat" style="color: var(--sage);">0</div>
-      <div class="stat-label">AI systems designed to cultivate this capacity</div>
+      <p style="opacity:0.45; font-style:italic; font-family:'Cormorant Garamond',serif;">What nobody yet believes matters.</p>
+      <div class="stat-box bbox-full" style="margin-top:1.5rem;">
+        <div class="bcorner-tr"></div><div class="bcorner-bl"></div>
+        <div class="stat" style="color:var(--sage);">0</div>
+        <div class="stat-label">AI systems designed to cultivate<br>this capacity</div>
+      </div>
     </div>
   </div>
+
   <div class="bottom-line">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
+
+  <div class="catalog-num" style="color:var(--umber);">02 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
-<!-- SLIDE 3: WHY NOW -->
+<!-- ================================================================ -->
+<!-- SLIDE 3: WHY NOW (DARK) -->
+<!-- ================================================================ -->
 <div class="slide slide-3">
+
+  <!-- DNA structure ghost accent -->
+  <div class="img-wrap s3-dna" style="z-index:2;">
+    <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800"
+         alt="" style="mix-blend-mode:screen;filter:grayscale(1) contrast(0.65) brightness(0.5);opacity:0.1;object-position:center top;">
+  </div>
+
+  <!-- Second image layer — protein structure overlay -->
+  <div class="img-wrap" style="bottom:0;left:0;width:30%;height:40%;clip-path:polygon(0 30%,100% 0,100% 100%,0 100%);z-index:2;">
+    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800"
+         alt="" style="mix-blend-mode:screen;filter:grayscale(1) contrast(0.6);opacity:0.07;object-position:center;">
+  </div>
+
   <div class="wash"></div>
-  <div class="wash-2"></div>
+  <div class="wash-periwinkle"></div>
+  <div class="dot-grid-dark"></div>
+
+  <!-- Coral riso accent block -->
+  <div class="riso-block" style="bottom:0;right:0;width:180px;height:180px;background:var(--coral);opacity:0.06;clip-path:polygon(100% 0,0 100%,100% 100%);"></div>
+
   <div class="content">
-    <div class="label" style="color: var(--sage); opacity: 0.5; margin-bottom: 1.5rem;">Why This Matters Now</div>
+    <div class="label" style="color:var(--sage);opacity:0.5;margin-bottom:1.4rem;">Why This Matters Now</div>
     <h2>Three converging forces</h2>
     <div class="forces">
       <div class="force">
@@ -917,10 +1544,38 @@ body {
       </div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--bone);opacity:0.25;">03 / 14</div>
+  <div class="catalog-series" style="color:var(--bone);opacity:0.2;">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 4: THREE PIECES -->
+<!-- ================================================================ -->
 <div class="slide slide-4">
+
+  <!-- Image fragments above piece columns -->
+  <div class="s4-frag-1">
+    <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.3) contrast(1.1);opacity:0.18;">
+  </div>
+  <div class="s4-frag-2">
+    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) contrast(1.05);opacity:0.15;">
+  </div>
+  <div class="s4-frag-3">
+    <img src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.4);opacity:0.18;">
+  </div>
+
+  <!-- Color washes over fragments -->
+  <div class="riso-block" style="top:0;left:0;width:33.33%;height:28%;background:var(--periwinkle);opacity:0.12;"></div>
+  <div class="riso-block" style="top:0;left:33.33%;width:33.34%;height:28%;background:var(--coral);opacity:0.09;"></div>
+  <div class="riso-block" style="top:0;right:0;width:33.33%;height:28%;background:var(--sage);opacity:0.11;"></div>
+
+  <!-- Dot grid -->
+  <div class="dot-grid visible"></div>
+
   <div class="content">
     <div class="arc-header">
       <div class="label" style="margin-bottom: 1rem;">The Series</div>
@@ -954,14 +1609,36 @@ body {
       </div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">04 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 5: PIECE 1 OUTLINE -->
-<div class="slide slide-detail">
-  <div class="label piece-indicator" style="color: var(--periwinkle);">Piece 1 · Month 1</div>
+<!-- ================================================================ -->
+<div class="slide slide-detail slide-5">
+
+  <!-- Lab image strip — right edge -->
+  <div class="img-wrap s5-lab detail-img-strip" style="top:0;right:0;width:18%;height:100%;">
+    <img src="https://images.unsplash.com/photo-1582719471384-894fbb16f461?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;object-position:center;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.2) contrast(1.1);opacity:0.2;">
+  </div>
+  <!-- Periwinkle riso block over image -->
+  <div class="riso-block s5-riso"></div>
+
+  <!-- Gradient veil to not bleed on content -->
+  <div style="position:absolute;top:0;right:0;width:22%;height:100%;background:linear-gradient(to right,var(--cream) 15%,transparent 100%);z-index:3;pointer-events:none;"></div>
+
+  <!-- Leader line accent -->
+  <div class="leader-v" style="left:9%;top:15%;height:70%;opacity:0.12;"></div>
+
+  <div class="label piece-indicator" style="color:var(--periwinkle);">Piece 1 · Month 1</div>
   <div class="slide-num">05 / 14</div>
+
   <h2 class="serif">The Oracle and the Visionary</h2>
   <div class="detail-sub">8,000–9,000 words · Establishing the distinction</div>
+
   <div class="sections">
     <div class="section-item">
       <span class="sec-num">1</span>
@@ -994,12 +1671,27 @@ body {
       <p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p>
     </div>
   </div>
+
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 6: PIECE 1 COMPANIES -->
+<!-- ================================================================ -->
 <div class="slide slide-company">
-  <div class="label piece-indicator" style="color: var(--periwinkle);">Piece 1 · Portfolio Companies</div>
+
+  <!-- Subtle abstract background -->
+  <div class="img-wrap" style="top:0;left:0;width:100%;height:100%;z-index:1;">
+    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.15) contrast(0.85);opacity:0.06;">
+  </div>
+
+  <!-- Periwinkle riso block — top right -->
+  <div class="riso-block" style="top:0;right:0;width:35%;height:100%;background:linear-gradient(to left,rgba(123,127,196,0.09),transparent);"></div>
+
+  <div class="label piece-indicator" style="color:var(--periwinkle);">Piece 1 · Portfolio Companies</div>
   <div class="slide-num">06 / 14</div>
+
   <div class="company-grid" style="margin-top: 4rem;">
     <div class="company-card">
       <h3>Recursion Pharmaceuticals</h3>
@@ -1008,7 +1700,7 @@ body {
       <p>FAP clinical milestone (Feb 2026) — first full-stack AI OS validation. REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
       <div class="insight">Key question: What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
     </div>
-    <div class="company-card">
+    <div class="company-card" style="border-top-color: var(--periwinkle);">
       <h3>Boltz</h3>
       <div class="company-type">Open-Source · Digital Biology</div>
       <p>Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
@@ -1016,14 +1708,38 @@ body {
       <div class="insight">Key question: What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">06 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 7: PIECE 2 OUTLINE -->
+<!-- ================================================================ -->
 <div class="slide slide-detail">
-  <div class="label piece-indicator" style="color: var(--coral);">Piece 2 · Month 2</div>
+
+  <!-- Abstract molecular image strip — right -->
+  <div class="img-wrap" style="top:0;right:0;width:20%;height:100%;z-index:2;clip-path:polygon(30% 0,100% 0,100% 100%,0 100%);">
+    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.2) contrast(1.05);opacity:0.22;">
+  </div>
+  <!-- Coral riso over it -->
+  <div class="riso-block" style="top:0;right:0;width:20%;height:100%;background:var(--coral);opacity:0.06;"></div>
+  <!-- Gradient veil -->
+  <div style="position:absolute;top:0;right:0;width:24%;height:100%;background:linear-gradient(to right,var(--cream) 15%,transparent 100%);z-index:3;pointer-events:none;"></div>
+
+  <!-- Second image — protein, bottom left corner fragment -->
+  <div class="img-wrap" style="bottom:0;left:0;width:15%;height:25%;z-index:2;clip-path:polygon(0 50%,100% 0,100% 100%,0 100%);">
+    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) contrast(0.9);opacity:0.12;">
+  </div>
+
+  <div class="label piece-indicator" style="color:var(--coral);">Piece 2 · Month 2</div>
   <div class="slide-num">07 / 14</div>
+
   <h2 class="serif">The Noise Floor</h2>
   <div class="detail-sub">7,500–8,500 words · Diagnosing the crisis</div>
+
   <div class="sections">
     <div class="section-item">
       <span class="sec-num">1</span>
@@ -1056,40 +1772,82 @@ body {
       <p>In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p>
     </div>
   </div>
+
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 8: PIECE 2 COMPANIES -->
+<!-- ================================================================ -->
 <div class="slide slide-company">
-  <div class="label piece-indicator" style="color: var(--coral);">Piece 2 · Portfolio Companies</div>
+
+  <!-- Abstract molecular background layer -->
+  <div class="img-wrap" style="top:0;left:0;width:100%;height:100%;z-index:1;">
+    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.1) contrast(0.8);opacity:0.07;">
+  </div>
+
+  <!-- Coral accent top strip -->
+  <div class="riso-block" style="top:0;left:0;width:100%;height:4px;background:linear-gradient(to right,var(--periwinkle),var(--coral),var(--ochre));opacity:0.3;border-radius:0;"></div>
+
+  <div class="label piece-indicator" style="color:var(--coral);">Piece 2 · Portfolio Companies</div>
   <div class="slide-num">08 / 14</div>
-  <div class="company-grid" style="margin-top: 4rem; grid-template-columns: repeat(3, 1fr);">
+
+  <div class="company-grid company-grid-3" style="margin-top:4rem;">
     <div class="company-card">
       <h3>Modal</h3>
       <div class="company-type">Serverless Compute</div>
       <p>The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
       <div class="insight">What happens to question quality when compute stops being the constraint?</div>
     </div>
-    <div class="company-card" style="border-top-color: var(--coral);">
+    <div class="company-card" style="border-top-color:var(--coral);">
       <h3>LangChain</h3>
       <div class="company-type">Agent Orchestration</div>
       <p>LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
       <div class="insight">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
     </div>
-    <div class="company-card" style="border-top-color: var(--ochre);">
+    <div class="company-card" style="border-top-color:var(--ochre);">
       <h3>DatologyAI</h3>
       <div class="company-type">Data Curation</div>
       <p>Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
       <div class="insight">What would a training dataset look like if optimized for novelty rather than consensus?</div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">08 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 9: PIECE 3 OUTLINE -->
+<!-- ================================================================ -->
 <div class="slide slide-detail">
-  <div class="label piece-indicator" style="color: var(--sage);">Piece 3 · Month 3</div>
+
+  <!-- Botanical / nature strip — right edge -->
+  <div class="img-wrap" style="top:0;right:0;width:22%;height:100%;z-index:2;clip-path:polygon(25% 0,100% 0,100% 100%,0 100%);">
+    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;object-position:center;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.45) contrast(1.1);opacity:0.22;">
+  </div>
+  <!-- Sage riso over it -->
+  <div class="riso-block" style="top:0;right:0;width:22%;height:100%;background:var(--sage);opacity:0.07;"></div>
+  <!-- Gradient veil -->
+  <div style="position:absolute;top:0;right:0;width:26%;height:100%;background:linear-gradient(to right,var(--cream) 15%,transparent 100%);z-index:3;pointer-events:none;"></div>
+
+  <!-- Second botanical layer — top left corner crescent -->
+  <div class="img-wrap" style="top:0;left:0;width:18%;height:22%;z-index:2;clip-path:polygon(0 0,100% 0,50% 100%,0 80%);">
+    <img src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.5);opacity:0.15;">
+  </div>
+
+  <!-- Ochre accent riso top left -->
+  <div class="riso-block" style="top:0;left:0;width:18%;height:22%;background:var(--ochre);opacity:0.06;clip-path:polygon(0 0,100% 0,50% 100%,0 80%);"></div>
+
+  <div class="label piece-indicator" style="color:var(--sage);">Piece 3 · Month 3</div>
   <div class="slide-num">09 / 14</div>
+
   <h2 class="serif">Designing for Intuition</h2>
   <div class="detail-sub">7,000–8,000 words · The constructive turn</div>
+
   <div class="sections">
     <div class="section-item">
       <span class="sec-num">1</span>
@@ -1122,38 +1880,75 @@ body {
       <p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p>
     </div>
   </div>
+
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 10: PIECE 3 COMPANIES -->
+<!-- ================================================================ -->
 <div class="slide slide-company">
-  <div class="label piece-indicator" style="color: var(--sage);">Piece 3 · Portfolio Companies</div>
+
+  <!-- Nature texture background -->
+  <div class="img-wrap" style="top:0;left:0;width:100%;height:100%;z-index:1;">
+    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:multiply;filter:grayscale(1) sepia(0.3) contrast(0.85);opacity:0.08;">
+  </div>
+
+  <!-- Sage accent top strip -->
+  <div class="riso-block" style="top:0;left:0;width:100%;height:4px;background:linear-gradient(to right,var(--sage),var(--ochre),var(--moss));opacity:0.35;border-radius:0;"></div>
+
+  <div class="label piece-indicator" style="color:var(--sage);">Piece 3 · Portfolio Companies</div>
   <div class="slide-num">10 / 14</div>
-  <div class="company-grid" style="margin-top: 4rem; grid-template-columns: repeat(3, 1fr);">
-    <div class="company-card">
+
+  <div class="company-grid company-grid-3" style="margin-top:4rem;">
+    <div class="company-card" style="border-top-color:var(--sage);">
       <h3>VeriSIM Life</h3>
       <div class="company-type">Biosimulation</div>
       <p>BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
       <div class="insight">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
     </div>
-    <div class="company-card" style="border-top-color: var(--sage);">
+    <div class="company-card" style="border-top-color:var(--sage);">
       <h3>Antithesis</h3>
       <div class="company-type">Autonomous Testing</div>
       <p>Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
       <div class="insight">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
     </div>
-    <div class="company-card" style="border-top-color: var(--ochre);">
+    <div class="company-card" style="border-top-color:var(--ochre);">
       <h3>Scribe</h3>
       <div class="company-type">Workflow Documentation</div>
       <p>AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
       <div class="insight">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">10 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 11: INTEGRATION -->
+<!-- ================================================================ -->
 <div class="slide slide-11">
-  <div class="label" style="text-align: center; margin-bottom: 1.5rem;">Integration</div>
+
+  <!-- Collage of 3 images at very low opacity -->
+  <div class="img-wrap s11-img-1">
+    <img src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=800" alt="">
+  </div>
+  <div class="img-wrap s11-img-2">
+    <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800" alt="">
+  </div>
+  <div class="img-wrap s11-img-3">
+    <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800" alt="">
+  </div>
+
+  <!-- Risograph color accents -->
+  <div class="riso-block" style="top:0;left:0;width:35%;height:50%;background:var(--periwinkle);opacity:0.05;clip-path:polygon(0 0,100% 0,80% 100%,0 85%);"></div>
+  <div class="riso-block" style="bottom:0;right:0;width:40%;height:55%;background:var(--sage);opacity:0.06;clip-path:polygon(20% 0,100% 15%,100% 100%,0 100%);"></div>
+
+  <div class="label" style="text-align:center;margin-bottom:1.4rem;position:relative;z-index:10;">Integration</div>
   <h2 class="serif">How the pieces connect</h2>
+
   <div class="threads">
     <div class="thread">
       <h4>Recursion ↔ Modal</h4>
@@ -1176,26 +1971,60 @@ body {
       <div class="connection">Runs through all three pieces</div>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">11 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
-<!-- SLIDE 12: WHY AMPLIFY -->
+<!-- ================================================================ -->
+<!-- SLIDE 12: WHY AMPLIFY (DARK) -->
+<!-- ================================================================ -->
 <div class="slide slide-12">
+
+  <!-- Manuscript texture -->
+  <div class="img-wrap s12-manuscript" style="z-index:1;">
+    <img src="https://images.unsplash.com/photo-1456324504439-367cee3b3c32?w=800" alt="">
+  </div>
+
+  <!-- DNA texture, soft overlay top right -->
+  <div class="img-wrap" style="top:0;right:0;width:35%;height:50%;z-index:1;clip-path:ellipse(60% 70% at 70% 30%);">
+    <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800"
+         alt="" style="width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;filter:grayscale(1) contrast(0.5) brightness(0.35);opacity:0.07;">
+  </div>
+
+  <!-- Subtle dot grid -->
+  <div style="position:absolute;inset:0;pointer-events:none;z-index:1;background-image:radial-gradient(circle,rgba(237,233,216,0.05) 1px,transparent 1px);background-size:26px 26px;"></div>
+
   <div class="accent-bar"></div>
-  <div class="label" style="color: var(--sage); opacity: 0.5; margin-bottom: 2rem;">Why This Matters to Amplify</div>
+
+  <div class="label" style="color:var(--sage);opacity:0.5;margin-bottom:2rem;position:relative;z-index:10;">Why This Matters to Amplify</div>
   <h2 class="serif">The portfolio thesis, extended</h2>
   <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
   <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
   <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
+
+  <div class="catalog-num" style="color:var(--bone);opacity:0.2;">12 / 14</div>
+  <div class="catalog-series" style="color:var(--bone);opacity:0.18;">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 13: LOGISTICS -->
+<!-- ================================================================ -->
 <div class="slide slide-13">
-  <div class="label" style="margin-bottom: 1.5rem;">Reporting Plan</div>
+
+  <!-- Dot grid -->
+  <div class="dot-grid visible" style="opacity:0.6;"></div>
+
+  <!-- Ochre riso block — corner -->
+  <div class="riso-block" style="bottom:0;right:0;width:220px;height:220px;background:var(--ochre);opacity:0.06;clip-path:polygon(100% 0,0 100%,100% 100%);"></div>
+
+  <div class="label" style="margin-bottom:1.4rem;position:relative;z-index:10;">Reporting Plan</div>
   <h2 class="serif">How I'll build it</h2>
+
   <div class="logistics-grid">
     <div class="log-item">
       <div class="log-label">Interviews</div>
-      <div class="log-value">20–25</div>
+      <div class="log-value bbox" style="display:inline-block;padding:0.4rem 0.6rem;margin-bottom:0.5rem;">20–25</div>
       <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
     </div>
     <div class="log-item">
@@ -1224,18 +2053,49 @@ body {
       <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
     </div>
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">13 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
+<!-- ================================================================ -->
 <!-- SLIDE 14: CLOSING -->
+<!-- ================================================================ -->
 <div class="slide slide-14">
+
+  <!-- Botanical echoing slide 1 — left fragment -->
+  <div class="img-wrap s14-botanical">
+    <img src="https://images.unsplash.com/photo-1457530378978-8bac673b8062?w=800" alt="">
+  </div>
+
+  <!-- Botanical right fragment — nature leaves -->
+  <div class="img-wrap s14-botanical-r">
+    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800" alt="">
+  </div>
+
+  <!-- Sage wash over bottom botanical -->
+  <div class="sage-wash"></div>
+
+  <!-- Ochre risograph triangle — top right -->
+  <div class="riso-block" style="top:0;right:0;width:160px;height:160px;background:var(--ochre);opacity:0.07;clip-path:polygon(100% 0,0 0,100% 100%);"></div>
+
+  <!-- Vertical stems (echoing slide 1) -->
+  <div class="stem-top"></div>
   <div class="stem-bottom"></div>
-  <div class="label" style="margin-bottom: 3rem;">Closing</div>
+
+  <!-- Dot at center midpoint -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:50%;border:1px solid var(--sage);opacity:0.2;z-index:5;"></div>
+
+  <div class="label" style="margin-bottom:2.8rem;position:relative;z-index:10;">Closing</div>
   <div class="closing-quote">
     "The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."
   </div>
   <div class="closing-meta">
     Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026
   </div>
+
+  <div class="catalog-num" style="color:var(--umber);">14 / 14</div>
+  <div class="catalog-series" style="color:var(--umber);">SCI-INT / 2026</div>
 </div>
 
 </body>
