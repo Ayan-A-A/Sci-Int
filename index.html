@@ -3,257 +3,814 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Generator and the Discriminator · Amplify Partners</title>
+<title>The Generator and the Discriminator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+/* ===== RESET & BASE ===== */
+*{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --forest:#1A2A1B;--dark:#0D1610;--gold:#C4A855;--amber:#8B7A3C;
-  --cream:#EDE9D8;--bone:#E8E4DA;--sage:#8A9A6B;--rose:#D98BA0;
-  --peri:#7B7FC4;--umber:#6B5D3F;
+  --cream:#EDE8C8;
+  --bone:#E8E4DA;
+  --dark:#2A2622;
+  --forest-dark:#3a4a1f;
+  --forest-mid:#556b2a;
+  --forest-light:#6b7d35;
+  --gold-deep:#d4c56a;
+  --gold-light:#e8dc8f;
+  --navy:#1a2340;
+  --periwinkle:#7B7FC4;
+  --sage:#8A9A6B;
+  --coral:#E85D3D;
+  --rose:#D98BA0;
+  --ochre:#C4A855;
+  --cobalt:#1e3fd8;
+  --pink-soft:#f4a6a8;
+  --pink-coral:#ef9a86;
+  --mauve:#b0a0c4;
+  --lavender:#eae7ee;
+  --sage-cloud:#b8ceb0;
+  --blue-teal:#8fb4c4;
+  --olive:#c3cb9e;
+  --pale-green:#eef1ec;
 }
-html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
-body{font-family:'Inter',sans-serif;background:var(--dark);-webkit-font-smoothing:antialiased;color:var(--cream)}
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll;}
+body{
+  font-family:'Inter',sans-serif;
+  background:#1a1a1a;
+  -webkit-font-smoothing:antialiased;
+}
 
-.slide{width:100vw;height:100vh;scroll-snap-align:start;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.slide::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.04;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size:200px}
+/* ===== SVG GRAIN FILTER ===== */
+.grain-overlay{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  pointer-events:none;
+  z-index:200;
+  opacity:0.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size:300px 300px;
+}
 
-.art-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+/* ===== SLIDE BASE ===== */
+.slide{
+  width:100vw;height:100vh;
+  scroll-snap-align:start;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-/* TYPE */
-.serif{font-family:'Cormorant Garamond',serif}
-.label{font-family:'Inter',sans-serif;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.5}
-.coord{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:.5rem;letter-spacing:.06em;pointer-events:none;z-index:3;opacity:.22}
-.sparkle{position:absolute;font-size:.75rem;pointer-events:none;z-index:3;opacity:.28;animation:sparkle-pulse 4s ease-in-out infinite}
+/* ===== TYPE ===== */
+.serif{font-family:'Cormorant Garamond',serif;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.58rem;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:rgba(237,232,200,0.5);
+}
+.coord{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.5rem;
+  color:rgba(255,255,255,0.35);
+  letter-spacing:0.1em;
+}
 
-/* ANIMATIONS */
-@keyframes glow-pulse{0%,100%{opacity:.28;transform:scale(1)}50%{opacity:.5;transform:scale(1.07)}}
-@keyframes glow-pulse2{0%,100%{opacity:.22;transform:scale(1)}50%{opacity:.42;transform:scale(1.05)}}
-@keyframes glow-pulse3{0%,100%{opacity:.18;transform:scale(1)}50%{opacity:.38;transform:scale(1.06)}}
-@keyframes px-pulse{0%,100%{opacity:.1}50%{opacity:.28}}
-@keyframes sparkle-pulse{0%,100%{opacity:.15}50%{opacity:.45}}
-@keyframes ring-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.anim-glow{animation:glow-pulse 5s ease-in-out infinite}
-.anim-glow2{animation:glow-pulse2 7s ease-in-out infinite;animation-delay:2.2s}
-.anim-glow3{animation:glow-pulse3 6s ease-in-out infinite;animation-delay:4s}
-.anim-px{animation:px-pulse 4s ease-in-out infinite}
-.anim-ring{animation:ring-slow 45s linear infinite;transform-box:fill-box;transform-origin:center center}
+/* ===== BLUEPRINT ARC SVG ===== */
+.bp-svg{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:2;
+}
+.bp-arc{stroke:rgba(255,255,255,0.12);stroke-width:0.5;fill:none;}
+.bp-arc-gold{stroke:rgba(212,197,106,0.2);stroke-width:0.5;fill:none;}
 
-/* NAV */
-#nav-dots{position:fixed;right:1.2rem;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:200}
-.ndot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.18;cursor:pointer;transition:opacity .3s,transform .3s}
-.ndot.active{opacity:.65;transform:scale(1.7)}
+/* ===== SPARKLE ===== */
+.sparkle{
+  position:absolute;
+  font-size:1rem;
+  color:rgba(212,197,106,0.7);
+  animation:sparkle-pulse 4s ease-in-out infinite;
+  z-index:5;
+  line-height:1;
+}
+@keyframes sparkle-pulse{0%,100%{opacity:0.4;transform:scale(1);}50%{opacity:1;transform:scale(1.2);}}
 
-/* ══ SLIDE 1 ══════════════════════════════════════════════ */
-.s1{background:linear-gradient(135deg,#060D07 0%,#0E1A0F 40%,#1A2A1B 100%)}
-.s1 .title-block{position:absolute;left:8%;top:50%;transform:translateY(-50%);z-index:5;max-width:54%}
-.s1 h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2.6rem,4.2vw,4.8rem);line-height:1.08;color:var(--cream);margin-bottom:1.4rem}
-.s1 h1 .gen{color:var(--gold);font-style:italic}
-.s1 .subtitle{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:var(--cream);opacity:.55;margin-bottom:2.5rem;max-width:420px;line-height:1.55}
-.s1 .meta{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);opacity:.45}
-.s1 .corner-stat{position:absolute;bottom:3.5rem;right:4.5rem;text-align:right;z-index:5}
-.s1 .corner-stat .sn{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold);opacity:.65;display:block;line-height:1}
-.s1 .corner-stat .sk{font-family:'IBM Plex Mono',monospace;font-size:.52rem;color:var(--cream);opacity:.3;letter-spacing:.08em}
+/* ===== REGISTRATION CROSS ===== */
+.reg-cross{
+  position:absolute;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.6rem;
+  color:rgba(255,255,255,0.2);
+  z-index:5;
+}
 
-/* ══ SLIDE 2 ══════════════════════════════════════════════ */
-.s2{background:#0C1510}
-.s2 .content{display:grid;grid-template-columns:1fr 64px 1fr;max-width:88%;width:100%;position:relative;z-index:5}
-.s2 .col{padding:3.5rem 2.5rem}
-.s2 .divider-txt{display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--cream);opacity:.2;position:relative}
-.s2 .divider-txt::before{content:'';position:absolute;top:10%;bottom:10%;left:50%;width:1px;background:linear-gradient(to bottom,transparent,var(--gold),transparent);opacity:.15}
-.s2 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.65rem;margin-bottom:1.4rem;line-height:1.2}
-.s2 .col-left h2{color:var(--peri)} .s2 .col-right h2{color:var(--gold)}
-.s2 p{font-size:.78rem;line-height:1.72;color:var(--cream);opacity:.6;margin-bottom:.9rem}
-.s2 .stat-n{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;display:block;margin-top:1.5rem}
-.s2 .col-left .stat-n{color:var(--peri)} .s2 .col-right .stat-n{color:var(--gold)}
-.s2 .stat-lbl{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--cream);opacity:.38;margin-top:.3rem}
-.s2 .btm-quote{position:absolute;bottom:3.5rem;left:50%;transform:translateX(-50%);width:58%;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:var(--cream);opacity:.35;line-height:1.6;z-index:5}
+/* ===== GOLDEN GLOW ===== */
+.golden-glow{
+  position:absolute;
+  border-radius:50%;
+  mix-blend-mode:screen;
+  pointer-events:none;
+  z-index:1;
+  animation:glow-pulse 6s ease-in-out infinite;
+}
+@keyframes glow-pulse{0%,100%{transform:scale(1);opacity:0.3;}50%{transform:scale(1.08);opacity:0.45;}}
 
-/* ══ SLIDE 3 ══════════════════════════════════════════════ */
-.s3{background:#050B06}
-.s3 .content{max-width:80%;position:relative;z-index:5}
-.s3 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.4rem;margin-bottom:3.5rem;color:var(--cream)}
-.s3 .forces{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem}
-.s3 .force{border-top:1px solid rgba(196,168,85,.14);padding-top:1.5rem}
-.s3 .fn{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;color:var(--gold);opacity:.45;margin-bottom:.8rem}
-.s3 .force h3{font-weight:400;font-size:.82rem;margin-bottom:.9rem;color:var(--cream)}
-.s3 .force p{font-size:.74rem;line-height:1.65;color:var(--cream);opacity:.52}
-.s3 .evidence{margin-top:.9rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:var(--rose);opacity:.75}
+/* ===== ASCII BLOOM CANVAS ===== */
+.ascii-bloom{
+  position:absolute;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  line-height:14px;
+  letter-spacing:1px;
+  white-space:pre;
+  color:#f5f5f0;
+  z-index:3;
+  pointer-events:none;
+}
 
-/* ══ SLIDE 4 ══════════════════════════════════════════════ */
-.s4{background:linear-gradient(160deg,#080E09 0%,#111C12 55%,#172416 100%)}
-.s4 .content{max-width:82%;width:100%;position:relative;z-index:5}
-.s4 .arc-hd{text-align:center;margin-bottom:3.5rem}
-.s4 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.9rem;color:var(--cream);margin-bottom:1rem}
-.s4 .arc-flow{display:flex;align-items:center;justify-content:center;gap:.8rem;margin-top:.4rem}
-.s4 .arc-step{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;padding:.3rem .9rem;border:1px solid;background:transparent}
-.s4 .arc-step:nth-child(1){color:var(--peri);border-color:rgba(123,127,196,.3)}
-.s4 .arc-step:nth-child(3){color:var(--rose);border-color:rgba(217,139,160,.3)}
-.s4 .arc-step:nth-child(5){color:var(--sage);border-color:rgba(138,154,107,.3)}
-.s4 .arc-arrow{color:var(--gold);opacity:.3;font-size:1.1rem}
-.s4 .pieces{display:grid;grid-template-columns:repeat(3,1fr)}
-.s4 .piece{padding:2rem 1.8rem;border-top:1px solid rgba(196,168,85,.1)}
-.s4 .piece:not(:last-child){border-right:1px solid rgba(196,168,85,.06)}
-.s4 .piece .mo{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.38;margin-bottom:.8rem}
-.s4 .piece h3{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.35rem;margin-bottom:.5rem;line-height:1.25;color:var(--cream)}
-.s4 .piece .psub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:var(--cream);opacity:.45;margin-bottom:1.2rem;line-height:1.5}
-.s4 .piece .cos{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);opacity:.42}
+/* ===== CORNER BRACKET FRAME ===== */
+.corner-frame{
+  position:absolute;
+  pointer-events:none;
+  z-index:10;
+}
+.corner-frame .tl,.corner-frame .tr,.corner-frame .bl,.corner-frame .br{
+  position:absolute;
+  width:24px;height:24px;
+}
+.corner-frame .tl{top:20px;left:20px;border-top:1px solid rgba(255,255,255,0.25);border-left:1px solid rgba(255,255,255,0.25);}
+.corner-frame .tr{top:20px;right:20px;border-top:1px solid rgba(255,255,255,0.25);border-right:1px solid rgba(255,255,255,0.25);}
+.corner-frame .bl{bottom:20px;left:20px;border-bottom:1px solid rgba(255,255,255,0.25);border-left:1px solid rgba(255,255,255,0.25);}
+.corner-frame .br{bottom:20px;right:20px;border-bottom:1px solid rgba(255,255,255,0.25);border-right:1px solid rgba(255,255,255,0.25);}
 
-/* ══ DETAIL SLIDES (5,7,9) ════════════════════════════════ */
-.sdet{background:linear-gradient(150deg,#080E09 0%,#111C12 60%,#172416 100%);flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:5vh 8%}
-.sdet .ptag{position:absolute;top:2.5rem;left:4rem;font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;z-index:5}
-.sdet .snum{position:absolute;top:2.5rem;right:4rem;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--cream);opacity:.18;z-index:5}
-.sdet h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.1rem;color:var(--cream);margin-top:4rem;margin-bottom:.4rem;line-height:1.2;position:relative;z-index:5}
-.sdet .dsub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.88rem;color:var(--cream);opacity:.4;margin-bottom:2.5rem;position:relative;z-index:5}
-.sdet .sections{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem 4rem;width:100%;position:relative;z-index:5}
-.sdet .si{padding:1.1rem 0;border-top:1px solid rgba(196,168,85,.09)}
-.sdet .sec-n{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;color:var(--gold);opacity:.22;float:left;margin-right:.9rem;line-height:1}
-.sdet .si h4{font-weight:400;font-size:.73rem;margin-bottom:.45rem;color:var(--cream)}
-.sdet .si p{font-size:.68rem;line-height:1.62;color:var(--cream);opacity:.48}
+/* ===== CHROMATIC CLOUD ===== */
+.cloud-blob{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(60px);
+  mix-blend-mode:screen;
+  pointer-events:none;
+  animation:cloud-drift 18s ease-in-out infinite;
+}
+@keyframes cloud-drift{
+  0%{transform:translate(0,0) scale(1);}
+  33%{transform:translate(20px,-15px) scale(1.05);}
+  66%{transform:translate(-15px,20px) scale(0.97);}
+  100%{transform:translate(0,0) scale(1);}
+}
 
-/* ══ COMPANY SLIDES (6,8,10) ═══════════════════════════════ */
-.sco{background:linear-gradient(150deg,#080E09 0%,#111C12 60%,#172416 100%);flex-direction:column;align-items:flex-start;justify-content:center;padding:5vh 8%}
-.sco .ptag{position:absolute;top:2.5rem;left:4rem;font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;z-index:5}
-.sco .snum{position:absolute;top:2.5rem;right:4rem;font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--cream);opacity:.18;z-index:5}
-.sco .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;width:100%;position:relative;z-index:5;margin-top:3rem}
-.sco .cgrid.tri{grid-template-columns:repeat(3,1fr)}
-.sco .cc{padding:1.7rem;border:1px solid rgba(196,168,85,.1);background:rgba(0,0,0,.18);position:relative}
-.sco .cc .ct{position:absolute;top:0;left:0;height:2px;width:60px}
-.sco .cc h3{font-weight:400;font-size:.88rem;margin-bottom:.28rem;color:var(--cream)}
-.sco .ctype{font-family:'IBM Plex Mono',monospace;font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);opacity:.42;margin-bottom:1.1rem}
-.sco .cc p{font-size:.73rem;line-height:1.65;color:var(--cream);opacity:.58;margin-bottom:.8rem}
-.sco .insight{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:var(--gold);opacity:.72;margin-top:.9rem;padding-top:.9rem;border-top:1px solid rgba(196,168,85,.1);line-height:1.5}
+/* ===== HALFTONE ===== */
+.halftone-canvas{
+  position:absolute;
+  top:0;left:0;
+  pointer-events:none;
+  z-index:1;
+}
 
-/* ══ SLIDE 11 ══════════════════════════════════════════════ */
-.s11{background:linear-gradient(160deg,#080E09 0%,#101A11 55%,#131E14 100%);flex-direction:column;padding:5vh 8%}
-.s11 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.9rem;color:var(--cream);margin-bottom:2.8rem;text-align:center;position:relative;z-index:5}
-.s11 .threads{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;width:100%;max-width:920px;margin:0 auto;position:relative;z-index:5}
-.s11 .thread{padding:1.4rem;border:1px solid rgba(196,168,85,.1);background:rgba(0,0,0,.15)}
-.s11 .thread h4{font-weight:400;font-size:.68rem;letter-spacing:.1em;margin-bottom:.75rem;color:var(--gold)}
-.s11 .thread p{font-size:.7rem;line-height:1.62;color:var(--cream);opacity:.58}
-.s11 .thread .conn{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.76rem;color:var(--sage);margin-top:.75rem;opacity:.7}
+/* ===== CONCENTRIC RINGS ===== */
+.ring-svg{
+  position:absolute;
+  top:0;left:0;width:100%;height:100%;
+  pointer-events:none;
+  z-index:2;
+}
+.ring{fill:none;stroke-width:0.5;animation:ring-pulse 8s ease-in-out infinite;}
+@keyframes ring-pulse{0%,100%{opacity:0.15;}50%{opacity:0.35;}}
 
-/* ══ SLIDE 12 ══════════════════════════════════════════════ */
-.s12{background:#050B06;flex-direction:column;padding:8vh 12%;align-items:flex-start;justify-content:center}
-.s12 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.2rem;color:var(--cream);margin-bottom:1.8rem;max-width:680px;position:relative;z-index:5}
-.s12 p{font-size:.8rem;line-height:1.78;color:var(--cream);opacity:.58;max-width:630px;margin-bottom:1.4rem;position:relative;z-index:5}
-.s12 .highlight{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:var(--gold);opacity:.82;max-width:600px;line-height:1.5;margin-top:1.4rem;position:relative;z-index:5}
+/* ===== SLIDE 1: TITLE ===== */
+.slide-1{background:linear-gradient(145deg,#2a3a10 0%,#3a4a1f 30%,#4a5a25 55%,#3a4a1f 75%,#2a3212 100%);}
+.slide-1 .bg-text{
+  position:absolute;
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(8rem,18vw,18rem);
+  color:rgba(237,232,200,0.06);
+  letter-spacing:-0.02em;
+  line-height:0.85;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  white-space:nowrap;
+  z-index:0;
+  pointer-events:none;
+  user-select:none;
+}
+.slide-1 .title-content{
+  position:relative;
+  z-index:10;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  padding:0 8% 0 10%;
+  width:100%;
+  max-width:1100px;
+}
+.slide-1 h1{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(2.4rem,4.5vw,4.2rem);
+  line-height:1.15;
+  color:var(--cream);
+  margin-bottom:1.2rem;
+  position:relative;
+  z-index:12;
+}
+.slide-1 h1 em{color:var(--gold-light);font-style:italic;}
+.slide-1 .subtitle{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(0.9rem,1.5vw,1.25rem);
+  color:rgba(237,232,200,0.65);
+  margin-bottom:2.5rem;
+  max-width:480px;
+  line-height:1.55;
+}
+.slide-1 .meta{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(237,232,200,0.4);
+}
+.slide-1 .corner-mark{
+  position:absolute;
+  bottom:3rem;
+  right:4rem;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:0.78rem;
+  color:rgba(212,197,106,0.45);
+  text-align:right;
+  line-height:1.5;
+  z-index:10;
+}
 
-/* ══ SLIDE 13 ══════════════════════════════════════════════ */
-.s13{background:var(--cream);flex-direction:column;padding:5vh 8%;align-items:flex-start;justify-content:flex-start}
-.s13 .label{color:var(--umber)}
-.s13 h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.8rem;color:#1A2A1B;margin-top:3.8rem;margin-bottom:2.8rem;position:relative;z-index:5}
-.s13 .lgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4rem;width:100%;position:relative;z-index:5}
-.s13 .li{border-top:1px solid rgba(26,42,27,.1);padding-top:1.4rem}
-.s13 .llbl{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--umber);opacity:.55;margin-bottom:.75rem}
-.s13 .lval{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:300;color:#1A2A1B;margin-bottom:.45rem}
-.s13 .li p{font-size:.7rem;line-height:1.52;color:#1A2A1B;opacity:.58}
-.s13 .coord{color:var(--umber)}
+/* ===== SLIDE 2: CORE TENSION ===== */
+.slide-2{background:#1c1d2e;}
+.slide-2 .content{
+  display:grid;
+  grid-template-columns:1fr 60px 1fr;
+  max-width:88%;
+  width:100%;
+  align-items:center;
+  gap:0;
+  position:relative;
+  z-index:10;
+}
+.slide-2 .col{padding:2.5rem;}
+.slide-2 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;
+  font-size:1.7rem;
+  margin-bottom:1.2rem;
+  line-height:1.2;
+}
+.slide-2 .col-left h2{color:#9b9fd4;}
+.slide-2 .col-right h2{color:#a8ba85;}
+.slide-2 p{font-size:0.8rem;line-height:1.7;color:rgba(237,232,200,0.65);margin-bottom:0.8rem;}
+.slide-2 .stat{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.8rem;
+  font-weight:300;
+  margin-top:1.5rem;
+}
+.slide-2 .col-left .stat{color:#7B7FC4;}
+.slide-2 .col-right .stat{color:#8A9A6B;}
+.slide-2 .stat-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(237,232,200,0.4);
+  margin-top:0.3rem;
+}
+.slide-2 .vs-divider{
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:1.2rem;
+  color:rgba(237,232,200,0.3);
+}
+.slide-2 .editorial-label{
+  position:absolute;
+  top:2rem;left:2.5rem;
+  z-index:12;
+}
+.slide-2 .bottom-line{
+  position:absolute;
+  bottom:3rem;left:50%;
+  transform:translateX(-50%);
+  max-width:600px;
+  text-align:center;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:0.95rem;
+  color:rgba(237,232,200,0.5);
+  line-height:1.6;
+  z-index:12;
+}
+/* Halftone left panel */
+.slide-2 .ht-panel{
+  position:absolute;
+  top:0;left:0;
+  width:45%;height:100%;
+  overflow:hidden;
+  opacity:0.12;
+  z-index:0;
+}
+/* Cloud right panel */
+.slide-2 .cloud-panel{
+  position:absolute;
+  top:0;right:0;
+  width:45%;height:100%;
+  overflow:hidden;
+  z-index:0;
+}
 
-/* ══ SLIDE 14 ══════════════════════════════════════════════ */
-.s14{background:linear-gradient(160deg,#080E09 0%,#111C12 50%,#1A2A1B 100%);flex-direction:column;text-align:center}
-.s14 .cquote{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(1.1rem,1.8vw,1.6rem);max-width:700px;line-height:1.62;color:var(--cream);opacity:.82;margin-bottom:2.8rem;position:relative;z-index:5;padding:0 3rem}
-.s14 .cmeta{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--gold);opacity:.38;position:relative;z-index:5}
+/* ===== SLIDE 3: WHY NOW ===== */
+.slide-3{background:#1e1c18;}
+.slide-3 .content{
+  max-width:80%;
+  position:relative;
+  z-index:10;
+  width:100%;
+}
+.slide-3 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:2.6rem;
+  margin-bottom:3rem;
+  color:var(--bone);
+}
+.slide-3 .forces{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;}
+.slide-3 .force{border-top:1px solid rgba(237,232,200,0.12);padding-top:1.5rem;position:relative;}
+.slide-3 .force-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem;font-weight:300;
+  opacity:0.5;margin-bottom:0.8rem;
+}
+.slide-3 .force:nth-child(1) .force-num{color:#f4a6a8;}
+.slide-3 .force:nth-child(2) .force-num{color:#e8dc8f;}
+.slide-3 .force:nth-child(3) .force-num{color:#b8ceb0;}
+.slide-3 .force h3{font-weight:400;font-size:0.82rem;margin-bottom:0.8rem;color:var(--bone);}
+.slide-3 .force p{font-size:0.72rem;line-height:1.65;color:rgba(237,232,200,0.55);}
+.slide-3 .force .evidence{
+  margin-top:0.8rem;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.82rem;
+  color:rgba(212,197,106,0.7);
+}
+.slide-3 .force-cloud{
+  position:absolute;
+  top:-30px;right:-20px;
+  width:120px;height:120px;
+  border-radius:50%;
+  filter:blur(40px);
+  opacity:0.15;
+  pointer-events:none;
+}
+
+/* ===== SLIDE 4: THREE PIECES ===== */
+.slide-4{background:#f0ece0;}
+.slide-4 .content{max-width:82%;width:100%;position:relative;z-index:10;}
+.slide-4 .arc-header{text-align:center;margin-bottom:3.5rem;}
+.slide-4 .arc-header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2rem;
+  color:#2A2622;margin-bottom:0.8rem;
+}
+.slide-4 .arc-flow{display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-top:0.5rem;}
+.slide-4 .arc-step{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;
+  padding:0.35rem 1rem;border-radius:1px;
+}
+.slide-4 .arc-step:nth-child(1){background:rgba(123,127,196,0.1);color:#7B7FC4;border:1px solid rgba(123,127,196,0.2);}
+.slide-4 .arc-step:nth-child(3){background:rgba(232,93,61,0.08);color:#E85D3D;border:1px solid rgba(232,93,61,0.15);}
+.slide-4 .arc-step:nth-child(5){background:rgba(138,154,107,0.1);color:#8A9A6B;border:1px solid rgba(138,154,107,0.2);}
+.slide-4 .arc-arrow{color:rgba(42,38,34,0.25);font-size:1rem;}
+.slide-4 .pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;}
+.slide-4 .piece{
+  padding:1.8rem;
+  background:rgba(255,255,255,0.5);
+  border:1px solid rgba(42,38,34,0.06);
+  position:relative;
+}
+.slide-4 .piece-art{
+  height:120px;
+  margin-bottom:1.2rem;
+  position:relative;
+  overflow:hidden;
+}
+.slide-4 .piece .month{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(42,38,34,0.4);margin-bottom:0.6rem;
+}
+.slide-4 .piece h3{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:400;font-size:1.3rem;margin-bottom:0.4rem;line-height:1.25;
+  color:#2A2622;
+}
+.slide-4 .piece .piece-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.78rem;
+  color:rgba(42,38,34,0.55);margin-bottom:0.8rem;line-height:1.45;
+}
+.slide-4 .piece .companies{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(138,154,107,0.8);
+}
+
+/* ===== SLIDE DETAIL / COMPANY (5-10) ===== */
+.slide-detail,.slide-company{
+  background:#f5f1e4;
+  flex-direction:column;
+  padding:5vh 9%;
+  align-items:flex-start;
+  justify-content:flex-start;
+}
+.slide-detail .piece-ind,.slide-company .piece-ind{
+  position:absolute;top:2rem;left:3.5rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
+}
+.slide-detail .slide-num,.slide-company .slide-num{
+  position:absolute;top:2rem;right:3.5rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.15em;
+  color:rgba(42,38,34,0.3);
+}
+.slide-detail h2,.slide-company h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2.2rem;
+  margin-bottom:0.4rem;margin-top:3.5rem;
+  line-height:1.2;color:#2A2622;
+}
+.slide-detail .detail-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.9rem;
+  color:rgba(42,38,34,0.55);margin-bottom:2rem;
+}
+.slide-detail .sections{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1.2rem 3rem;width:100%;
+}
+.slide-detail .section-item{
+  padding:1rem 0;
+  border-top:1px solid rgba(42,38,34,0.07);
+}
+.slide-detail .sec-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:300;
+  color:rgba(42,38,34,0.2);
+  float:left;margin-right:0.8rem;line-height:1;
+}
+.slide-detail .section-item h4{
+  font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:#2A2622;
+}
+.slide-detail .section-item p{
+  font-size:0.68rem;line-height:1.6;color:rgba(42,38,34,0.58);
+}
+.slide-company .company-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2.5rem;width:100%;margin-top:3.5rem;
+}
+.slide-company .company-card{
+  padding:1.8rem;
+  border-top:2px solid rgba(42,38,34,0.1);
+  position:relative;
+}
+.slide-company .company-card h3{
+  font-weight:500;font-size:0.9rem;margin-bottom:0.25rem;color:#2A2622;
+}
+.slide-company .company-type{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:rgba(42,38,34,0.4);margin-bottom:1rem;
+}
+.slide-company .company-card p{font-size:0.73rem;line-height:1.65;color:rgba(42,38,34,0.65);margin-bottom:0.7rem;}
+.slide-company .insight{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.85rem;
+  color:#8A9A6B;margin-top:0.8rem;
+  padding-top:0.8rem;border-top:1px solid rgba(42,38,34,0.06);line-height:1.45;
+}
+/* Accent clouds for detail slides */
+.detail-cloud{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+  opacity:0.08;
+  z-index:0;
+  animation:cloud-drift 20s ease-in-out infinite;
+}
+
+/* ===== SLIDE 11: INTEGRATION ===== */
+.slide-11{background:#1e1e1e;}
+.slide-11 .content{
+  max-width:85%;width:100%;
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+}
+.slide-11 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2.2rem;
+  margin-bottom:2.5rem;text-align:center;
+  color:var(--bone);
+}
+.slide-11 .threads{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1.5rem;width:100%;max-width:860px;
+}
+.slide-11 .thread{
+  padding:1.4rem;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.slide-11 .thread h4{
+  font-weight:400;font-size:0.7rem;letter-spacing:0.08em;
+  margin-bottom:0.6rem;color:#8A9A6B;
+}
+.slide-11 .thread p{font-size:0.7rem;line-height:1.6;color:rgba(237,232,200,0.55);}
+.slide-11 .thread .connection{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:0.75rem;
+  color:rgba(212,197,106,0.55);margin-top:0.6rem;
+}
+
+/* ===== SLIDE 12: WHY AMPLIFY ===== */
+.slide-12{background:#1a1a16;color:var(--cream);}
+.slide-12 .content{
+  max-width:72%;
+  position:relative;z-index:10;
+}
+.slide-12 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2.4rem;
+  margin-bottom:2rem;color:var(--bone);max-width:700px;
+}
+.slide-12 p{font-size:0.82rem;line-height:1.75;color:rgba(237,232,200,0.6);max-width:640px;margin-bottom:1.3rem;}
+.slide-12 .highlight{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:1.15rem;
+  color:rgba(138,154,107,0.9);max-width:600px;line-height:1.5;margin-top:1rem;
+}
+
+/* ===== SLIDE 13: LOGISTICS ===== */
+.slide-13{background:#f0ece0;}
+.slide-13 .content{
+  max-width:82%;width:100%;
+  position:relative;z-index:10;
+}
+.slide-13 h2{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;font-size:2rem;
+  margin-bottom:2.5rem;color:#2A2622;
+}
+.slide-13 .logistics-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;
+}
+.slide-13 .log-item{border-top:1px solid rgba(42,38,34,0.1);padding-top:1.2rem;position:relative;}
+.slide-13 .log-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(42,38,34,0.4);margin-bottom:0.6rem;
+}
+.slide-13 .log-value{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:300;
+  color:#2A2622;margin-bottom:0.4rem;
+}
+.slide-13 .log-item p{font-size:0.7rem;line-height:1.5;color:rgba(42,38,34,0.55);}
+
+/* Blueprint node dots */
+.bp-node{
+  position:absolute;
+  width:6px;height:6px;
+  border-radius:50%;
+  border:1px solid rgba(42,38,34,0.3);
+  background:transparent;
+}
+.bp-label{
+  position:absolute;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.45rem;
+  color:rgba(42,38,34,0.35);
+  letter-spacing:0.1em;
+}
+
+/* ===== SLIDE 14: CLOSING ===== */
+.slide-14{background:linear-gradient(145deg,#2a3a10 0%,#3a4a1f 40%,#4a5a25 60%,#2a3212 100%);}
+.slide-14 .content{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  max-width:760px;
+  padding:0 2rem;
+}
+.slide-14 .closing-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  font-size:clamp(1.2rem,2.2vw,1.75rem);
+  max-width:700px;line-height:1.55;
+  color:var(--cream);margin-bottom:2.5rem;
+}
+.slide-14 .closing-meta{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(237,232,200,0.4);
+}
+
+/* ===== HALFTONE DOT ANIMATION ===== */
+@keyframes dot-pulse{0%,100%{r:attr(r);}50%{r:calc(attr(r) * 1.3);}}
 </style>
 </head>
 <body>
 
-<!-- NAV DOTS -->
-<div id="nav-dots"></div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 1 · TITLE
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s1" id="s1">
-  <svg class="art-layer" id="a1" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="title-block">
-    <div class="label" style="margin-bottom:1.6rem;opacity:.45">Amplify Partners Writing Fellowship</div>
-    <h1>The <span class="gen">Generator</span><br>and the<br>Discriminator</h1>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 1 — TITLE (ASCII BLOOM)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-1" id="s1">
+  <!-- Golden radial glow -->
+  <div class="golden-glow" id="s1-glow" style="width:500px;height:500px;background:radial-gradient(circle,rgba(212,197,106,0.35) 0%,rgba(180,160,60,0.15) 40%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <!-- Blueprint SVG arcs -->
+  <svg class="bp-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <g style="animation:rotate-slow 30s linear infinite;transform-origin:720px 450px;">
+      <circle class="bp-arc" cx="720" cy="450" r="280"/>
+      <circle class="bp-arc" cx="720" cy="450" r="380"/>
+      <circle class="bp-arc-gold" cx="720" cy="450" r="180"/>
+    </g>
+    <line class="bp-arc" x1="440" y1="450" x2="200" y2="450"/>
+    <line class="bp-arc" x1="1000" y1="450" x2="1240" y2="450"/>
+    <line class="bp-arc" x1="720" y1="170" x2="720" y2="50"/>
+    <line class="bp-arc" x1="720" y1="730" x2="720" y2="870"/>
+    <path class="bp-arc-gold" d="M 520 250 Q 720 150 920 250"/>
+    <path class="bp-arc-gold" d="M 520 650 Q 720 750 920 650"/>
+    <!-- Tick marks -->
+    <g fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5">
+      <line x1="716" y1="168" x2="724" y2="168"/>
+      <line x1="720" y1="164" x2="720" y2="172"/>
+      <line x1="436" y1="446" x2="444" y2="446"/>
+      <line x1="440" y1="442" x2="440" y2="450"/>
+      <line x1="996" y1="446" x2="1004" y2="446"/>
+      <line x1="1000" y1="442" x2="1000" y2="450"/>
+    </g>
+  </svg>
+  <!-- ASCII Bloom (generated by JS below) -->
+  <div id="bloom-container" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;"></div>
+  <!-- Large background serif text -->
+  <div class="bg-text" style="writing-mode:horizontal-tb;">Bloom</div>
+  <!-- Sparkles -->
+  <span class="sparkle" style="top:22%;left:15%;">✦</span>
+  <span class="sparkle" style="top:70%;right:18%;animation-delay:-2s;">✦</span>
+  <span class="sparkle" style="top:35%;right:30%;animation-delay:-4s;font-size:0.7rem;">✦</span>
+  <!-- Coordinate labels -->
+  <span class="coord" style="position:absolute;top:28%;left:68%;z-index:12;">3 × 10⁴¹ – 647</span>
+  <span class="coord" style="position:absolute;bottom:32%;left:20%;z-index:12;">894,350</span>
+  <span class="coord" style="position:absolute;top:65%;right:22%;z-index:12;">602,594</span>
+  <!-- Registration marks -->
+  <span class="reg-cross" style="top:18%;right:42%;z-index:12;">+</span>
+  <span class="reg-cross" style="bottom:22%;left:40%;z-index:12;">+</span>
+  <!-- Title content -->
+  <div class="title-content">
+    <div class="label" style="margin-bottom:1.5rem;">Amplify Partners Writing Fellowship</div>
+    <h1>The <em>Generator</em><br>and the Discriminator</h1>
     <div class="subtitle">Scientific Intuition in the Age of AI Scientists</div>
-    <div class="meta" style="font-family:'IBM Plex Mono',monospace">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
+    <div class="meta">Ayan &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Three-Piece Series</div>
   </div>
-  <div class="corner-stat">
-    <span class="sn">72 / 84</span>
-    <span class="sk">Nobel laureates called it intuition</span>
+  <div class="corner-mark">72 of 84 Nobel laureates<br>called it intuition</div>
+  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
+    <div class="tl"></div><div class="tr"></div>
+    <div class="bl"></div><div class="br"></div>
   </div>
-  <span class="sparkle" style="left:62%;top:18%;animation-delay:1s">✦</span>
-  <span class="sparkle" style="left:80%;top:72%;animation-delay:2.5s;font-size:.55rem">✧</span>
-  <span class="sparkle" style="left:91%;top:33%;animation-delay:.5s;font-size:.6rem">✦</span>
+  <div class="grain-overlay"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 2 · CORE TENSION
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s2" id="s2">
-  <svg class="art-layer" id="a2" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="label" style="position:absolute;top:2.5rem;left:4rem;z-index:5">The Core Tension</div>
-  <div class="content">
+<!-- ═══════════════════════════════════════════════
+     SLIDE 2 — CORE TENSION (HALFTONE + CLOUD)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-2" id="s2">
+  <!-- Left halftone panel (Discriminator) -->
+  <canvas class="halftone-canvas" id="ht-s2" style="position:absolute;top:0;left:0;width:47%;height:100%;opacity:0.18;z-index:0;"></canvas>
+  <!-- Right cloud panel (Generator) -->
+  <div class="cloud-blob" style="width:300px;height:300px;background:rgba(176,160,196,0.6);top:20%;right:5%;animation-delay:0s;z-index:1;"></div>
+  <div class="cloud-blob" style="width:220px;height:220px;background:rgba(184,206,176,0.5);top:40%;right:20%;animation-delay:-6s;z-index:1;"></div>
+  <div class="cloud-blob" style="width:180px;height:180px;background:rgba(143,180,196,0.4);bottom:15%;right:8%;animation-delay:-12s;z-index:1;"></div>
+  <!-- Blueprint SVG -->
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;">
+    <line stroke="rgba(255,255,255,0.08)" stroke-width="0.5" x1="720" y1="0" x2="720" y2="900"/>
+    <line stroke="rgba(255,255,255,0.08)" stroke-width="0.5" x1="0" y1="450" x2="1440" y2="450"/>
+    <text x="730" y="30" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="9">(II.)</text>
+  </svg>
+  <div class="editorial-label">
+    <span class="label">The Core Tension</span>
+  </div>
+  <div class="content" style="z-index:10;">
     <div class="col col-left">
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(155,159,212,0.6);margin-bottom:0.5rem;">(I.) Discriminator</div>
       <h2>Discriminator Taste</h2>
       <p>Pattern-matching against institutional consensus. Calibrated against what has already been accepted, published, cited, funded.</p>
       <p>Learns the grammar of scientific acceptance. Predicts what the field will find credible.</p>
-      <p style="opacity:.28;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem">What has already won.</p>
-      <span class="stat-n">100+</span>
-      <div class="stat-lbl">AI companies building discriminators for biology</div>
+      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;">What has already won.</p>
+      <div class="stat">100+</div>
+      <div class="stat-label">AI companies building discriminators for biology</div>
     </div>
-    <div class="divider-txt">vs.</div>
+    <div class="vs-divider" style="position:relative;">
+      <div style="position:absolute;top:10%;bottom:10%;left:50%;width:1px;background:linear-gradient(to bottom,transparent,rgba(237,232,200,0.15),transparent);"></div>
+      <span style="position:relative;z-index:1;background:#1c1d2e;padding:0.3rem 0;">vs.</span>
+    </div>
     <div class="col col-right">
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(168,186,133,0.6);margin-bottom:0.5rem;">(II.) Generator</div>
       <h2>Generator Taste</h2>
       <p>Identifying problems before the field has vocabulary for them. Sustaining attention on something unrewarding long enough for it to become rewarding.</p>
-      <p>The capacity that led Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
-      <p style="opacity:.28;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem">What nobody yet believes matters.</p>
-      <span class="stat-n">0</span>
-      <div class="stat-lbl">AI systems designed to cultivate this capacity</div>
+      <p>Brenner to mRNA, McClintock to transposons, Varmus to proto-oncogenes.</p>
+      <p style="opacity:0.4;font-style:italic;font-family:'Cormorant Garamond',serif;">What nobody yet believes matters.</p>
+      <div class="stat">0</div>
+      <div class="stat-label">AI systems designed to cultivate this capacity</div>
     </div>
   </div>
-  <div class="btm-quote">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
-  <span class="sparkle" style="left:49%;top:45%;animation-delay:1.5s;font-size:.5rem">✧</span>
+  <div class="bottom-line">"They haven't built a tool that points to the kind of taste where you're picking a problem sometimes decades before the field knows it matters."</div>
+  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
+    <div class="tl"></div><div class="tr"></div>
+    <div class="bl"></div><div class="br"></div>
+  </div>
+  <div class="grain-overlay"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 3 · WHY NOW
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s3" id="s3">
-  <svg class="art-layer" id="a3" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="content">
-    <div class="label" style="color:var(--gold);opacity:.38;margin-bottom:1.4rem">Why This Matters Now</div>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 3 — WHY NOW (CHROMATIC CLOUDS)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-3" id="s3">
+  <!-- Cloud blobs per force -->
+  <div class="cloud-blob" style="width:280px;height:280px;background:rgba(244,166,168,0.7);top:10%;left:5%;animation-delay:0s;z-index:0;"></div>
+  <div class="cloud-blob" style="width:250px;height:250px;background:rgba(232,220,143,0.6);top:5%;left:38%;animation-delay:-7s;z-index:0;"></div>
+  <div class="cloud-blob" style="width:260px;height:260px;background:rgba(184,206,176,0.6);top:8%;right:5%;animation-delay:-14s;z-index:0;"></div>
+  <!-- Dim secondary blobs -->
+  <div class="cloud-blob" style="width:180px;height:120px;background:rgba(244,166,168,0.3);bottom:20%;left:8%;animation-delay:-3s;z-index:0;"></div>
+  <div class="cloud-blob" style="width:150px;height:150px;background:rgba(232,220,143,0.25);bottom:15%;left:40%;animation-delay:-10s;z-index:0;"></div>
+  <div class="cloud-blob" style="width:160px;height:130px;background:rgba(184,206,176,0.3);bottom:18%;right:8%;animation-delay:-5s;z-index:0;"></div>
+  <!-- Blueprint connection lines -->
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <line stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4 6" x1="250" y1="200" x2="480" y2="200"/>
+    <line stroke="rgba(255,255,255,0.12)" stroke-width="0.5" stroke-dasharray="4 6" x1="720" y1="200" x2="960" y2="200"/>
+    <circle cx="250" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+    <circle cx="720" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+    <circle cx="1190" cy="200" r="3" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+    <text x="16" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.01 — 248,100</text>
+    <text x="580" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.02 — 719,100</text>
+    <text x="1120" y="825" fill="rgba(255,255,255,0.15)" font-family="IBM Plex Mono" font-size="8">node.03 — 1190,100</text>
+  </svg>
+  <div class="content" style="z-index:10;padding-top:8vh;">
+    <div class="label" style="margin-bottom:1.2rem;">Why This Matters Now</div>
     <h2>Three converging forces</h2>
     <div class="forces">
       <div class="force">
-        <div class="fn">01</div>
+        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(244,166,168,0.15);filter:blur(20px);pointer-events:none;"></div>
+        <div class="force-num">01</div>
         <h3>The Automation Inflection</h3>
         <p>Self-driving labs at production scale. Ginkgo, Emerald Cloud Lab, Strateos running autonomous experiments. Recursion screening millions of compounds per week.</p>
         <div class="evidence">Nobel 2024 → Hassabis, Jumper, Baker</div>
       </div>
       <div class="force">
-        <div class="fn">02</div>
+        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(232,220,143,0.12);filter:blur(20px);pointer-events:none;"></div>
+        <div class="force-num">02</div>
         <h3>The Signal-to-Noise Crisis</h3>
         <p>AI-assisted authorship flooding the literature. Autonomous agents fail 40% of physical tasks. More experiments, not more signal.</p>
         <div class="evidence">Bergstrom 2026: "do more, less well"</div>
       </div>
       <div class="force">
-        <div class="fn">03</div>
+        <div style="position:absolute;top:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:rgba(184,206,176,0.12);filter:blur(20px);pointer-events:none;"></div>
+        <div class="force-num">03</div>
         <h3>The Missing Piece</h3>
         <p>No AI scientist system is designed to cultivate generative scientific intuition. All optimize for discriminator performance. The gap is structural, not accidental.</p>
         <div class="evidence">Guo et al. 2026: ~40% failure rate</div>
       </div>
     </div>
   </div>
-  <span class="sparkle" style="left:16%;top:60%;animation-delay:0s">✦</span>
-  <span class="sparkle" style="left:50%;top:65%;animation-delay:2s;font-size:.6rem">✧</span>
-  <span class="sparkle" style="left:83%;top:60%;animation-delay:4s">✦</span>
+  <span class="sparkle" style="bottom:10%;right:5%;font-size:0.8rem;color:rgba(212,197,106,0.5);">✦</span>
+  <div class="grain-overlay"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 4 · THREE PIECES
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s4" id="s4">
-  <svg class="art-layer" id="a4" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="content">
-    <div class="arc-hd">
-      <div class="label" style="margin-bottom:.9rem">The Series</div>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 4 — THREE PIECES (MINI ASCII MOTIFS)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-4" id="s4">
+  <!-- Soft bg blobs -->
+  <div style="position:absolute;top:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:rgba(123,127,196,0.06);filter:blur(80px);pointer-events:none;z-index:0;"></div>
+  <div style="position:absolute;bottom:-80px;right:-80px;width:350px;height:350px;border-radius:50%;background:rgba(138,154,107,0.06);filter:blur(80px);pointer-events:none;z-index:0;"></div>
+  <div class="content" style="z-index:10;">
+    <div class="arc-header">
+      <div class="label" style="color:rgba(42,38,34,0.4);margin-bottom:0.8rem;">The Series</div>
       <h2>Three pieces. Three months. One argument.</h2>
       <div class="arc-flow">
         <span class="arc-step">Define</span>
@@ -265,952 +822,668 @@ body{font-family:'Inter',sans-serif;background:var(--dark);-webkit-font-smoothin
     </div>
     <div class="pieces">
       <div class="piece">
-        <div class="mo">Month 1</div>
+        <!-- Crystal/molecular mini ASCII -->
+        <div class="piece-art" id="art-p1"></div>
+        <div class="month">Month 1</div>
         <h3>The Oracle and the Visionary</h3>
-        <div class="psub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
-        <div class="cos">Recursion · Boltz</div>
+        <div class="piece-sub">What scientific intuition actually is, and why your AI scientist doesn't have it</div>
+        <div class="companies">Recursion · Boltz</div>
       </div>
       <div class="piece">
-        <div class="mo">Month 2</div>
+        <!-- Noise/static mini ASCII -->
+        <div class="piece-art" id="art-p2"></div>
+        <div class="month">Month 2</div>
         <h3>The Noise Floor</h3>
-        <div class="psub">How lab automation is producing more results and less signal — and what actually cuts through</div>
-        <div class="cos">Modal · LangChain · DatologyAI</div>
+        <div class="piece-sub">How lab automation is producing more results and less signal — and what actually cuts through</div>
+        <div class="companies">Modal · LangChain · DatologyAI</div>
       </div>
       <div class="piece">
-        <div class="mo">Month 3</div>
+        <!-- Branching/dendritic mini ASCII -->
+        <div class="piece-art" id="art-p3"></div>
+        <div class="month">Month 3</div>
         <h3>Designing for Intuition</h3>
-        <div class="psub">What AI tools for science could look like if built to cultivate generative capacity</div>
-        <div class="cos">VeriSIM Life · Antithesis · Scribe</div>
+        <div class="piece-sub">What AI tools for science could look like if built to cultivate generative capacity</div>
+        <div class="companies">VeriSIM Life · Antithesis · Scribe</div>
       </div>
     </div>
   </div>
+  <div class="grain-overlay" style="background:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");opacity:0.03;"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 5 · PIECE 1 OUTLINE
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sdet" id="s5">
-  <svg class="art-layer" id="a5" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--peri)">Piece 1 · Month 1</div>
-  <div class="snum">05 / 14</div>
-  <h2>The Oracle and the Visionary</h2>
-  <div class="dsub">8,000–9,000 words · Establishing the distinction</div>
+<!-- ═══════════════════════════════════════════════
+     SLIDES 5-6: PIECE 1 (Periwinkle/mauve cloud)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-detail" id="s5">
+  <div class="detail-cloud" style="width:500px;height:400px;background:rgba(123,127,196,0.5);top:-100px;right:-100px;animation-delay:0s;"></div>
+  <div class="detail-cloud" style="width:300px;height:300px;background:rgba(176,160,196,0.4);bottom:-50px;left:200px;animation-delay:-8s;"></div>
+  <!-- Blueprint arcs -->
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <path d="M 1200 0 Q 1440 200 1440 450" stroke="rgba(123,127,196,0.12)" stroke-width="0.5" fill="none"/>
+    <path d="M 1100 0 Q 1300 300 1440 350" stroke="rgba(123,127,196,0.08)" stroke-width="0.5" fill="none"/>
+    <text x="1340" y="50" fill="rgba(123,127,196,0.3)" font-family="IBM Plex Mono" font-size="8">(I.)</text>
+  </svg>
+  <div class="piece-ind" style="color:#7B7FC4;">Piece 1 · Month 1</div>
+  <div class="slide-num">05 / 14</div>
+  <h2 style="margin-top:4rem;">The Oracle and the Visionary</h2>
+  <div class="detail-sub">8,000–9,000 words · Establishing the distinction</div>
   <div class="sections">
-    <div class="si"><span class="sec-n">1</span><h4>The Contrast</h4><p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. The interpolation/extrapolation distinction made visceral.</p></div>
-    <div class="si"><span class="sec-n">2</span><h4>What Laureates Said</h4><p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p></div>
-    <div class="si"><span class="sec-n">3</span><h4>What Cognitive Science Says</h4><p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge. Intuition as trainable faculty, not mysticism.</p></div>
-    <div class="si"><span class="sec-n">4</span><h4>What AI Is Actually Learning</h4><p>Foundation models trained on PDB, published literature, citation patterns. All calibrated against consensus. The training distribution ≠ the frontier.</p></div>
-    <div class="si"><span class="sec-n">5</span><h4>The Architecture of the Gap</h4><p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation. The legibility gradient.</p></div>
-    <div class="si"><span class="sec-n">6</span><h4>What This Is Not Saying</h4><p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p></div>
+    <div class="section-item"><span class="sec-num">1</span><h4>The Contrast</h4><p>Opens with Boltz-2 predicting binding affinity in 0.3 seconds alongside Brenner's mRNA intuition in 1960. The interpolation/extrapolation distinction made visceral.</p></div>
+    <div class="section-item"><span class="sec-num">2</span><h4>What Laureates Said</h4><p>Shavinina's analysis of 72/84 Nobel interviews. Watson/Crick, Varmus, McClintock — specific accounts of generator taste in action.</p></div>
+    <div class="section-item"><span class="sec-num">3</span><h4>What Cognitive Science Says</h4><p>Klein's RPD model, Dreyfus's skill acquisition, Kahneman's expert intuition conditions, Polanyi's tacit knowledge. Intuition as trainable faculty, not mysticism.</p></div>
+    <div class="section-item"><span class="sec-num">4</span><h4>What AI Is Actually Learning</h4><p>Foundation models trained on PDB, published literature, citation patterns. All calibrated against consensus. The training distribution ≠ the frontier.</p></div>
+    <div class="section-item"><span class="sec-num">5</span><h4>The Architecture of the Gap</h4><p>How discriminator bias reproduces at every layer: literature surfacing, experiment suggestion, hypothesis evaluation. The legibility gradient.</p></div>
+    <div class="section-item"><span class="sec-num">6</span><h4>What This Is Not Saying</h4><p>Not anti-AI, not mysticism, not anti-automation. A specific architectural claim about a specific gap.</p></div>
   </div>
+  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 6 · PIECE 1 COMPANIES
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sco" id="s6">
-  <svg class="art-layer" id="a6" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--peri)">Piece 1 · Portfolio Companies</div>
-  <div class="snum">06 / 14</div>
-  <div class="cgrid">
-    <div class="cc"><div class="ct" style="background:var(--peri)"></div>
+<div class="slide slide-company" id="s6">
+  <div class="detail-cloud" style="width:400px;height:350px;background:rgba(123,127,196,0.4);top:-80px;right:-60px;animation-delay:-4s;"></div>
+  <div class="detail-cloud" style="width:250px;height:250px;background:rgba(176,160,196,0.35);bottom:0;left:100px;animation-delay:-11s;"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <path d="M 1300 0 Q 1440 150 1440 400" stroke="rgba(123,127,196,0.1)" stroke-width="0.5" fill="none"/>
+    <text x="1340" y="50" fill="rgba(123,127,196,0.3)" font-family="IBM Plex Mono" font-size="8">(I.)</text>
+    <text x="20" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">894,350 — 602,594</text>
+  </svg>
+  <div class="piece-ind" style="color:#7B7FC4;">Piece 1 · Portfolio Companies</div>
+  <div class="slide-num">06 / 14</div>
+  <div class="company-grid" style="margin-top:4rem;">
+    <div class="company-card" style="border-top-color:rgba(123,127,196,0.5);">
       <h3>Recursion Pharmaceuticals</h3>
-      <div class="ctype">NASDAQ: RXRX · Digital Biology</div>
+      <div class="company-type">NASDAQ: RXRX · Digital Biology</div>
       <p>50PB+ phenomics data. Millions of cellular perturbation experiments per week. BioHive-2 supercomputer. The most complete realization of discriminator-taste science at industrial scale.</p>
-      <p>FAP clinical milestone (Feb 2026) — first full-stack AI OS validation. REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
+      <p>FAP clinical milestone (Feb 2026). REC-1245 early data (May 2026). Exscientia acquisition completed.</p>
       <div class="insight">Key question: What does scientist judgment add when Recursion OS surfaces a compound hit? Where does pattern recognition end and mechanistic insight begin?</div>
     </div>
-    <div class="cc"><div class="ct" style="background:var(--sage)"></div>
+    <div class="company-card" style="border-top-color:rgba(176,160,196,0.5);">
       <h3>Boltz</h3>
-      <div class="ctype">Open-Source · Digital Biology</div>
+      <div class="company-type">Open-Source · Digital Biology</div>
       <p>Boltz-2: MIT-licensed protein structure and affinity prediction. Two distinct outputs — binding confidence and affinity prediction. Trained on PDB + binding databases.</p>
       <p>The clearest pedagogical exhibit for the discriminator argument: what a foundation model learns is bounded by what has been deposited and characterized.</p>
       <div class="insight">Key question: What happens at the edge of the PDB training distribution? Where does model confidence mislead — membrane proteins, disordered regions, novel organisms?</div>
     </div>
   </div>
+  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 7 · PIECE 2 OUTLINE
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sdet" id="s7">
-  <svg class="art-layer" id="a7" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--rose)">Piece 2 · Month 2</div>
-  <div class="snum">07 / 14</div>
-  <h2>The Noise Floor</h2>
-  <div class="dsub">7,500–8,500 words · Diagnosing the crisis</div>
+<!-- ═══════════════════════════════════════════════
+     SLIDES 7-8: PIECE 2 (Dense halftone noise field)
+     ═══════════════════════════════════════════════ -->
+<div class="slide" id="s7" style="background:#141414;flex-direction:column;padding:5vh 9%;align-items:flex-start;justify-content:flex-start;">
+  <canvas id="ht-s7" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.22;z-index:0;pointer-events:none;"></canvas>
+  <!-- Golden dots breaking through -->
+  <div style="position:absolute;top:38%;left:55%;width:8px;height:8px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 20px 8px rgba(232,220,143,0.4);z-index:5;animation:glow-pulse 4s ease-in-out infinite;"></div>
+  <div style="position:absolute;top:52%;left:70%;width:6px;height:6px;border-radius:50%;background:#d4c56a;box-shadow:0 0 15px 6px rgba(212,197,106,0.35);z-index:5;animation:glow-pulse 6s ease-in-out infinite;animation-delay:-2s;"></div>
+  <div style="position:absolute;top:62%;left:45%;width:5px;height:5px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 12px 5px rgba(232,220,143,0.3);z-index:5;animation:glow-pulse 5s ease-in-out infinite;animation-delay:-3s;"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <text x="16" y="30" fill="rgba(232,93,61,0.4)" font-family="IBM Plex Mono" font-size="8">(II.) The Noise Floor</text>
+    <text x="1300" y="880" fill="rgba(255,255,255,0.12)" font-family="IBM Plex Mono" font-size="7">07/14</text>
+  </svg>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:#E85D3D;position:relative;z-index:10;margin-top:2rem;">Piece 2 · Month 2</div>
+  <h2 class="serif" style="font-size:2.2rem;font-weight:300;color:var(--bone);margin-bottom:0.4rem;margin-top:3rem;position:relative;z-index:10;">The Noise Floor</h2>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.9rem;color:rgba(237,232,200,0.5);margin-bottom:2rem;position:relative;z-index:10;">7,500–8,500 words · Diagnosing the crisis</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem 3rem;width:100%;position:relative;z-index:10;">
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">1</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Throughput Fallacy</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress. The noise floor rises with the throughput.</p>
+    </div>
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">2</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Failure Modes at Scale</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding literature. The honest empirical ledger.</p>
+    </div>
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">3</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Literature Flood</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Preprints growing faster than curation capacity. AI-assisted authorship producing more things that look like science.</p>
+    </div>
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">4</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Agent Orchestration Problem</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Agent frameworks handle anomalies as noise, not signal. Current design: coverage and reliability. Missing design: generative flexibility at inflection points.</p>
+    </div>
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">5</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Training Culture Problem</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices. A generation learning to operate, not to judge.</p>
+    </div>
+    <div style="padding:1rem 0;border-top:1px solid rgba(255,255,255,0.06);">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:rgba(255,255,255,0.15);float:left;margin-right:0.8rem;line-height:1;">6</span>
+      <h4 style="font-weight:400;font-size:0.75rem;margin-bottom:0.4rem;color:var(--bone);">The Real Filter</h4>
+      <p style="font-size:0.68rem;line-height:1.6;color:rgba(237,232,200,0.45);">In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p>
+    </div>
+  </div>
+  <div class="grain-overlay"></div>
+</div>
+
+<div class="slide" id="s8" style="background:#181818;flex-direction:column;padding:5vh 9%;align-items:flex-start;justify-content:center;">
+  <canvas id="ht-s8" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.2;z-index:0;pointer-events:none;"></canvas>
+  <div style="position:absolute;top:30%;left:60%;width:10px;height:10px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 25px 10px rgba(232,220,143,0.45);z-index:5;animation:glow-pulse 3.5s ease-in-out infinite;"></div>
+  <div style="position:absolute;top:55%;left:42%;width:7px;height:7px;border-radius:50%;background:#d4c56a;box-shadow:0 0 18px 7px rgba(212,197,106,0.4);z-index:5;animation:glow-pulse 5s ease-in-out infinite;animation-delay:-1.5s;"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <text x="16" y="30" fill="rgba(232,93,61,0.35)" font-family="IBM Plex Mono" font-size="8">(II.) Portfolio</text>
+    <text x="1300" y="880" fill="rgba(255,255,255,0.1)" font-family="IBM Plex Mono" font-size="7">08/14</text>
+  </svg>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;letter-spacing:0.22em;text-transform:uppercase;color:#E85D3D;position:relative;z-index:10;margin-bottom:1rem;">Piece 2 · Portfolio Companies</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;max-width:1000px;position:relative;z-index:10;">
+    <div style="padding:1.6rem;border-top:2px solid rgba(232,93,61,0.35);">
+      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">Modal</h3>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Serverless Compute</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">What happens to question quality when compute stops being the constraint?</div>
+    </div>
+    <div style="padding:1.6rem;border-top:2px solid rgba(232,93,61,0.2);">
+      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">LangChain</h3>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Agent Orchestration</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
+    </div>
+    <div style="padding:1.6rem;border-top:2px solid rgba(196,168,85,0.35);">
+      <h3 style="font-weight:500;font-size:0.85rem;margin-bottom:0.25rem;color:var(--bone);">DatologyAI</h3>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(237,232,200,0.35);margin-bottom:0.8rem;">Data Curation</div>
+      <p style="font-size:0.7rem;line-height:1.65;color:rgba(237,232,200,0.55);">Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;color:#8A9A6B;margin-top:0.8rem;line-height:1.45;">What would a training dataset look like if optimized for novelty rather than consensus?</div>
+    </div>
+  </div>
+  <div class="grain-overlay"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDES 9-10: PIECE 3 (Sage cloud + ripple rings)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-detail" id="s9" style="background:#f4f1e8;">
+  <div class="detail-cloud" style="width:450px;height:400px;background:rgba(184,206,176,0.5);top:-80px;right:-60px;animation-delay:0s;"></div>
+  <div class="detail-cloud" style="width:280px;height:280px;background:rgba(195,203,158,0.4);bottom:-40px;left:150px;animation-delay:-9s;"></div>
+  <!-- Concentric ripple rings -->
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <circle class="ring" cx="1200" cy="200" r="80" stroke="rgba(138,154,107,0.3)" style="animation-delay:0s;"/>
+    <circle class="ring" cx="1200" cy="200" r="140" stroke="rgba(138,154,107,0.2)" style="animation-delay:-2s;"/>
+    <circle class="ring" cx="1200" cy="200" r="200" stroke="rgba(138,154,107,0.12)" style="animation-delay:-4s;"/>
+    <circle class="ring" cx="1200" cy="200" r="260" stroke="rgba(138,154,107,0.07)" style="animation-delay:-6s;"/>
+    <text x="16" y="30" fill="rgba(138,154,107,0.4)" font-family="IBM Plex Mono" font-size="8">(III.) Designing for Intuition</text>
+    <text x="1360" y="880" fill="rgba(42,38,34,0.15)" font-family="IBM Plex Mono" font-size="7">09/14</text>
+  </svg>
+  <div class="piece-ind" style="color:#8A9A6B;">Piece 3 · Month 3</div>
+  <div class="slide-num" style="color:rgba(42,38,34,0.3);">09 / 14</div>
+  <h2 style="margin-top:4rem;color:#2A2622;">Designing for Intuition</h2>
+  <div class="detail-sub">7,000–8,000 words · The constructive turn</div>
   <div class="sections">
-    <div class="si"><span class="sec-n">1</span><h4>The Throughput Fallacy</h4><p>500 DBTL cycles per week produces data points, not insights. More experiments ≠ more progress. The noise floor rises with the throughput.</p></div>
-    <div class="si"><span class="sec-n">2</span><h4>The Failure Modes at Scale</h4><p>Guo 2026: 40% physical task failure. A-Lab: 41/58. Sakana AI Scientist: automated manuscripts flooding literature. The honest empirical ledger.</p></div>
-    <div class="si"><span class="sec-n">3</span><h4>The Literature Flood</h4><p>Preprints growing faster than curation capacity. AI-assisted authorship producing more things that look like science. Signal-to-noise ratio decreasing.</p></div>
-    <div class="si"><span class="sec-n">4</span><h4>The Agent Orchestration Problem</h4><p>Agent frameworks handle anomalies as noise, not signal. Current design: coverage and reliability. Missing design: generative flexibility at inflection points.</p></div>
-    <div class="si"><span class="sec-n">5</span><h4>The Training Culture Problem</h4><p>Productive struggle builds expert intuition. AI removes struggle. Giorgino (CHI 2024): AI anchors experts, helps novices. A generation learning to operate, not to judge.</p></div>
-    <div class="si"><span class="sec-n">6</span><h4>The Real Filter</h4><p>In every layer — lab, literature, field, institution — what cuts through noise is generator taste. The filter is human. The systems aren't building for it.</p></div>
+    <div class="section-item"><span class="sec-num">1</span><h4>The Constructive Frame</h4><p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p></div>
+    <div class="section-item"><span class="sec-num">2</span><h4>Designed Friction</h4><p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p></div>
+    <div class="section-item"><span class="sec-num">3</span><h4>Generator-Augmented Interfaces</h4><p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas.</p></div>
+    <div class="section-item"><span class="sec-num">4</span><h4>Institutional Protection</h4><p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p></div>
+    <div class="section-item"><span class="sec-num">5</span><h4>What an AI Generator Would Look Like</h4><p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p></div>
+    <div class="section-item"><span class="sec-num">6</span><h4>The Long Game</h4><p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p></div>
   </div>
+  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 8 · PIECE 2 COMPANIES
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sco" id="s8">
-  <svg class="art-layer" id="a8" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--rose)">Piece 2 · Portfolio Companies</div>
-  <div class="snum">08 / 14</div>
-  <div class="cgrid tri">
-    <div class="cc"><div class="ct" style="background:var(--rose)"></div>
-      <h3>Modal</h3>
-      <div class="ctype">Serverless Compute</div>
-      <p>The infrastructure enabling the biology throughput revolution. Boltz-2, ESMFold2, Chai-1, ESM3 all run on Modal. They see what scale looks like from inside.</p>
-      <div class="insight">What happens to question quality when compute stops being the constraint?</div>
-    </div>
-    <div class="cc"><div class="ct" style="background:var(--rose);opacity:.6"></div>
-      <h3>LangChain</h3>
-      <div class="ctype">Agent Orchestration</div>
-      <p>LangGraph powers many scientific agent pipelines. Their interrupt node design determines when agents pause for human judgment vs. proceed autonomously.</p>
-      <div class="insight">How do scientific agents handle unexpected results — as noise to retry, or signal to escalate?</div>
-    </div>
-    <div class="cc"><div class="ct" style="background:var(--gold)"></div>
-      <h3>DatologyAI</h3>
-      <div class="ctype">Data Curation</div>
-      <p>Training data determines what models learn. Biology training data is deeply biased: publication bias, characterization bias, therapeutic bias. Ari Morcos, ex-Meta FAIR.</p>
-      <div class="insight">What would a training dataset look like if optimized for novelty rather than consensus?</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 9 · PIECE 3 OUTLINE
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sdet" id="s9">
-  <svg class="art-layer" id="a9" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--sage)">Piece 3 · Month 3</div>
-  <div class="snum">09 / 14</div>
-  <h2>Designing for Intuition</h2>
-  <div class="dsub">7,000–8,000 words · The constructive turn</div>
-  <div class="sections">
-    <div class="si"><span class="sec-n">1</span><h4>The Constructive Frame</h4><p>Not anti-AI, not anti-automation. Three design principles for building systems that cultivate rather than atrophy generator capacity.</p></div>
-    <div class="si"><span class="sec-n">2</span><h4>Designed Friction</h4><p>Productive struggle preserved by design. Learning mode that asks questions before giving answers. Vygotsky's ZPD applied to scientific AI tools.</p></div>
-    <div class="si"><span class="sec-n">3</span><h4>Generator-Augmented Interfaces</h4><p>Tools that surface the edge of knowledge, not the center. Anomalous findings, cross-domain analogies, underrepresented areas. Finding what you don't know to look for.</p></div>
-    <div class="si"><span class="sec-n">4</span><h4>Institutional Protection</h4><p>Lab cultures that value generative failure. Unassisted reasoning time. Journal clubs for anomalies. Mentorship focused on productive uncertainty.</p></div>
-    <div class="si"><span class="sec-n">5</span><h4>What an AI Generator Would Look Like</h4><p>Training on paradigm shifts. Cross-domain surfacing. Temporal counterfactual reasoning. Research directions, not product specs — but specific ones.</p></div>
-    <div class="si"><span class="sec-n">6</span><h4>The Long Game</h4><p>Callback to Piece 1's opening. Faster discriminators AND cultivated generators. A design philosophy for the next paradigm shift.</p></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 10 · PIECE 3 COMPANIES
-═══════════════════════════════════════════════════════════ -->
-<div class="slide sco" id="s10">
-  <svg class="art-layer" id="a10" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="ptag" style="color:var(--sage)">Piece 3 · Portfolio Companies</div>
-  <div class="snum">10 / 14</div>
-  <div class="cgrid tri">
-    <div class="cc"><div class="ct" style="background:var(--sage)"></div>
+<div class="slide slide-company" id="s10" style="background:#f4f1e8;">
+  <div class="detail-cloud" style="width:380px;height:320px;background:rgba(184,206,176,0.45);top:-60px;right:-40px;animation-delay:-5s;"></div>
+  <div class="detail-cloud" style="width:220px;height:220px;background:rgba(143,180,196,0.3);bottom:0;left:80px;animation-delay:-13s;"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <circle class="ring" cx="1280" cy="180" r="70" stroke="rgba(138,154,107,0.25)" style="animation-delay:-1s;"/>
+    <circle class="ring" cx="1280" cy="180" r="120" stroke="rgba(138,154,107,0.15)" style="animation-delay:-3s;"/>
+    <text x="16" y="30" fill="rgba(138,154,107,0.35)" font-family="IBM Plex Mono" font-size="8">(III.) Portfolio</text>
+    <text x="1360" y="880" fill="rgba(42,38,34,0.15)" font-family="IBM Plex Mono" font-size="7">10/14</text>
+  </svg>
+  <div class="piece-ind" style="color:#8A9A6B;">Piece 3 · Portfolio Companies</div>
+  <div class="slide-num" style="color:rgba(42,38,34,0.3);">10 / 14</div>
+  <div class="company-grid" style="margin-top:4rem;grid-template-columns:repeat(3,1fr);">
+    <div class="company-card" style="border-top-color:rgba(138,154,107,0.5);">
       <h3>VeriSIM Life</h3>
-      <div class="ctype">Biosimulation</div>
+      <div class="company-type">Biosimulation</div>
       <p>BIOiSIM platform — digital twins for drug development. Biosimulation as a space for designed friction: low-cost hypothesis testing that makes failure visible and productive.</p>
       <div class="insight">Can biosimulation be pedagogically productive — building intuition through simulated struggle?</div>
     </div>
-    <div class="cc"><div class="ct" style="background:var(--sage);opacity:.6"></div>
+    <div class="company-card" style="border-top-color:rgba(143,180,196,0.5);">
       <h3>Antithesis</h3>
-      <div class="ctype">Autonomous Testing</div>
+      <div class="company-type">Autonomous Testing</div>
       <p>Finds bugs by exploring unknown state spaces, not testing against known specs. A generator-taste tool for software. The architectural analog for what science needs.</p>
       <div class="insight">What would an "Antithesis for science" look like — finding what the hypothesis didn't predict?</div>
     </div>
-    <div class="cc"><div class="ct" style="background:var(--gold)"></div>
+    <div class="company-card" style="border-top-color:rgba(195,203,158,0.5);">
       <h3>Scribe</h3>
-      <div class="ctype">Workflow Documentation</div>
+      <div class="company-type">Workflow Documentation</div>
       <p>AI captures expert workflows automatically. But does it capture the tacit judgment — the moment an expert deviates from protocol because something looks off?</p>
       <div class="insight">Where does expert judgment live in the documented workflow, and what gets filtered out?</div>
     </div>
   </div>
+  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 11 · INTEGRATION
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s11" id="s11">
-  <svg class="art-layer" id="a11" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="label" style="text-align:center;margin-bottom:1.4rem;position:relative;z-index:5">Integration</div>
-  <h2>How the pieces connect</h2>
-  <div class="threads">
-    <div class="thread">
-      <h4>Recursion ↔ Modal</h4>
-      <p>Throughput side of the argument. Recursion as discriminator science at scale, Modal as the infrastructure enabling that scale.</p>
-      <div class="conn">P1 and P2 in direct conversation</div>
-    </div>
-    <div class="thread">
-      <h4>Boltz ↔ DatologyAI</h4>
-      <p>What a model learns is a function of what's in training data. Boltz's PDB limits connect to DatologyAI's curation question.</p>
-      <div class="conn">P1 diagnosis → P2 mechanism</div>
-    </div>
-    <div class="thread">
-      <h4>LangChain ↔ Antithesis</h4>
-      <p>Agent orchestration that handles anomalies as noise vs. autonomous testing that seeks anomalies as signal.</p>
-      <div class="conn">P2 problem → P3 solution</div>
-    </div>
-    <div class="thread">
-      <h4>Productive Struggle Thread</h4>
-      <p>From tacit knowledge (P1) through atrophy under automation (P2) to designed friction (P3). The spine of the series.</p>
-      <div class="conn">Runs through all three pieces</div>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 11 — INTEGRATION (All three styles)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-11" id="s11">
+  <!-- Chromatic clouds -->
+  <div class="cloud-blob" style="width:350px;height:300px;background:rgba(123,127,196,0.35);top:0;left:0;z-index:0;animation-delay:0s;"></div>
+  <div class="cloud-blob" style="width:280px;height:280px;background:rgba(184,206,176,0.3);bottom:0;right:0;z-index:0;animation-delay:-9s;"></div>
+  <div class="cloud-blob" style="width:200px;height:200px;background:rgba(232,220,143,0.2);top:30%;left:40%;z-index:0;animation-delay:-5s;"></div>
+  <!-- Halftone canvas overlay -->
+  <canvas id="ht-s11" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.06;z-index:1;pointer-events:none;"></canvas>
+  <!-- ASCII element -->
+  <div id="bloom-s11" style="position:absolute;top:50%;right:5%;transform:translateY(-50%);z-index:3;opacity:0.25;pointer-events:none;font-family:'IBM Plex Mono',monospace;font-size:9px;line-height:12px;white-space:pre;color:#f5f5f0;"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:4;pointer-events:none;">
+    <text x="16" y="30" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono" font-size="8">Integration — 11/14</text>
+  </svg>
+  <div class="content" style="z-index:10;">
+    <div class="label" style="text-align:center;margin-bottom:1.2rem;">Integration</div>
+    <h2>How the pieces connect</h2>
+    <div class="threads">
+      <div class="thread">
+        <h4>Recursion ↔ Modal</h4>
+        <p>Throughput side of the argument. Recursion as discriminator science at scale, Modal as the infrastructure enabling that scale.</p>
+        <div class="connection">P1 and P2 in direct conversation</div>
+      </div>
+      <div class="thread">
+        <h4>Boltz ↔ DatologyAI</h4>
+        <p>What a model learns is a function of what's in training data. Boltz's PDB limits connect to DatologyAI's curation question.</p>
+        <div class="connection">P1 diagnosis → P2 mechanism</div>
+      </div>
+      <div class="thread">
+        <h4>LangChain ↔ Antithesis</h4>
+        <p>Agent orchestration that handles anomalies as noise vs. autonomous testing that seeks anomalies as signal.</p>
+        <div class="connection">P2 problem → P3 solution</div>
+      </div>
+      <div class="thread">
+        <h4>Productive Struggle Thread</h4>
+        <p>From tacit knowledge (P1) through atrophy under automation (P2) to designed friction (P3). The spine of the series.</p>
+        <div class="connection">Runs through all three pieces</div>
+      </div>
     </div>
   </div>
+  <div class="grain-overlay"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 12 · WHY AMPLIFY
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s12" id="s12">
-  <svg class="art-layer" id="a12" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="label" style="color:var(--gold);opacity:.38;margin-bottom:1.8rem;position:relative;z-index:5">Why This Matters to Amplify</div>
-  <h2>The portfolio thesis, extended</h2>
-  <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
-  <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
-  <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
-  <span class="sparkle" style="right:8%;top:20%;animation-delay:1s;color:var(--gold)">✦</span>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 12 — WHY AMPLIFY (Minimal, golden glow)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-12" id="s12">
+  <!-- Single golden glow spot -->
+  <div class="golden-glow" style="width:600px;height:600px;background:radial-gradient(circle,rgba(212,197,106,0.2) 0%,rgba(180,160,60,0.08) 50%,transparent 70%);top:50%;left:30%;transform:translate(-50%,-50%);z-index:1;"></div>
+  <!-- Sparkle star -->
+  <span class="sparkle" style="top:38%;left:58%;font-size:1.4rem;color:rgba(212,197,106,0.6);z-index:5;">✦</span>
+  <svg class="bp-svg" viewBox="0 0 1440 900" style="z-index:2;pointer-events:none;">
+    <text x="16" y="30" fill="rgba(255,255,255,0.12)" font-family="IBM Plex Mono" font-size="7">12/14</text>
+    <text x="16" y="880" fill="rgba(212,197,106,0.2)" font-family="IBM Plex Mono" font-size="7">amplify.partners — writing fellowship</text>
+  </svg>
+  <div class="content" style="z-index:10;margin-left:8%;">
+    <div class="label" style="margin-bottom:1.5rem;">Why This Matters to Amplify</div>
+    <h2>The portfolio thesis, extended</h2>
+    <p>Amplify has built a portfolio around the convergence of AI infrastructure and life sciences. That thesis is right. This series extends it by naming a latent risk nobody is articulating clearly: the companies in the portfolio are building faster discriminators without an explicit design philosophy for what human generator capacity does in that system.</p>
+    <p>This is not a criticism. It is a contribution. The discriminator tools are necessary. The question is what design philosophy makes those tools produce generator-quality science.</p>
+    <div class="highlight">"Positions Amplify as the investor thinking seriously about the quality of AI-augmented science — not just its throughput. That is a differentiated position."</div>
+  </div>
+  <div class="grain-overlay"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 13 · LOGISTICS
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s13" id="s13">
-  <svg class="art-layer" id="a13" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="opacity:.6"></svg>
-  <div class="label" style="position:absolute;top:2.5rem;left:4rem;z-index:5;color:var(--umber)">Reporting Plan</div>
-  <h2>How I'll build it</h2>
-  <div class="lgrid">
-    <div class="li">
-      <div class="llbl">Interviews</div>
-      <div class="lval">20–25</div>
-      <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
-    </div>
-    <div class="li">
-      <div class="llbl">Duration</div>
-      <div class="lval">3 months</div>
-      <p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p>
-    </div>
-    <div class="li">
-      <div class="llbl">Word Count</div>
-      <div class="lval">~24K</div>
-      <p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p>
-    </div>
-    <div class="li">
-      <div class="llbl">Portfolio Companies</div>
-      <div class="lval">8</div>
-      <p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p>
-    </div>
-    <div class="li">
-      <div class="llbl">Bibliography</div>
-      <div class="lval">78</div>
-      <p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p>
-    </div>
-    <div class="li">
-      <div class="llbl">Builds From</div>
-      <div class="lval">2 pieces</div>
-      <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 13 — LOGISTICS (Blueprint style)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-13" id="s13">
+  <!-- Blueprint SVG network -->
+  <svg style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;" viewBox="0 0 1440 900">
+    <!-- Connecting lines between log items (approximate positions) -->
+    <line x1="240" y1="540" x2="480" y2="540" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
+    <line x1="720" y1="540" x2="960" y2="540" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
+    <line x1="240" y1="700" x2="480" y2="700" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
+    <line x1="720" y1="700" x2="960" y2="700" stroke="rgba(42,38,34,0.06)" stroke-width="0.5" stroke-dasharray="3 5"/>
+    <circle cx="240" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <circle cx="720" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <circle cx="1200" cy="540" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <circle cx="240" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <circle cx="720" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <circle cx="1200" cy="700" r="3" fill="none" stroke="rgba(42,38,34,0.15)" stroke-width="0.5"/>
+    <!-- Coordinate labels -->
+    <text x="50" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">node: 240,540 — reporting.plan</text>
+    <text x="1280" y="880" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">13/14</text>
+    <text x="50" y="30" fill="rgba(42,38,34,0.2)" font-family="IBM Plex Mono" font-size="7">Reporting Plan — Amplify Partners Writing Fellowship</text>
+  </svg>
+  <div class="content" style="z-index:10;margin-top:0;">
+    <div class="label" style="color:rgba(42,38,34,0.4);margin-bottom:1.2rem;">Reporting Plan</div>
+    <h2>How I'll build it</h2>
+    <div class="logistics-grid">
+      <div class="log-item">
+        <div class="log-label">Interviews</div>
+        <div class="log-value">20–25</div>
+        <p>Scientists, AI builders, cognitive scientists, philosophers of science. Embedded access with portfolio companies.</p>
+      </div>
+      <div class="log-item">
+        <div class="log-label">Duration</div>
+        <div class="log-value">3 months</div>
+        <p>One piece per month. Research, reporting, writing, revision. Progressive argument builds across the series.</p>
+      </div>
+      <div class="log-item">
+        <div class="log-label">Word Count</div>
+        <div class="log-value">~24K</div>
+        <p>Three pieces, 7,000–9,000 words each. Target: Asimov Press, The Atlantic, or purpose-built Substack.</p>
+      </div>
+      <div class="log-item">
+        <div class="log-label">Portfolio Companies</div>
+        <div class="log-value">8</div>
+        <p>Recursion, Boltz, Modal, LangChain, DatologyAI, VeriSIM Life, Antithesis, Scribe.</p>
+      </div>
+      <div class="log-item">
+        <div class="log-label">Bibliography</div>
+        <div class="log-value">78</div>
+        <p>Across cognitive science, philosophy of science, AI systems, lab automation, portfolio publications.</p>
+      </div>
+      <div class="log-item">
+        <div class="log-label">Builds From</div>
+        <div class="log-value">2 pieces</div>
+        <p>"Scientific Intuition in the Agentic Age" and "Vibe Coding Biology" on editlife.substack.com.</p>
+      </div>
     </div>
   </div>
+  <div class="grain-overlay" style="opacity:0.03;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E\");"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SLIDE 14 · CLOSING
-═══════════════════════════════════════════════════════════ -->
-<div class="slide s14" id="s14">
-  <svg class="art-layer" id="a14" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"></svg>
-  <div class="label" style="margin-bottom:2.8rem;color:var(--gold);opacity:.38;position:relative;z-index:5">Closing</div>
-  <div class="cquote">"The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."</div>
-  <div class="cmeta">Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026</div>
-  <span class="sparkle" style="left:12%;top:25%;animation-delay:.5s">✦</span>
-  <span class="sparkle" style="right:12%;top:25%;animation-delay:2s">✦</span>
-  <span class="sparkle" style="left:48%;top:82%;animation-delay:3s;font-size:.55rem">✧</span>
+<!-- ═══════════════════════════════════════════════
+     SLIDE 14 — CLOSING (Echo of slide 1)
+     ═══════════════════════════════════════════════ -->
+<div class="slide slide-14" id="s14">
+  <div class="golden-glow" id="s14-glow" style="width:600px;height:600px;background:radial-gradient(circle,rgba(212,197,106,0.4) 0%,rgba(180,160,60,0.18) 40%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+  <svg class="bp-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <g style="animation:rotate-slow 40s linear infinite;transform-origin:720px 450px;">
+      <circle class="bp-arc-gold" cx="720" cy="450" r="320"/>
+      <circle class="bp-arc" cx="720" cy="450" r="420"/>
+    </g>
+    <circle class="bp-arc-gold" cx="720" cy="450" r="220"/>
+    <path class="bp-arc-gold" d="M 520 250 Q 720 150 920 250"/>
+    <path class="bp-arc-gold" d="M 520 650 Q 720 750 920 650"/>
+    <text x="16" y="880" fill="rgba(212,197,106,0.25)" font-family="IBM Plex Mono" font-size="7">14/14 — The Generator and the Discriminator</text>
+  </svg>
+  <div id="bloom-s14" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;"></div>
+  <span class="sparkle" style="top:25%;left:18%;color:rgba(212,197,106,0.6);">✦</span>
+  <span class="sparkle" style="bottom:28%;right:20%;animation-delay:-3s;color:rgba(212,197,106,0.5);font-size:0.8rem;">✦</span>
+  <span class="sparkle" style="top:40%;right:15%;animation-delay:-6s;font-size:1.2rem;">✦</span>
+  <span class="coord" style="position:absolute;top:30%;left:65%;z-index:12;">894,350 × 10⁴¹</span>
+  <span class="coord" style="position:absolute;bottom:35%;left:18%;z-index:12;">602,594 — 0.3s</span>
+  <div class="corner-frame" style="top:0;left:0;right:0;bottom:0;">
+    <div class="tl" style="border-color:rgba(212,197,106,0.3);"></div>
+    <div class="tr" style="border-color:rgba(212,197,106,0.3);"></div>
+    <div class="bl" style="border-color:rgba(212,197,106,0.3);"></div>
+    <div class="br" style="border-color:rgba(212,197,106,0.3);"></div>
+  </div>
+  <div class="content" style="z-index:10;position:relative;">
+    <div class="label" style="margin-bottom:2rem;color:rgba(237,232,200,0.4);">Closing</div>
+    <div class="closing-quote">"The automation of science is not the problem. The problem is that the automation is being designed without a clear model of what human generative capacity does that the automation does not — and therefore without a design philosophy for preserving it."</div>
+    <div class="closing-meta">Ayan &nbsp;·&nbsp; Amplify Partners Writing Fellowship &nbsp;·&nbsp; 2026</div>
+  </div>
+  <div class="grain-overlay"></div>
 </div>
+
+<style>
+@keyframes rotate-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes ascii-flicker{0%,90%,100%{opacity:1;}92%,98%{opacity:0.3;}}
+</style>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-// UTILITY
-// ══════════════════════════════════════════════════════════════
-const NS = 'http://www.w3.org/2000/svg';
-function se(tag, a={}) {
-  const e = document.createElementNS(NS, tag);
-  for (const [k,v] of Object.entries(a)) e.setAttribute(k, v);
-  return e;
-}
-function makeRNG(seed) {
-  let s = seed >>> 0;
-  return () => { s = Math.imul(1664525, s) + 1013904223 >>> 0; return s / 4294967296; };
-}
-function getDefs(svg) {
-  let d = svg.querySelector('defs');
-  if (!d) { d = se('defs'); svg.insertBefore(d, svg.firstChild); }
-  return d;
-}
-function radGrad(id, cx, cy, r, stops) {
-  const g = se('radialGradient', {id, cx, cy, r, gradientUnits:'userSpaceOnUse'});
-  stops.forEach(([off,col,op=1]) => {
-    const s = se('stop'); s.setAttribute('offset', off);
-    s.setAttribute('stop-color', col); s.setAttribute('stop-opacity', op); g.appendChild(s);
-  });
-  return g;
-}
-function linGrad(id, x1, y1, x2, y2, stops) {
-  const g = se('linearGradient', {id, x1, y1, x2, y2, gradientUnits:'userSpaceOnUse'});
-  stops.forEach(([off,col,op=1]) => {
-    const s = se('stop'); s.setAttribute('offset', off);
-    s.setAttribute('stop-color', col); s.setAttribute('stop-opacity', op); g.appendChild(s);
-  });
-  return g;
-}
+// ═══════════════════════════════════════
+// ASCII BLOOM GENERATOR
+// ═══════════════════════════════════════
+function generateBloom(cx, cy, radius, opts = {}) {
+  const {
+    chars = ['.','·',':','+','×','*','#','○','◌','◦','●','▪','─','│','╱','╲','=','|','/','\\','-'],
+    denseChars = ['#','●','▪','*','×','=','#','|'],
+    midChars = ['+',':','○','◌','◦','─','│'],
+    sparseChars = ['.','·','-','/','\\','╱','╲'],
+    gridStep = 12,
+    colorPrimary = '#f5f5f0',
+    colorGold = '#e8dc8f',
+    colorNavy = '#1a2340',
+    animate = true,
+    scale = 1.0
+  } = opts;
 
-// ══════════════════════════════════════════════════════════════
-// PRIMITIVES
-// ══════════════════════════════════════════════════════════════
+  const container = document.createElement('div');
+  container.style.cssText = `position:relative;width:${radius*2*scale}px;height:${radius*2*scale}px;font-family:'IBM Plex Mono',monospace;font-size:${Math.round(10*scale)}px;line-height:${Math.round(13*scale)}px;`;
 
-// Bloom: radial data-pixel flower
-function bloom(svg, cx, cy, maxR, col, accent, rng, density=1.0) {
-  const rings = 20;
-  for (let ring = 1; ring <= rings; ring++) {
-    const t = ring / rings;
-    const r = t * maxR;
-    const n = Math.floor(6 + ring * 5.2);
-    const d = Math.sin(t * Math.PI) * density;
-    for (let i = 0; i < n; i++) {
-      if (rng() > d * 0.88 + 0.12) continue;
-      const ang = (i / n) * Math.PI * 2 + rng() * 0.55;
-      const jr = (rng() - 0.5) * maxR * 0.14;
-      const x = cx + Math.cos(ang) * (r + jr);
-      const y = cy + Math.sin(ang) * (r + jr);
-      const w = rng() * 5 + 1.5, h = rng() * 13 + 3;
-      const op = ((0.12 + rng() * 0.52) * d).toFixed(3);
-      const fill = rng() > 0.82 ? accent : col;
-      svg.appendChild(se('rect', {
-        x: (x-w/2).toFixed(1), y: (y-h/2).toFixed(1),
-        width: w.toFixed(1), height: h.toFixed(1), rx: '0.5',
-        fill, opacity: op,
-        transform: `rotate(${(ang*180/Math.PI+90).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`
-      }));
-    }
-  }
-}
+  const cols = Math.ceil(radius * 2 * scale / (gridStep * scale * 0.7));
+  const rows = Math.ceil(radius * 2 * scale / (gridStep * scale));
+  const cellW = radius * 2 * scale / cols;
+  const cellH = radius * 2 * scale / rows;
 
-// Ordered grid (discriminator)
-function orderedGrid(svg, x0, y0, w, h, cell, gap, col, rng) {
-  const cols = Math.floor(w / (cell+gap)), rows = Math.floor(h / (cell+gap));
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const x = x0 + c * (cell+gap), y = y0 + r * (cell+gap);
-      const rw = cell * (0.45 + rng() * 0.55), rh = cell * (0.35 + rng() * 0.65);
-      const op = (0.18 + rng() * 0.32).toFixed(3);
-      svg.appendChild(se('rect', {x: x.toFixed(1), y: y.toFixed(1), width: rw.toFixed(1), height: rh.toFixed(1), fill: col, opacity: op, rx: '0.3'}));
-    }
-  }
-}
+      const px = c * cellW;
+      const py = r * cellH;
+      const dx = px - radius * scale;
+      const dy = py - radius * scale;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const normDist = dist / (radius * scale);
 
-// Scattered field (generator)
-function scatterField(svg, x0, y0, w, h, count, col, accent, rng) {
-  for (let i = 0; i < count; i++) {
-    const x = x0 + rng() * w, y = y0 + rng() * h;
-    const pw = rng() * 7 + 1, ph = rng() * 16 + 2;
-    const ang = rng() * 360;
-    const op = (0.06 + rng() * 0.42).toFixed(3);
-    const fill = rng() > 0.86 ? accent : col;
-    svg.appendChild(se('rect', {
-      x: (x-pw/2).toFixed(1), y: (y-ph/2).toFixed(1),
-      width: pw.toFixed(1), height: ph.toFixed(1), fill, opacity: op, rx: '0.3',
-      transform: `rotate(${ang.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`
-    }));
-  }
-}
+      if (normDist > 1.08) continue;
 
-// Noise field: dense uniform random micro-rects
-function noiseField(svg, x0, y0, w, h, density, col, accent, rng, cls='') {
-  const cols = Math.floor(w / density), rows = Math.floor(h / density);
-  const g = se('g'); if(cls) g.setAttribute('class', cls);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (rng() > 0.62) continue;
-      const x = x0 + c * density + rng() * density * 0.6;
-      const y = y0 + r * density + rng() * density * 0.6;
-      const pw = rng() * 3.5 + 0.5, ph = rng() * 3.5 + 0.5;
-      const isSignal = rng() > 0.965;
-      const op = isSignal ? 0.85 : (0.05 + rng() * 0.28);
-      g.appendChild(se('rect', {x: x.toFixed(1), y: y.toFixed(1), width: pw.toFixed(1), height: ph.toFixed(1), fill: isSignal ? accent : col, opacity: op.toFixed(3)}));
-    }
-  }
-  svg.appendChild(g);
-}
+      // Petal shape: use angle to create organic form
+      const angle = Math.atan2(dy, dx);
+      const petalMod = 1 + 0.18 * Math.cos(6 * angle) + 0.08 * Math.cos(12 * angle);
+      const effectiveDist = normDist / petalMod;
 
-// Crystal: hexagonal layers of rects
-function crystal(svg, cx, cy, size, col, rng) {
-  const layers = 7;
-  for (let l = 1; l <= layers; l++) {
-    const sides = 6, r = size * l / layers;
-    for (let s = 0; s < sides; s++) {
-      const ang = (s/sides)*Math.PI*2 + Math.PI/6;
-      const x = cx + Math.cos(ang)*r, y = cy + Math.sin(ang)*r;
-      const sz = (rng()*7+2) * (1 - l/layers*0.45);
-      const op = ((0.28+rng()*0.5)*(1-l/layers*0.38)).toFixed(3);
-      svg.appendChild(se('rect', {x:(x-sz/2).toFixed(1),y:(y-sz/2).toFixed(1),width:sz.toFixed(1),height:sz.toFixed(1),fill:col,opacity:op,rx:'0.5',transform:`rotate(${(ang*180/Math.PI).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`}));
-      if (l < layers && rng() > 0.35) {
-        const mx = cx + Math.cos(ang)*r*0.58, my = cy + Math.sin(ang)*r*0.58;
-        const ms = rng()*3+1;
-        svg.appendChild(se('rect', {x:(mx-ms/2).toFixed(1),y:(my-ms/2).toFixed(1),width:ms.toFixed(1),height:(ms*(0.5+rng())).toFixed(1),fill:col,opacity:((op*0.6).toFixed(3))}));
+      if (effectiveDist > 1.0) continue;
+
+      let char, color, opacity;
+
+      if (effectiveDist < 0.25) {
+        // Dense core
+        char = denseChars[Math.floor(Math.random() * denseChars.length)];
+        opacity = 0.85 + Math.random() * 0.15;
+        color = Math.random() < 0.3 ? colorGold : colorPrimary;
+      } else if (effectiveDist < 0.55) {
+        // Mid petal
+        char = midChars[Math.floor(Math.random() * midChars.length)];
+        opacity = 0.5 + Math.random() * 0.35;
+        color = Math.random() < 0.15 ? colorGold : (Math.random() < 0.1 ? colorNavy : colorPrimary);
+      } else if (effectiveDist < 0.8) {
+        // Outer petal
+        char = sparseChars[Math.floor(Math.random() * sparseChars.length)];
+        opacity = 0.2 + Math.random() * 0.3;
+        color = colorPrimary;
+      } else {
+        // Very edge — sparse scatter
+        if (Math.random() > 0.45) continue;
+        char = sparseChars[Math.floor(Math.random() * sparseChars.length)];
+        opacity = 0.1 + Math.random() * 0.15;
+        color = colorPrimary;
       }
+
+      const span = document.createElement('span');
+      span.textContent = char;
+      span.style.cssText = `position:absolute;left:${px}px;top:${py}px;color:${color};opacity:${opacity.toFixed(2)};`;
+
+      if (animate && Math.random() < 0.12) {
+        const delay = (Math.random() * 14).toFixed(1);
+        const dur = (8 + Math.random() * 7).toFixed(1);
+        span.style.animation = `ascii-flicker ${dur}s ${delay}s ease-in-out infinite`;
+      }
+
+      container.appendChild(span);
     }
   }
+  return container;
 }
 
-// Branch: recursive dendritic growth
-function branch(svg, x, y, ang, len, depth, col, rng) {
-  if (depth===0 || len<5) return;
-  const ex = x + Math.cos(ang)*len, ey = y + Math.sin(ang)*len;
-  const op = (0.12 + depth*0.07).toFixed(3);
-  const sw = (0.4 + depth*0.28).toFixed(2);
-  svg.appendChild(se('line', {x1:x.toFixed(1),y1:y.toFixed(1),x2:ex.toFixed(1),y2:ey.toFixed(1),stroke:col,'stroke-width':sw,opacity:op}));
-  const steps = Math.max(1, Math.floor(len/14));
-  for (let i=1; i<=steps; i++) {
-    if (rng()>0.52) continue;
-    const t=i/steps, px=x+(ex-x)*t, py=y+(ey-y)*t;
-    const sz = rng()*3.5+0.8;
-    svg.appendChild(se('rect',{x:(px-sz/2).toFixed(1),y:(py-sz/2).toFixed(1),width:sz.toFixed(1),height:(sz*(0.5+rng()*1.5)).toFixed(1),fill:col,opacity:((0.15+rng()*0.5).toFixed(3)),rx:'0.3'}));
-  }
-  const nl = len*(0.58 + rng()*0.28);
-  const bcount = depth > 2 ? 2 : (rng()>0.32?2:1);
-  for (let b=0; b<bcount; b++) {
-    const spread = (rng()>0.5?1:-1)*(0.28+rng()*0.52);
-    branch(svg, ex, ey, ang+spread, nl, depth-1, col, rng);
-  }
-}
-
-// Concentric rings
-function rings(svg, cx, cy, count, baseR, step, col, animated=false) {
-  for (let i=0; i<count; i++) {
-    const r = baseR + i*step;
-    const op = Math.max(0.012, 0.09 - i*0.007).toFixed(4);
-    const c = se('circle', {cx, cy, r, fill:'none', stroke:col, 'stroke-width':'0.8', opacity:op});
-    if (animated && i===0) c.setAttribute('class','anim-glow');
-    svg.appendChild(c);
-  }
-}
-
-// Glow circle (radial gradient disk)
-function glow(svg, id, cx, cy, r, col, op=0.32, cls='anim-glow') {
-  getDefs(svg).appendChild(radGrad(id, cx, cy, r, [['0%',col,op],['55%',col,op*0.35],['100%',col,0]]));
-  const c = se('circle', {cx, cy, r, fill:`url(#${id})`});
-  if (cls) c.setAttribute('class', cls);
-  svg.appendChild(c);
-}
-
-// Line grid
-function lineGrid(svg, x0, y0, w, h, spacing, col, op=0.025) {
-  for (let x=x0; x<=x0+w; x+=spacing) svg.appendChild(se('line',{x1:x,y1:y0,x2:x,y2:y0+h,stroke:col,'stroke-width':'0.4',opacity:op}));
-  for (let y=y0; y<=y0+h; y+=spacing) svg.appendChild(se('line',{x1:x0,y1:y,x2:x0+w,y2:y,stroke:col,'stroke-width':'0.4',opacity:op}));
-}
-
-// Axis ticks
-function axisTicks(svg, x0, ytick, count, spacing, col) {
-  for (let i=0; i<count; i++) {
-    const x = x0 + i*spacing, h = i%5===0?9:4;
-    svg.appendChild(se('line',{x1:x,y1:ytick,x2:x,y2:ytick+h,stroke:col,'stroke-width':'0.5',opacity:'0.13'}));
-    if (i%10===0 && i>0) {
-      const t = se('text',{x,y:ytick+18,fill:col,opacity:'0.12','font-family':'IBM Plex Mono, monospace','font-size':'8','text-anchor':'middle'});
-      t.textContent = i*spacing;
-      svg.appendChild(t);
-    }
-  }
-}
-
-// Scatter coordinate labels
-function coords(slide, list, col='#C4A855') {
-  list.forEach(([lp, tp, txt]) => {
-    const s = document.createElement('span');
-    s.className = 'coord';
-    s.style.left = lp; s.style.top = tp; s.style.color = col;
-    s.textContent = txt;
-    slide.appendChild(s);
-  });
-}
-
-// Large bg ghost text (serif, very low opacity)
-function bgText(svg, x, y, txt, size, col, op=0.022, italic=true) {
-  const t = se('text',{x, y, 'font-family':'Cormorant Garamond, serif', 'font-size':size, 'font-weight':'300', fill:col, opacity:op, 'font-style': italic?'italic':'normal'});
-  t.textContent = txt;
-  svg.appendChild(t);
-}
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 1 — TITLE
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a1');
-  const rng = makeRNG(42);
-  const C = '#C4A855', S = '#8A9A6B', CR = '#EDE9D8', P = '#7B7FC4';
-
-  glow(svg,'g1a',1440,520,580,C,0.22,'anim-glow');
-  glow(svg,'g1b',1680,760,340,S,0.15,'anim-glow2');
-  glow(svg,'g1c',1200,180,260,C,0.1,'anim-glow3');
-
-  lineGrid(svg, 0, 0, 1920, 1080, 90, C, 0.022);
-
-  // Concentric rings background
-  rings(svg, 1580, 160, 14, 70, 58, C);
-  rings(svg, 1880, 920, 9, 90, 65, S);
-
-  // Main bloom right side — the primary art element
-  bloom(svg, 1430, 520, 400, C, CR, makeRNG(43));
-
-  // Secondary bloom upper-right
-  bloom(svg, 1740, 180, 200, S, C, makeRNG(44), 0.55);
-
-  // Tertiary bloom lower-right
-  bloom(svg, 1820, 820, 140, P, C, makeRNG(45), 0.45);
-
-  // Thin axis line
-  svg.appendChild(se('line',{x1:0,y1:1064,x2:1920,y2:1064,stroke:C,'stroke-width':'0.5',opacity:'0.1'}));
-  axisTicks(svg, 0, 1064, 48, 40, C);
-
-  // Ghost letterforms behind art
-  bgText(svg, 1060, 900, 'G', 520, C, 0.018);
-
-  coords(document.getElementById('s1'), [
-    ['61.5%','11%','1430,520'],
-    ['58%','18%','r: 0.847'],
-    ['76%','8%','619,210'],
-    ['86%','64%','θ: 1.047'],
-    ['67%','88%','234,284'],
-    ['43%','82%','x: 0.213'],
-    ['88%','22%','∂f/∂x'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 2 — CORE TENSION
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a2');
-  const P = '#7B7FC4', C = '#C4A855', CR = '#EDE9D8';
-
-  glow(svg,'g2a',380,540,480,P,0.1,'anim-glow2');
-  glow(svg,'g2b',1540,540,480,C,0.1,'anim-glow3');
-
-  // Vertical boundary
-  svg.appendChild(se('line',{x1:960,y1:40,x2:960,y2:1040,stroke:C,'stroke-width':'0.5',opacity:'0.1'}));
-
-  // LEFT: ordered periwinkle grid (discriminator)
-  const rngL = makeRNG(21);
-  orderedGrid(svg, 30, 90, 680, 900, 9, 6, P, rngL);
-  rings(svg, 200, 300, 8, 55, 44, P);
-
-  // RIGHT: scattered organic field (generator)
-  const rngR = makeRNG(77);
-  scatterField(svg, 1000, 70, 880, 940, 260, C, CR, rngR);
-  rings(svg, 1700, 760, 7, 75, 58, C);
-
-  // Faint connecting line across divider
-  for (let i=0; i<6; i++) {
-    const y = 180 + i*140;
-    svg.appendChild(se('line',{x1:900,y1:y,x2:1020,y2:y+(rngL()-0.5)*60,stroke:C,'stroke-width':'0.4',opacity:'0.06'}));
-  }
-
-  axisTicks(svg, 0, 1064, 48, 40, C);
-
-  bgText(svg, 80, 820, 'order', 200, P, 0.025);
-  bgText(svg, 1000, 820, 'emergence', 200, C, 0.025);
-
-  coords(document.getElementById('s2'), [
-    ['2%','86%','grid: 0.00'],
-    ['4%','90%','σ: 0.021'],
-    ['76%','6%','∇: 0.847'],
-    ['80%','90%','entropy: high'],
-    ['47%','3%','boundary: x=960'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 3 — WHY NOW
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a3');
-  const C = '#C4A855', P = '#7B7FC4', S = '#8A9A6B', R = '#D98BA0';
-
-  // Three primary glows — one per force
-  glow(svg,'g3a',320,700,300,C,0.38,'anim-glow');
-  glow(svg,'g3b',960,770,270,P,0.32,'anim-glow2');
-  glow(svg,'g3c',1600,700,300,S,0.32,'anim-glow3');
-
-  // Connecting data-lines
-  [[[320,700],[960,770]],[[960,770],[1600,700]]].forEach(([[x1,y1],[x2,y2]])=>{
-    svg.appendChild(se('line',{x1,y1,x2,y2,stroke:C,'stroke-width':'0.6',opacity:'0.1',
-      'stroke-dasharray':'4 8'}));
-  });
-
-  // Small pixel clusters at each glow
-  const rng1=makeRNG(31), rng2=makeRNG(32), rng3=makeRNG(33);
-  scatterField(svg, 90, 520, 480, 420, 90, C, '#EDE9D8', rng1);
-  scatterField(svg, 720, 560, 480, 440, 90, P, '#EDE9D8', rng2);
-  scatterField(svg, 1350, 520, 480, 420, 90, S, '#EDE9D8', rng3);
-
-  // Horizontal rule
-  svg.appendChild(se('line',{x1:0,y1:1055,x2:1920,y2:1055,stroke:C,'stroke-width':'0.5',opacity:'0.08'}));
-  axisTicks(svg, 0, 1055, 48, 40, C);
-
-  bgText(svg, 700, 480, 'convergence', 140, C, 0.022);
-
-  coords(document.getElementById('s3'), [
-    ['14%','44%','320,700'],
-    ['47%','49%','960,770'],
-    ['80%','44%','1600,700'],
-    ['42%','96%','Δt → 0 · now'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 4 — THREE PIECES
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a4');
-  const C = '#C4A855', P = '#7B7FC4', R = '#D98BA0', S = '#8A9A6B';
-
-  glow(svg,'g4a',960,1000,650,C,0.08,'anim-glow3');
-
-  lineGrid(svg, 0, 0, 1920, 380, 85, C, 0.028);
-
-  // Crystal motif col 1
-  crystal(svg, 320, 920, 210, P, makeRNG(401));
-
-  // Noise motif col 2
-  noiseField(svg, 680, 780, 560, 280, 15, R, C, makeRNG(402));
-
-  // Branch motif col 3
-  branch(svg, 1600, 1080, -Math.PI/2, 130, 6, S, makeRNG(403));
-
-  rings(svg, 960, 70, 9, 45, 38, C);
-  rings(svg, 320, 920, 6, 55, 42, P);
-  rings(svg, 1600, 920, 6, 55, 42, S);
-
-  bgText(svg, 340, 450, '1', 300, P, 0.015, false);
-  bgText(svg, 920, 450, '2', 300, R, 0.015, false);
-  bgText(svg, 1500, 450, '3', 300, S, 0.015, false);
-
-  coords(document.getElementById('s4'), [
-    ['3%','7%','series: 3×1'],
-    ['85%','6%','months: 3'],
-    ['44%','93%','∑ words: ~24K'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 5 — PIECE 1 OUTLINE (molecular / periwinkle)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a5');
-  const P = '#7B7FC4', C = '#C4A855', CR = '#EDE9D8';
-
-  glow(svg,'g5a',1580,380,520,P,0.18,'anim-glow');
-  glow(svg,'g5b',1820,180,260,P,0.1,'anim-glow2');
-
-  crystal(svg, 1520,420,340,P,makeRNG(501));
-  crystal(svg, 1790,200,160,CR,makeRNG(502));
-
-  scatterField(svg, 1080,80,820,920,140,P,C,makeRNG(503));
-  rings(svg, 1520,420,12,75,60,P);
-
-  lineGrid(svg, 0,0,460,1080,65,P,0.038);
-  axisTicks(svg, 0,1060,48,40,P);
-
-  bgText(svg, 750,960,'intuition',280,P,0.018);
-
-  coords(document.getElementById('s5'), [
-    ['56%','7%','1520,420'],
-    ['71%','86%','r: 0.723'],
-    ['2%','16%','P1: defined'],
-    ['91%','70%','∂²/∂x²'],
-    ['60%','94%','PDB: bounded'],
-  ], P);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 6 — PIECE 1 COMPANIES
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a6');
-  const P = '#7B7FC4', C = '#C4A855', S = '#8A9A6B';
-
-  glow(svg,'g6a',1720,200,420,P,0.14,'anim-glow');
-  glow(svg,'g6b',200,950,300,S,0.1,'anim-glow3');
-
-  bloom(svg, 1760,160,260,P,C,makeRNG(601),0.5);
-  rings(svg, 180,940,8,55,44,P);
-
-  lineGrid(svg, 1300,0,620,500,70,P,0.03);
-
-  coords(document.getElementById('s6'), [
-    ['2%','38%','RXRX: ∞ phenomes'],
-    ['80%','87%','PDB: bounded'],
-    ['84%','46%','0.3s / structure'],
-    ['3%','72%','τ: decades'],
-  ], P);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 7 — PIECE 2 OUTLINE (noise / rose)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a7');
-  const R = '#D98BA0', C = '#C4A855', S = '#8A9A6B';
-
-  glow(svg,'g7a',1500,540,530,R,0.16,'anim-glow');
-  glow(svg,'g7b',200,200,280,S,0.1,'anim-glow3');
-
-  // Dense noise right
-  noiseField(svg, 880,0,1040,1080,17,R,C,makeRNG(701),'anim-px');
-  // Sparse noise left (the contrast)
-  noiseField(svg, 0,0,460,1080,30,S,C,makeRNG(702));
-
-  rings(svg, 1500,540,10,95,68,R);
-  axisTicks(svg, 0,1062,48,40,R);
-
-  bgText(svg, 200,900,'noise',380,R,0.018);
-
-  coords(document.getElementById('s7'), [
-    ['47%','7%','noise: 0.847'],
-    ['2%','82%','signal: 0.021'],
-    ['86%','57%','SNR: critical'],
-    ['18%','10%','fail: ~40%'],
-    ['62%','91%','∂signal/∂t < 0'],
-  ], R);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 8 — PIECE 2 COMPANIES
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a8');
-  const R = '#D98BA0', C = '#C4A855';
-
-  glow(svg,'g8a',960,950,520,R,0.12,'anim-glow2');
-  noiseField(svg, 0,0,1920,560,23,R,C,makeRNG(801));
-  scatterField(svg, 0,580,1920,480,180,C,'#EDE9D8',makeRNG(802));
-  rings(svg, 200,200,6,60,48,R);
-  rings(svg, 1720,900,5,50,42,C);
-
-  coords(document.getElementById('s8'), [
-    ['2%','7%','throughput: ↑↑'],
-    ['83%','7%','signal: →'],
-    ['44%','93%','curation: missing'],
-  ], R);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 9 — PIECE 3 OUTLINE (branches / sage)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a9');
-  const S = '#8A9A6B', C = '#C4A855', P = '#7B7FC4';
-
-  glow(svg,'g9a',1500,520,540,S,0.18,'anim-glow');
-  glow(svg,'g9b',300,700,280,C,0.1,'anim-glow3');
-
-  branch(svg, 1500,1080,-Math.PI/2,210,7,S,makeRNG(901));
-  branch(svg, 280,540,0,160,5,C,makeRNG(902));
-  branch(svg, 300,240,Math.PI*0.15,100,4,P,makeRNG(903));
-
-  rings(svg, 1500,520,11,82,63,S);
-  lineGrid(svg, 0,0,580,1080,65,S,0.035);
-  axisTicks(svg, 0,1062,48,40,S);
-
-  bgText(svg, 750,960,'growth',320,S,0.018);
-
-  coords(document.getElementById('s9'), [
-    ['56%','7%','growth: dendritic'],
-    ['2%','62%','depth: 7'],
-    ['86%','86%','ZPD: [0,1]'],
-    ['34%','4%','branch: 2^n'],
-  ], S);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 10 — PIECE 3 COMPANIES
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a10');
-  const S = '#8A9A6B', C = '#C4A855';
-
-  glow(svg,'g10a',1720,280,420,S,0.15,'anim-glow');
-  glow(svg,'g10b',150,900,260,C,0.1,'anim-glow3');
-
-  branch(svg, 1760,260,Math.PI*1.2,140,6,S,makeRNG(1001));
-  branch(svg, 140,900,-Math.PI*0.25,110,5,C,makeRNG(1002));
-
-  rings(svg, 280,200,7,58,48,S);
-  lineGrid(svg, 1200,0,720,400,70,S,0.03);
-
-  coords(document.getElementById('s10'), [
-    ['2%','28%','friction: designed'],
-    ['80%','76%','state: unknown'],
-    ['44%','7%','tacit: ??? captured'],
-  ], S);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 11 — INTEGRATION (all three motifs)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a11');
-  const C = '#C4A855', P = '#7B7FC4', R = '#D98BA0', S = '#8A9A6B';
-
-  glow(svg,'g11a',960,540,720,C,0.08,'anim-glow2');
-
-  // Crystal (P1)
-  crystal(svg, 380,300,210,P,makeRNG(1101));
-  // Noise (P2) — central overlap zone
-  noiseField(svg, 560,360,800,720,24,R,C,makeRNG(1102));
-  // Branch (P3)
-  branch(svg, 1620,940,-Math.PI*0.72,170,6,S,makeRNG(1103));
-
-  // Central rings binding it all
-  rings(svg, 960,540,14,65,58,C,true);
-
-  lineGrid(svg, 0,0,1920,1080,100,C,0.018);
-  axisTicks(svg, 0,1062,48,40,C);
-
-  bgText(svg, 460,680,'P1∩P2∩P3',420,C,0.016,false);
-
-  coords(document.getElementById('s11'), [
-    ['3%','17%','P1∩P2∩P3'],
-    ['84%','12%','convergence'],
-    ['18%','90%','spine: struggle'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 12 — WHY AMPLIFY (minimal)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a12');
-  const C = '#C4A855', S = '#8A9A6B', P = '#7B7FC4', R = '#D98BA0';
-
-  glow(svg,'g12a',960,540,900,C,0.05,'anim-glow3');
-
-  // Single large ring cluster — confidence
-  rings(svg, 1720,540,18,100,82,C);
-
-  // Left gradient accent bar
-  getDefs(svg).appendChild(linGrad('g12bar',0,0,0,1080,[['0%',S,0.55],['50%',P,0.55],['100%',R,0.55]]));
-  svg.appendChild(se('rect',{x:0,y:0,width:4,height:1080,fill:'url(#g12bar)'}));
-
-  // Very sparse data points
-  const rng = makeRNG(121);
-  for (let i=0;i<28;i++) {
-    const x=220+rng()*900, y=100+rng()*880, sz=rng()*4+1;
-    svg.appendChild(se('rect',{x,y,width:sz,height:sz*(0.5+rng()),fill:C,opacity:(0.04+rng()*0.12).toFixed(3)}));
-  }
-
-  coords(document.getElementById('s12'), [
-    ['80%','26%','thesis: extended'],
-    ['84%','84%','risk: latent'],
-    ['2%','92%','diff: ✦'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 13 — LOGISTICS (dot grid, light bg)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a13');
-  const F = '#1A2A1B', C = '#C4A855', U = '#6B5D3F';
-
-  // Dot grid
-  for (let row=0; row*42<1080; row++) {
-    for (let col=0; col*42<1920; col++) {
-      const x=col*42+21, y=row*42+21;
-      svg.appendChild(se('circle',{cx:x,cy:y,r:'1.2',fill:F,opacity:'0.07'}));
-    }
-  }
-
-  lineGrid(svg, 0,0,1920,1080,126,F,0.04);
-  rings(svg, 1820,80,7,48,40,C);
-  rings(svg, 80,1000,5,38,32,F);
-
-  // Coordinate labels styled as data decoration (dark on light)
-  coords(document.getElementById('s13'), [
-    ['80%','7%','n: 20–25'],
-    ['87%','11%','T: 3mo'],
-    ['2%','16%','words: 24K'],
-    ['84%','88%','refs: 78'],
-    ['2%','88%','companies: 8'],
-  ], U);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// SLIDE 14 — CLOSING (full resolved bloom)
-// ══════════════════════════════════════════════════════════════
-(function() {
-  const svg = document.getElementById('a14');
-  const C = '#C4A855', S = '#8A9A6B', P = '#7B7FC4', CR = '#EDE9D8';
-
-  glow(svg,'g14a',960,540,750,C,0.2,'anim-glow');
-  glow(svg,'g14b',960,540,380,CR,0.06,'anim-glow2');
-
-  // Full, more resolved bloom — centre stage
-  bloom(svg, 960,540,540,C,CR,makeRNG(141),1.25);
-
-  // Echoes of all three piece motifs — more filled in
-  bloom(svg, 280,200,190,S,C,makeRNG(142),0.55);
-  bloom(svg, 1700,860,200,P,C,makeRNG(143),0.55);
-  crystal(svg, 1700,200,120,C,makeRNG(144));
-
-  // Rings — resolved / complete
-  rings(svg, 960,540,18,85,68,C,true);
-
-  lineGrid(svg, 0,0,1920,1080,85,C,0.02);
-  axisTicks(svg, 0,1064,48,40,C);
-
-  bgText(svg, 200,720,'∑',680,C,0.018,false);
-
-  coords(document.getElementById('s14'), [
-    ['3%','12%','960,540'],
-    ['84%','12%','r: 0.540'],
-    ['3%','86%','resolved'],
-    ['84%','86%','∑: complete'],
-    ['46%','5%','θ: 2π'],
-    ['46%','92%','August 2026'],
-  ], C);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// NAVIGATION DOTS
-// ══════════════════════════════════════════════════════════════
-const navEl = document.getElementById('nav-dots');
-const slides = document.querySelectorAll('.slide');
-slides.forEach((sl, i) => {
-  const d = document.createElement('div');
-  d.className = 'ndot' + (i===0?' active':'');
-  d.title = `Slide ${i+1}`;
-  d.onclick = () => sl.scrollIntoView({behavior:'smooth'});
-  navEl.appendChild(d);
+// Slide 1 bloom
+const bloom1 = generateBloom(0, 0, 200, {scale: 1.4});
+bloom1.style.position = 'absolute';
+bloom1.style.top = '50%';
+bloom1.style.left = '50%';
+bloom1.style.transform = 'translate(-50%, -52%)';
+bloom1.style.zIndex = '3';
+document.getElementById('bloom-container').appendChild(bloom1);
+
+// Slide 14 bloom (more complete — denser)
+const bloom14 = generateBloom(0, 0, 200, {
+  scale: 1.5,
+  colorGold: '#e8dc8f',
+  colorPrimary: 'rgba(245,245,240,0.7)',
 });
+bloom14.style.position = 'relative';
+document.getElementById('bloom-s14').appendChild(bloom14);
 
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      const idx = [...slides].indexOf(e.target);
-      document.querySelectorAll('.ndot').forEach((d,i) => d.classList.toggle('active', i===idx));
+// Slide 11 mini bloom
+const bloom11 = generateBloom(0, 0, 80, {scale: 0.9});
+bloom11.style.position = 'relative';
+document.getElementById('bloom-s11').appendChild(bloom11);
+
+// ═══════════════════════════════════════
+// MINI ASCII ART FOR SLIDE 4
+// ═══════════════════════════════════════
+
+// P1: Crystalline/molecular
+function drawCrystal(container) {
+  const patterns = [
+    '    ·   ○   ·    ',
+    '  ·   ╱─╲   ·  ',
+    '    ╱   │   ╲    ',
+    '  ○─    ●    ─○  ',
+    '    ╲   │   ╱    ',
+    '  ·   ╲─╱   ·  ',
+    '    ·   ○   ·    ',
+    '  ╱─○     ○─╲  ',
+    ' ─   ╲   ╱   ─  ',
+    '  ·    ─●─    ·  ',
+  ];
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:9px;line-height:13px;color:#7B7FC4;opacity:0.8;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);';
+  pre.textContent = patterns.join('\n');
+  container.style.position = 'relative';
+  container.style.overflow = 'hidden';
+  container.style.background = 'rgba(123,127,196,0.05)';
+  container.appendChild(pre);
+}
+
+// P2: Noise/static scatter
+function drawNoise(container) {
+  container.style.position = 'relative';
+  container.style.overflow = 'hidden';
+  container.style.background = 'rgba(42,38,34,0.04)';
+  const rows = 9, cols = 20;
+  const noiseChars = ['.','·',':','+','*','#','·','·','.','.','·'];
+  let html = '<pre style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;line-height:13px;color:#E85D3D;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">';
+  for (let r = 0; r < rows; r++) {
+    let row = '';
+    for (let c = 0; c < cols; c++) {
+      const rnd = Math.random();
+      const ch = rnd < 0.15 ? '#' : rnd < 0.35 ? ':' : rnd < 0.6 ? '·' : ' ';
+      row += ch;
     }
-  });
-}, {threshold: 0.5});
-slides.forEach(s => obs.observe(s));
-
-// Keyboard navigation
-document.addEventListener('keydown', e => {
-  if (e.key==='ArrowDown'||e.key==='PageDown'||e.key===' ') {
-    e.preventDefault();
-    const active = [...document.querySelectorAll('.ndot')].findIndex(d=>d.classList.contains('active'));
-    if (active < slides.length-1) slides[active+1].scrollIntoView({behavior:'smooth'});
-  } else if (e.key==='ArrowUp'||e.key==='PageUp') {
-    e.preventDefault();
-    const active = [...document.querySelectorAll('.ndot')].findIndex(d=>d.classList.contains('active'));
-    if (active > 0) slides[active-1].scrollIntoView({behavior:'smooth'});
+    html += row + '\n';
   }
-});
+  html += '</pre>';
+  container.innerHTML = html;
+  // Golden signal dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('div');
+    dot.style.cssText = `position:absolute;width:5px;height:5px;border-radius:50%;background:#e8dc8f;box-shadow:0 0 8px 3px rgba(232,220,143,0.5);top:${20+Math.random()*60}%;left:${15+Math.random()*70}%;animation:glow-pulse ${3+Math.random()*2}s ease-in-out infinite;animation-delay:${Math.random()*3}s;`;
+    container.appendChild(dot);
+  }
+}
+
+// P3: Branching/dendritic
+function drawDendritic(container) {
+  container.style.position = 'relative';
+  container.style.overflow = 'hidden';
+  container.style.background = 'rgba(138,154,107,0.05)';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','100%');
+  svg.setAttribute('height','100%');
+  svg.style.cssText = 'position:absolute;top:0;left:0;';
+  svg.innerHTML = `
+    <line x1="50%" y1="95%" x2="50%" y2="60%" stroke="rgba(138,154,107,0.6)" stroke-width="1"/>
+    <line x1="50%" y1="60%" x2="30%" y2="35%" stroke="rgba(138,154,107,0.55)" stroke-width="0.8"/>
+    <line x1="50%" y1="60%" x2="70%" y2="35%" stroke="rgba(138,154,107,0.55)" stroke-width="0.8"/>
+    <line x1="30%" y1="35%" x2="18%" y2="15%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
+    <line x1="30%" y1="35%" x2="38%" y2="12%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
+    <line x1="70%" y1="35%" x2="62%" y2="12%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
+    <line x1="70%" y1="35%" x2="82%" y2="15%" stroke="rgba(138,154,107,0.45)" stroke-width="0.6"/>
+    <circle cx="50%" cy="60%" r="3" fill="rgba(138,154,107,0.7)"/>
+    <circle cx="30%" cy="35%" r="2.5" fill="rgba(138,154,107,0.6)"/>
+    <circle cx="70%" cy="35%" r="2.5" fill="rgba(138,154,107,0.6)"/>
+    <circle cx="18%" cy="15%" r="2" fill="rgba(232,220,143,0.7)"/>
+    <circle cx="38%" cy="12%" r="2" fill="rgba(232,220,143,0.7)"/>
+    <circle cx="62%" cy="12%" r="2" fill="rgba(232,220,143,0.7)"/>
+    <circle cx="82%" cy="15%" r="2" fill="rgba(232,220,143,0.7)"/>
+  `;
+  container.appendChild(svg);
+}
+
+drawCrystal(document.getElementById('art-p1'));
+drawNoise(document.getElementById('art-p2'));
+drawDendritic(document.getElementById('art-p3'));
+
+// ═══════════════════════════════════════
+// HALFTONE DOT RENDERER
+// ═══════════════════════════════════════
+function drawHalftone(canvasEl, opts = {}) {
+  const {
+    bgColor = '#1e3fd8',
+    dotColor = 'rgba(255,255,255,0.9)',
+    spacing = 18,
+    baseRadius = 3,
+    varianceMode = 'uniform', // 'uniform' | 'radial' | 'noise'
+    darkBg = true
+  } = opts;
+
+  const W = canvasEl.offsetWidth || canvasEl.width || 800;
+  const H = canvasEl.offsetHeight || canvasEl.height || 600;
+  canvasEl.width = W;
+  canvasEl.height = H;
+  const ctx = canvasEl.getContext('2d');
+
+  if (bgColor) {
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  ctx.fillStyle = dotColor;
+  const cols = Math.ceil(W / spacing) + 2;
+  const rows = Math.ceil(H / spacing) + 2;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * spacing;
+      const y = r * spacing;
+      let radius = baseRadius;
+
+      if (varianceMode === 'radial') {
+        const dx = x - W/2, dy = y - H/2;
+        const dist = Math.sqrt(dx*dx+dy*dy) / Math.max(W,H);
+        radius = baseRadius * (1.5 - dist * 1.2);
+      } else if (varianceMode === 'noise') {
+        // Simple pseudo-noise
+        const n = Math.sin(c * 12.9898 + r * 78.233) * 43758.5453;
+        const nv = n - Math.floor(n);
+        radius = baseRadius * 0.3 + nv * baseRadius * 1.4;
+      }
+
+      radius = Math.max(0.3, radius);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+// Slide 2: halftone for discriminator side
+setTimeout(() => {
+  const c2 = document.getElementById('ht-s2');
+  if (c2) drawHalftone(c2, {bgColor: null, dotColor:'rgba(123,127,196,0.8)', spacing:20, baseRadius:3, varianceMode:'uniform'});
+
+  // Slide 7: dense chaos (noise floor)
+  const c7 = document.getElementById('ht-s7');
+  if (c7) drawHalftone(c7, {bgColor: null, dotColor:'rgba(255,255,255,0.6)', spacing:14, baseRadius:2.5, varianceMode:'noise'});
+
+  // Slide 8: also noise, darker
+  const c8 = document.getElementById('ht-s8');
+  if (c8) drawHalftone(c8, {bgColor: null, dotColor:'rgba(255,255,255,0.5)', spacing:16, baseRadius:2.2, varianceMode:'noise'});
+
+  // Slide 11: faint halftone
+  const c11 = document.getElementById('ht-s11');
+  if (c11) drawHalftone(c11, {bgColor: null, dotColor:'rgba(255,255,255,0.4)', spacing:22, baseRadius:2, varianceMode:'radial'});
+}, 100);
 </script>
 </body>
 </html>
